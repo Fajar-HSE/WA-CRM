@@ -48,7 +48,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     return { messageId: r.messageId }
   }
 
-  async sendTemplate(args: { to: string; templateName: string; language: string; params?: string[]; contextMessageId?: string }): Promise<WhatsAppSendResult> {
+  async sendTemplate(args: { to: string; templateName: string; language: string; params?: string[]; template?: unknown; messageParams?: unknown; contextMessageId?: string }): Promise<WhatsAppSendResult> {
     const r = await sendTemplateMessage({
       phoneNumberId: this.phoneNumberId,
       accessToken: this.accessToken,
@@ -77,7 +77,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     return { messageId: r.messageId }
   }
 
-  async sendInteractiveList(args: { to: string; bodyText: string; buttonLabel: string; headerText?: string; footerText?: string; sections: { title: string; rows: { id: string; title: string; description?: string }[] }[]; contextMessageId?: string }): Promise<WhatsAppSendResult> {
+  async sendInteractiveList(args: { to: string; bodyText: string; buttonLabel: string; headerText?: string; footerText?: string; sections: { title?: string; rows: { id: string; title: string; description?: string }[] }[]; contextMessageId?: string }): Promise<WhatsAppSendResult> {
     const r = await sendInteractiveList({
       phoneNumberId: this.phoneNumberId,
       accessToken: this.accessToken,
@@ -97,16 +97,16 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       phoneNumberId: this.phoneNumberId,
       accessToken: this.accessToken,
       to: args.to,
-      messageId: args.messageId,
+      targetMessageId: args.messageId,
       emoji: args.emoji,
     })
   }
 
   async sendTypingIndicator(args: { to: string; messageId?: string }): Promise<void> {
+    if (!args.messageId) return
     await sendTypingIndicator({
       phoneNumberId: this.phoneNumberId,
       accessToken: this.accessToken,
-      to: args.to,
       messageId: args.messageId,
     })
   }
@@ -116,7 +116,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       mediaId: args.mediaId,
       accessToken: this.accessToken,
     })
-    return { url: r.url, mimeType: r.mimeType, fileSize: r.fileSize }
+    return { url: r.url, mimeType: r.mimeType, fileSize: r.fileSize ?? 0 }
   }
 
   async getPhoneHealth(args: { phoneNumberId: string }): Promise<unknown> {

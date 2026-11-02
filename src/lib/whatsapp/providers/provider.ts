@@ -64,7 +64,7 @@ export interface InteractiveListRow {
 }
 
 export interface InteractiveListSection {
-  title: string
+  title?: string
   rows: InteractiveListRow[]
 }
 

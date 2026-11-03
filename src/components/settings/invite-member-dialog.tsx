@@ -40,6 +40,9 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
 
 type InviteRole = 'admin' | 'agent' | 'viewer';
+// 'workspace': the invitee registers an account of their own and connects
+// their own WhatsApp number. 'member': joins this account (shared inbox).
+type InviteKind = 'workspace' | 'member';
 
 interface InviteMemberDialogProps {
   open: boolean;
@@ -62,6 +65,7 @@ const MAX_LABEL_LEN = 80;
 
 interface CreatedInvite {
   url: string;
+  kind: InviteKind;
   role: InviteRole;
   expiresInDays: number;
   /** Snapshotted at creation time so a later account rename can't
@@ -77,6 +81,7 @@ export function InviteMemberDialog({
   const t = useTranslations('Settings.invite');
   const tRoles = useTranslations('Settings.roles');
   const { account } = useAuth();
+  const [kind, setKind] = useState<InviteKind>('workspace');
   const [role, setRole] = useState<InviteRole>('agent');
   const [expiry, setExpiry] = useState<string>('7');
   const [label, setLabel] = useState('');
@@ -84,6 +89,7 @@ export function InviteMemberDialog({
   const [result, setResult] = useState<CreatedInvite | null>(null);
 
   function reset() {
+    setKind('workspace');
     setRole('agent');
     setExpiry('7');
     setLabel('');
@@ -109,6 +115,7 @@ export function InviteMemberDialog({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          kind,
           role,
           expiresInDays: Number(expiry),
           label: trimmedLabel || undefined,
@@ -128,6 +135,7 @@ export function InviteMemberDialog({
 
       setResult({
         url: data.url,
+        kind,
         role,
         expiresInDays: data.expiresInDays,
         // Snapshot the account name into the result so the wa.me
@@ -165,7 +173,10 @@ export function InviteMemberDialog({
     // for users in multi-team contexts where "our wacrm account"
     // wouldn't be enough to disambiguate.
     const accountName = result?.accountName ?? t('fallbackAccountName');
-    const message = t('whatsappMessage', { accountName, expiresInDays: result?.expiresInDays ?? 0, url });
+    const message =
+      result?.kind === 'workspace'
+        ? t('whatsappMessageWorkspace', { expiresInDays: result.expiresInDays, url })
+        : t('whatsappMessage', { accountName, expiresInDays: result?.expiresInDays ?? 0, url });
     return `https://wa.me/?text=${encodeURIComponent(message)}`;
   }
 
@@ -189,7 +200,7 @@ export function InviteMemberDialog({
                 {t('inviteCreated')}
               </DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                {t.rich('inviteCreatedDesc', {
+                {t.rich(result.kind === 'workspace' ? 'inviteCreatedDescWorkspace' : 'inviteCreatedDesc', {
                   role: tRoles(result.role),
                   days: result.expiresInDays,
                   bold: (chunks: React.ReactNode) => <strong>{chunks}</strong>
@@ -268,6 +279,26 @@ export function InviteMemberDialog({
 
             <div className="space-y-4 py-2">
               <div className="space-y-2">
+                <Label className="text-muted-foreground">{t('kindLabel')}</Label>
+                <Select
+                  value={kind}
+                  onValueChange={(v) => v && setKind(v as InviteKind)}
+                >
+                  <SelectTrigger className="w-full bg-muted border-border text-foreground">
+                    <SelectValue>{t(kind === 'workspace' ? 'kindWorkspace' : 'kindMember')}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="workspace">{t('kindWorkspace')}</SelectItem>
+                    <SelectItem value="member">{t('kindMember')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {t(kind === 'workspace' ? 'kindWorkspaceHint' : 'kindMemberHint')}
+                </p>
+              </div>
+
+              {kind === 'member' && (
+              <div className="space-y-2">
                 <Label className="text-muted-foreground">{t('roleLabel')}</Label>
                 <Select
                   value={role}
@@ -286,6 +317,7 @@ export function InviteMemberDialog({
                   {tRoles(`${role}Hint` as 'adminHint' | 'agentHint' | 'viewerHint')}
                 </p>
               </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-muted-foreground">{t('validForLabel')}</Label>

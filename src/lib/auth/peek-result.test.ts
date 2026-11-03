@@ -15,6 +15,18 @@ describe('toPeekResult', () => {
       role: 'agent',
       expires_at: '2026-10-20T00:00:00Z',
     };
+    // A database without migration 062 sends no `kind`: treated as a member invite.
+    expect(toPeekResult(200, body)).toEqual({ ...body, kind: 'member' });
+  });
+
+  it('carries the invitation kind through', () => {
+    const body = {
+      ok: true,
+      account_name: 'Acme',
+      role: 'admin',
+      kind: 'workspace',
+      expires_at: '2026-10-20T00:00:00Z',
+    };
     expect(toPeekResult(200, body)).toEqual(body);
   });
 

@@ -34,6 +34,8 @@ interface SessionState {
   status: string;
   qr: string | null;
   webhookUrl: string;
+  /** False for an account that was not invited to connect WhatsApp. */
+  canConnect?: boolean;
 }
 
 const KNOWN_STATUSES = [
@@ -201,6 +203,7 @@ export function WhatsAppConfig() {
     );
   }
 
+  const canConnect = state?.canConnect !== false;
   const label = knownStatus(status);
   const isConnected = status === 'WORKING';
   const isStopped = status === 'STOPPED' || status === 'FAILED' || status === 'NOT_FOUND';
@@ -208,6 +211,14 @@ export function WhatsAppConfig() {
   return (
     <section className="max-w-2xl space-y-6 animate-in fade-in-50 duration-200">
       <SettingsPanelHead title={t('title')} description={t('description')} />
+
+      {!canConnect && (
+        <Alert>
+          <AlertTriangle className="size-4" />
+          <AlertTitle>{t('notInvitedTitle')}</AlertTitle>
+          <AlertDescription>{t('notInvitedBody')}</AlertDescription>
+        </Alert>
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -282,7 +293,7 @@ export function WhatsAppConfig() {
           )}
 
           <div className="flex flex-wrap gap-2">
-            {(!state?.configured || isStopped) && (
+            {canConnect && (!state?.configured || isStopped) && (
               <Button
                 onClick={() => run('POST', 'connectSuccess', 'connectFailed')}
                 disabled={busy}

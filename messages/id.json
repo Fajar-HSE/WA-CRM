@@ -1689,7 +1689,14 @@
       "copied": "Tautan undangan disalin",
       "clipboardBlocked": "Papan klip diblokir, salin tautan secara manual",
       "whatsappMessage": "Bergabunglah ke {accountName} di wacrm lewat tautan ini (berlaku {expiresInDays} hari): {url}",
-      "createFailed": "Gagal membuat undangan"
+      "createFailed": "Gagal membuat undangan",
+      "kindLabel": "Jenis undangan",
+      "kindWorkspace": "Akun sendiri (nomor WhatsApp sendiri)",
+      "kindMember": "Gabung ke tim saya (kotak masuk bersama)",
+      "kindWorkspaceHint": "Orang itu mendaftar akun CRM terpisah dan menghubungkan nomor WhatsApp-nya sendiri. Percakapannya tetap pribadi. Tautan hanya berlaku sekali.",
+      "kindMemberHint": "Orang itu bergabung ke akun ini dan berbagi satu kotak masuk dan satu nomor WhatsApp.",
+      "inviteCreatedDescWorkspace": "Bagikan tautan ini ke orang tersebut. Mereka dapat mendaftar akun sendiri dan menghubungkan nomor WhatsApp-nya. Tautan hanya berlaku <bold>sekali</bold> dan aktif selama <bold>{days} hari</bold>.",
+      "whatsappMessageWorkspace": "Anda diundang membuat akun sendiri di wacrm. Tautan hanya berlaku sekali dan aktif {expiresInDays} hari: {url}"
     },
     "tagsAndFields": {
       "title": "Kolom & tag",
@@ -1893,7 +1900,9 @@
       "copy": "Salin URL webhook",
       "copied": "URL webhook disalin",
       "unofficialTitle": "Koneksi tidak resmi",
-      "unofficialBody": "WAHA menjalankan WhatsApp Web, bukan API Bisnis resmi. Jaga volume kirim tetap rendah dan hindari pesan massal yang tidak diminta, karena WhatsApp dapat memblokir nomor yang ditandai."
+      "unofficialBody": "WAHA menjalankan WhatsApp Web, bukan API Bisnis resmi. Jaga volume kirim tetap rendah dan hindari pesan massal yang tidak diminta, karena WhatsApp dapat memblokir nomor yang ditandai.",
+      "notInvitedTitle": "WhatsApp tidak dapat dihubungkan dari akun ini",
+      "notInvitedBody": "Hanya akun yang dibuat dari undangan yang dapat menghubungkan nomor WhatsApp. Minta undangan akun kepada pengelola CRM ini."
     },
     "sections": {
       "overview": "Ringkasan",
@@ -2190,7 +2199,9 @@
     "creating": "Membuat akun...",
     "submit": "Buat akun",
     "haveAccount": "Sudah punya akun?",
-    "signIn": "Masuk"
+    "signIn": "Masuk",
+    "inviteOnlyTitle": "Pendaftaran hanya lewat undangan",
+    "inviteOnlyBody": "Akun baru hanya bisa dibuat dari tautan undangan. Minta pengelola CRM ini mengirimkannya kepada Anda."
   },
   "ForgotPasswordPage": {
     "checkEmailTitle": "Periksa email Anda",
@@ -2256,7 +2267,26 @@
     "signingOut": "Sedang keluar…",
     "signOutSwitch": "Keluar & pakai email lain",
     "createAndJoin": "Buat akun & bergabung",
-    "haveAccount": "Saya sudah punya akun"
+    "haveAccount": "Saya sudah punya akun",
+    "workspace": {
+      "title": "Anda diundang membuat akun sendiri",
+      "body": "Anda akan mendapat CRM sendiri dan menghubungkan nomor WhatsApp Anda sendiri. Tautan ini hanya berlaku sekali dan aktif sampai {date}.",
+      "signedIn": "Anda sedang masuk. Undangan ini membuat akun baru, jadi keluar dulu, lalu buka tautannya lagi.",
+      "signOut": "Keluar dan lanjutkan"
+    },
+    "register": {
+      "fullName": "Nama lengkap",
+      "email": "Email",
+      "password": "Kata sandi",
+      "passwordPlaceholder": "Minimal {min} karakter",
+      "confirmPassword": "Konfirmasi kata sandi",
+      "passwordTooShort": "Kata sandi minimal {min} karakter",
+      "passwordsMismatch": "Kata sandi tidak cocok",
+      "creating": "Membuat akun…",
+      "submit": "Buat akun",
+      "failed": "Akun tidak dapat dibuat",
+      "signInFailed": "Akun sudah dibuat, tetapi gagal masuk. Silakan masuk lewat halaman masuk."
+    }
   },
   "Notifications": {
     "title": "Notifikasi",
@@ -2729,7 +2759,13 @@
     },
     "invitations": {
       "redeemFailed": "Gagal menukarkan undangan",
-      "missingToken": "Token undangan tidak ada"
+      "missingToken": "Token undangan tidak ada",
+      "registerInvalid": "Undangan ini tidak valid, sudah dipakai, atau sudah kedaluwarsa.",
+      "registerFailed": "Akun Anda tidak dapat dibuat. Silakan coba lagi.",
+      "emailTaken": "Alamat email itu sudah punya akun.",
+      "emailInvalid": "Masukkan alamat email yang valid.",
+      "nameInvalid": "Masukkan nama Anda (maksimal {max} karakter).",
+      "passwordInvalid": "Kata sandi harus {min} sampai {max} karakter."
     },
     "ai": {
       "pausedRequired": "paused (boolean) wajib diisi",
@@ -2828,7 +2864,8 @@
       "phoneCheckFailed": "Pemeriksaan metadata telepon gagal: {message}",
       "wabaNoApps": "WABA tidak memiliki aplikasi yang berlangganan. Simpan ulang konfigurasi untuk berlangganan.",
       "wabaCheckFailed": "Pemeriksaan langganan WABA gagal: {message}",
-      "noWabaId": "Tidak ada ID WABA tersimpan, webhook tidak dapat dihubungkan tanpanya. Tambahkan di formulir lalu simpan ulang."
+      "noWabaId": "Tidak ada ID WABA tersimpan, webhook tidak dapat dihubungkan tanpanya. Tambahkan di formulir lalu simpan ulang.",
+      "notInvited": "Akun ini belum diundang untuk menghubungkan WhatsApp. Minta undangan akun kepada pengelola."
     },
     "media": {
       "idRequired": "ID media wajib diisi",

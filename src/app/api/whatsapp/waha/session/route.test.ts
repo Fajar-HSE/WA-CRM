@@ -10,6 +10,27 @@ vi.mock('@/lib/auth/account', () => ({
     new Response(JSON.stringify({ error: String(e) }), { status: 500 }),
 }))
 
+const adminWrites: { table: string; op: string }[] = []
+vi.mock('@/lib/flows/admin-client', () => ({
+  supabaseAdmin: () => ({
+    from: (table: string) => {
+      const chain: Record<string, unknown> = {
+        update: () => {
+          adminWrites.push({ table, op: 'update' })
+          return chain
+        },
+        insert: async () => {
+          adminWrites.push({ table, op: 'insert' })
+          return { error: null }
+        },
+        eq: () => chain,
+        then: (resolve: (v: unknown) => unknown) => resolve({ error: null }),
+      }
+      return chain
+    },
+  }),
+}))
+
 const sessions: string[] = []
 vi.mock('@/lib/whatsapp/providers/waha', () => {
   class WahaHttpError extends Error {
@@ -37,16 +58,20 @@ vi.mock('@/lib/whatsapp/providers/waha', () => {
 
 import { DELETE, GET, POST } from './route'
 
-function makeCtx(row: Record<string, unknown> | null) {
-  const chain = {
-    select: () => chain,
-    eq: () => chain,
-    maybeSingle: async () => ({ data: row, error: null }),
-    update: () => chain,
-    insert: async () => ({ error: null }),
+function makeCtx(row: Record<string, unknown> | null, canConnect = true) {
+  const chainFor = (table: string) => {
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      maybeSingle: async () => ({
+        data: table === 'accounts' ? { can_connect_whatsapp: canConnect } : row,
+        error: null,
+      }),
+    }
+    return chain
   }
   return {
-    supabase: { from: () => chain },
+    supabase: { from: (table: string) => chainFor(table) },
     userId: 'user-1',
     accountId: ACCOUNT,
     role: 'admin',
@@ -59,6 +84,7 @@ const own = `wacrm-${ACCOUNT.replace(/-/g, '')}`
 describe('WAHA session route tenancy', () => {
   beforeEach(() => {
     sessions.length = 0
+    adminWrites.length = 0
     process.env.WAHA_BASE_URL = 'http://waha:3000'
     process.env.WAHA_API_KEY = 'k'
     process.env.WAHA_WEBHOOK_SECRET = 's'
@@ -102,5 +128,28 @@ describe('WAHA session route tenancy', () => {
     const json = await (await GET(new Request('http://x/api/whatsapp/waha/session'))).json()
     expect(json.configured).toBe(false)
     expect(sessions).toEqual([])
+  })
+
+  it('refuses to create a session for an account that was not invited', async () => {
+    requireRole.mockResolvedValue(makeCtx(null, false))
+    const res = await POST(new Request('http://x/api/whatsapp/waha/session', { method: 'POST' }))
+    expect(res.status).toBe(403)
+    expect(sessions).toEqual([])
+    expect(adminWrites).toEqual([])
+  })
+
+  it('tells the page whether the account may connect', async () => {
+    requireRole.mockResolvedValue(makeCtx(null, false))
+    const json = await (await GET(new Request('http://x/api/whatsapp/waha/session'))).json()
+    expect(json.canConnect).toBe(false)
+    requireRole.mockResolvedValue(makeCtx(null, true))
+    const ok = await (await GET(new Request('http://x/api/whatsapp/waha/session'))).json()
+    expect(ok.canConnect).toBe(true)
+  })
+
+  it('writes the config row with the service role, not the browser session', async () => {
+    requireRole.mockResolvedValue(makeCtx(null, true))
+    await POST(new Request('http://x/api/whatsapp/waha/session', { method: 'POST' }))
+    expect(adminWrites.some((w) => w.table === 'whatsapp_config' && w.op === 'insert')).toBe(true)
   })
 })

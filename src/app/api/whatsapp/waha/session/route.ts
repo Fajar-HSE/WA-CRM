@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse, type AccountContext } from '@/lib/auth/account'
 import { WahaHttpError, WahaWhatsAppProvider } from '@/lib/whatsapp/providers/waha'
+import { supabaseAdmin } from '@/lib/flows/admin-client'
+import { getT } from '@/lib/i18n/translate'
 import {
   resolveWahaWebhookUrl,
   wahaPlaceholderPhoneId,
@@ -15,7 +17,15 @@ import {
  * `ctx.accountId` on the server (see waha-config.ts). That is what keeps
  * one account from reading another account's pairing QR code, starting
  * its session, or logging it out.
+ *
+ * Creating a session is further limited to accounts that arrived through an
+ * invitation (accounts.can_connect_whatsapp, set only by the server). The
+ * writes below use the service role: the database refuses the WAHA columns to
+ * a browser session (migration 062), so a user cannot attach to a session by
+ * editing their own whatsapp_config row.
  */
+
+const t = getT('Api')
 
 const SESSION_UNAVAILABLE = 'NOT_FOUND'
 
@@ -37,6 +47,15 @@ function providerFor(sessionName: string): WahaWhatsAppProvider | { error: strin
   const env = wahaEnv()
   if ('error' in env) return env
   return new WahaWhatsAppProvider({ sessionName, ...env })
+}
+
+async function loadCanConnect(ctx: AccountContext): Promise<boolean> {
+  const { data } = await ctx.supabase
+    .from('accounts')
+    .select('can_connect_whatsapp')
+    .eq('id', ctx.accountId)
+    .maybeSingle()
+  return data?.can_connect_whatsapp === true
 }
 
 async function loadConfig(ctx: AccountContext): Promise<WahaConfigRow | null> {
@@ -62,7 +81,7 @@ async function ensureWahaRow(
 ): Promise<void> {
   if (existing) {
     if (existing.provider === 'waha' && existing.waha_session_name === sessionName) return
-    const { error } = await ctx.supabase
+    const { error } = await supabaseAdmin()
       .from('whatsapp_config')
       .update({ provider: 'waha', waha_session_name: sessionName })
       .eq('id', existing.id)
@@ -70,7 +89,7 @@ async function ensureWahaRow(
     if (error) throw new Error(describeDbError(error))
     return
   }
-  const { error } = await ctx.supabase.from('whatsapp_config').insert({
+  const { error } = await supabaseAdmin().from('whatsapp_config').insert({
     account_id: ctx.accountId,
     user_id: ctx.userId,
     provider: 'waha',
@@ -92,7 +111,7 @@ function describeDbError(error: { code?: string; message: string }): string {
 }
 
 async function syncStatus(ctx: AccountContext, status: string): Promise<void> {
-  await ctx.supabase
+  await supabaseAdmin()
     .from('whatsapp_config')
     .update({
       waha_session_status: status,
@@ -105,6 +124,7 @@ async function readState(
   ctx: AccountContext,
   provider: WahaWhatsAppProvider,
   webhookUrl: string,
+  canConnect: boolean,
 ) {
   let status = SESSION_UNAVAILABLE
   try {
@@ -115,7 +135,7 @@ async function readState(
   const qr =
     status === 'SCAN_QR_CODE' ? await provider.getQrCode(provider.sessionName) : null
   if (status !== SESSION_UNAVAILABLE) await syncStatus(ctx, status)
-  return { configured: true, sessionName: provider.sessionName, status, qr, webhookUrl }
+  return { configured: true, sessionName: provider.sessionName, status, qr, webhookUrl, canConnect }
 }
 
 export async function GET(request: Request) {
@@ -124,6 +144,7 @@ export async function GET(request: Request) {
     const sessionName = wahaSessionNameForAccount(ctx.accountId)
     const webhookUrl = resolveWahaWebhookUrl(new URL(request.url).origin)
     const row = await loadConfig(ctx)
+    const canConnect = await loadCanConnect(ctx)
 
     if (!row || row.provider !== 'waha' || row.waha_session_name !== sessionName) {
       return NextResponse.json({
@@ -132,6 +153,7 @@ export async function GET(request: Request) {
         status: SESSION_UNAVAILABLE,
         qr: null,
         webhookUrl,
+        canConnect,
       })
     }
 
@@ -139,7 +161,7 @@ export async function GET(request: Request) {
     if ('error' in provider) {
       return NextResponse.json({ error: provider.error }, { status: 500 })
     }
-    return NextResponse.json(await readState(ctx, provider, webhookUrl))
+    return NextResponse.json(await readState(ctx, provider, webhookUrl, canConnect))
   } catch (err) {
     return toErrorResponse(err)
   }
@@ -149,6 +171,14 @@ export async function POST(request: Request) {
   try {
     const ctx = await requireRole('admin')
     const sessionName = wahaSessionNameForAccount(ctx.accountId)
+
+    // Only accounts that arrived through an invitation may create a session.
+    if (!(await loadCanConnect(ctx))) {
+      return NextResponse.json(
+        { error: t('whatsappConfig.notInvited') },
+        { status: 403 },
+      )
+    }
 
     const secret = process.env.WAHA_WEBHOOK_SECRET?.trim()
     if (!secret) {
@@ -174,7 +204,7 @@ export async function POST(request: Request) {
     }
 
     await provider.ensureSession({ webhookUrl, webhookSecret: secret })
-    return NextResponse.json(await readState(ctx, provider, webhookUrl))
+    return NextResponse.json(await readState(ctx, provider, webhookUrl, true))
   } catch (err) {
     if (err instanceof WahaHttpError) {
       return NextResponse.json(
@@ -207,6 +237,7 @@ export async function DELETE(request: Request) {
       status: 'STOPPED',
       qr: null,
       webhookUrl,
+      canConnect: await loadCanConnect(ctx),
     })
   } catch (err) {
     if (err instanceof WahaHttpError) {

@@ -94,6 +94,7 @@ The UI ships in Bahasa Indonesia (default) and English. Each user can
 switch in **Settings → Appearance**; `NEXT_PUBLIC_APP_LOCALE` (`id` or
 `en`) sets the default for new visitors (catalogues live in `messages/`).
 WhatsApp is connected through WAHA — see [docs/waha.md](./docs/waha.md).
+Accounts are created by invitation only — see [docs/invite-only.md](./docs/invite-only.md).
 
 Prefer containers? See [docs/docker.md](./docs/docker.md) for the
 Dockerfile + Docker Compose setup.

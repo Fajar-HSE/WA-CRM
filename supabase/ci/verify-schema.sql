@@ -163,6 +163,25 @@ BEGIN
     RAISE EXCEPTION 'anon can execute dashboard_overview — migration 059 grants are wrong';
   END IF;
 
+  -- Invite-only workspaces (062).
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'accounts'
+      AND column_name = 'can_connect_whatsapp'
+  ) THEN
+    RAISE EXCEPTION 'accounts.can_connect_whatsapp is missing — migration 062 did not apply';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'account_invitations'
+      AND column_name = 'kind'
+  ) THEN
+    RAISE EXCEPTION 'account_invitations.kind is missing — migration 062 did not apply';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'protect_whatsapp_waha_columns') THEN
+    RAISE EXCEPTION 'protect_whatsapp_waha_columns trigger is missing — migration 062 did not apply';
+  END IF;
+
   RAISE NOTICE 'schema verification passed';
 END
 $$;

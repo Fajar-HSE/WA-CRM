@@ -53,6 +53,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { createClient } from '@/lib/supabase/client';
+import { InviteRegisterForm } from '@/components/auth/invite-register-form';
 import {
   RETRYABLE_PEEK_FAIL_REASONS,
   toPeekResult,
@@ -252,22 +253,17 @@ export default function JoinPage() {
               >
                 {t('tryAgain')}
               </Button>
-              <Link href="/signup">
+              <Link href="/login">
                 <Button
                   variant="outline"
                   className="w-full border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
-                  {t('createNewAccount')}
+                  {t('signIn')}
                 </Button>
               </Link>
             </>
           ) : (
             <>
-              <Link href="/signup">
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                  {t('createNewAccount')}
-                </Button>
-              </Link>
               <Link href="/login">
                 <Button
                   variant="outline"
@@ -284,7 +280,26 @@ export default function JoinPage() {
   }
 
   // ----- Peek OK -----
-  const inviteHeader = (
+  const isWorkspace = peek.kind === 'workspace';
+  const inviteHeader = isWorkspace ? (
+    <CardHeader className="items-center text-center">
+      <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+        <ShieldCheck className="h-6 w-6 text-primary" />
+      </div>
+      <CardTitle className="text-xl text-foreground">
+        {t('workspace.title')}
+      </CardTitle>
+      <CardDescription className="text-muted-foreground">
+        {t('workspace.body', {
+          date: new Date(peek.expires_at).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          }),
+        })}
+      </CardDescription>
+    </CardHeader>
+  ) : (
     <CardHeader className="items-center text-center">
       <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
         <UsersRound className="h-6 w-6 text-primary" />
@@ -313,6 +328,34 @@ export default function JoinPage() {
       </CardDescription>
     </CardHeader>
   );
+
+  // ----- Authed, but this invitation is for a brand-new account -----
+  if (authedUserId && isWorkspace) {
+    return (
+      <Card className="w-full max-w-md border-border bg-card">
+        {inviteHeader}
+        <CardContent className="flex flex-col gap-3">
+          <p className="text-center text-sm text-muted-foreground">
+            {t('workspace.signedIn')}
+          </p>
+          <Button
+            onClick={handleSignOutAndRetry}
+            disabled={signingOut}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {signingOut ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {t('signingOut')}
+              </>
+            ) : (
+              t('workspace.signOut')
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // ----- Authed: show Accept button -----
   if (authedUserId) {
@@ -403,24 +446,22 @@ export default function JoinPage() {
     );
   }
 
-  // ----- Not authed: prompt to sign up or sign in -----
+  // ----- Not authed: register with this invitation -----
   return (
     <Card className="w-full max-w-md border-border bg-card">
       {inviteHeader}
-      <CardContent className="flex flex-col gap-2">
-        <Link href={`/signup?invite=${encodeURIComponent(token!)}`}>
-          <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-            {t('createAndJoin')}
-          </Button>
-        </Link>
-        <Link href={`/login?invite=${encodeURIComponent(token!)}`}>
-          <Button
-            variant="outline"
-            className="w-full border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            {t('haveAccount')}
-          </Button>
-        </Link>
+      <CardContent className="flex flex-col gap-3">
+        <InviteRegisterForm token={token!} kind={peek.kind} />
+        {!isWorkspace && (
+          <Link href={`/login?invite=${encodeURIComponent(token!)}`}>
+            <Button
+              variant="outline"
+              className="w-full border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {t('haveAccount')}
+            </Button>
+          </Link>
+        )}
       </CardContent>
     </Card>
   );

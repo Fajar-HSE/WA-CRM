@@ -18,6 +18,7 @@ import { buildMetaTemplatePayload } from '@/lib/whatsapp/template-components'
 import { ensureMediaHeaderHandle } from '@/lib/whatsapp/template-header-handle'
 import { canEditTemplateCategory } from '@/lib/whatsapp/template-category-edit'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
+import { isLocalTemplateId } from '@/lib/whatsapp/local-template'
 import { getT } from '@/lib/i18n/translate'
 
 const t = getT('Api')
@@ -96,6 +97,40 @@ export async function PATCH(
       .maybeSingle()
     if (lookupErr || !existing) {
       return NextResponse.json({ error: t('templates.notFound') }, { status: 404 })
+    }
+
+    // Local template (WAHA): no Meta round trip and no review. Name and
+    // language stay as they are; the text can change and it stays usable.
+    if (isLocalTemplateId(existing.meta_template_id)) {
+      try {
+        validateTemplatePayload({ ...payload, name: existing.name, language: existing.language })
+      } catch (e) {
+        return NextResponse.json(
+          { error: e instanceof Error ? e.message : t('templates.validationFailed') },
+          { status: 400 },
+        )
+      }
+      const { data: localRow, error: localErr } = await supabase
+        .from('message_templates')
+        .update({
+          body_text: payload.body_text,
+          footer_text: payload.footer_text ?? null,
+          sample_values: payload.sample_values ?? null,
+          status: 'APPROVED',
+          submission_error: null,
+          rejection_reason: null,
+        })
+        .eq('id', id)
+        .eq('account_id', accountId)
+        .select()
+        .single()
+      if (localErr) {
+        return NextResponse.json(
+          { error: t('templates.editFailed') },
+          { status: 500 },
+        )
+      }
+      return NextResponse.json({ success: true, template: localRow, local: true })
     }
 
     if (!existing.meta_template_id) {
@@ -273,7 +308,7 @@ export async function DELETE(
       return NextResponse.json({ error: t('templates.notFound') }, { status: 404 })
     }
 
-    if (existing.meta_template_id && !isDryRun()) {
+    if (existing.meta_template_id && !isLocalTemplateId(existing.meta_template_id) && !isDryRun()) {
       const { data: config, error: configError } = await supabase
         .from('whatsapp_config')
         .select('*')

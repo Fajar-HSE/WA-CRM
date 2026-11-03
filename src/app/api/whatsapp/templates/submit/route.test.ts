@@ -8,6 +8,8 @@ type Write = {
 
 const writes: Write[] = []
 let existingTemplate: Record<string, unknown> | null = null
+/** What the account's whatsapp_config row looks like; `null` means none saved yet. */
+let configRow: Record<string, unknown> | null = { waba_id: 'waba-1', access_token: 'enc' }
 
 function makeSupabaseMock() {
   function builder(table: string) {
@@ -19,7 +21,7 @@ function makeSupabaseMock() {
         case 'accounts':
           return { data: { id: 'acct-1', name: 'Acme' }, error: null }
         case 'whatsapp_config':
-          return { data: { waba_id: 'waba-1', access_token: 'enc' }, error: null }
+          return { data: configRow, error: null }
         case 'message_templates':
           return write
             ? { data: { id: 'tpl-1', ...write.row }, error: null }
@@ -94,6 +96,7 @@ beforeEach(() => {
   __resetRateLimitForTests()
   writes.length = 0
   existingTemplate = null
+  configRow = { waba_id: 'waba-1', access_token: 'enc' }
   submitMessageTemplate.mockReset()
   supabaseMock = makeSupabaseMock()
   vi.stubEnv('WHATSAPP_TEMPLATES_DRY_RUN', 'true')
@@ -190,3 +193,35 @@ describe('POST /api/whatsapp/templates/submit', () => {
     expect(writes[0].row).toMatchObject({ status: 'DRAFT', user_id: 'user-1' })
   })
 })
+
+describe('local (WAHA) templates', () => {
+  it.each([
+    ['a WAHA account', { provider: 'waha', waba_id: null, access_token: '' }],
+    ['an account with no WhatsApp connection yet', null],
+  ])('saves a template for %s locally, approved at once, without calling Meta', async (_name, cfg) => {
+    vi.stubEnv('WHATSAPP_TEMPLATES_DRY_RUN', 'false')
+    configRow = cfg
+
+    const res = await submit()
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ success: true, local: true })
+    expect(submitMessageTemplate).not.toHaveBeenCalled()
+    expect(writes).toHaveLength(1)
+    expect(writes[0].row).toMatchObject({ status: 'APPROVED', name: 'order_update' })
+    expect(String(writes[0].row.meta_template_id)).toMatch(/^local-/)
+  })
+
+  it('still sends a template to Meta for an account that holds a Meta configuration', async () => {
+    vi.stubEnv('WHATSAPP_TEMPLATES_DRY_RUN', 'false')
+    configRow = { provider: 'meta', waba_id: 'waba-1', access_token: 'enc' }
+    submitMessageTemplate.mockResolvedValue({ id: 'meta-77', status: 'PENDING' })
+
+    const res = await submit()
+
+    expect(res.status).toBe(200)
+    expect(submitMessageTemplate).toHaveBeenCalledTimes(1)
+    expect(writes[0].row).toMatchObject({ status: 'PENDING', meta_template_id: 'meta-77' })
+  })
+})
+

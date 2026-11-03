@@ -148,6 +148,49 @@ describe('WahaWhatsAppProvider', () => {
     expect(a.messageId).not.toBe(b.messageId)
   })
 
+  describe('sendTemplate', () => {
+    const row = { body_text: 'Halo {{1}}, pesanan {{2}} sudah dikirim.', footer_text: 'Terima kasih' }
+
+    async function sentText(args: Parameters<WahaWhatsAppProvider['sendTemplate']>[0]) {
+      fetchMock.mockResolvedValue(jsonResponse({ id: 'm1' }))
+      await makeProvider().sendTemplate(args)
+      const send = fetchMock.mock.calls.find(([u]) => String(u).endsWith('/api/sendText'))!
+      return JSON.parse((send[1] as RequestInit).body as string).text as string
+    }
+
+    it('sends the template body with its values filled in, plus the footer', async () => {
+      const text = await sentText({
+        to: '628123456789@c.us',
+        templateName: 'order',
+        language: 'id',
+        template: row,
+        params: ['Sari', 'A-12'],
+      })
+      expect(text).toBe('Halo Sari, pesanan A-12 sudah dikirim.\n\nTerima kasih')
+    })
+
+    it('reads values from the structured message params too', async () => {
+      const text = await sentText({
+        to: '628123456789@c.us',
+        templateName: 'order',
+        language: 'id',
+        template: { body_text: 'Halo {{1}}' },
+        messageParams: { body: ['Budi'] },
+      })
+      expect(text).toBe('Halo Budi')
+    })
+
+    it('falls back to the name and values when no template row is given', async () => {
+      const text = await sentText({
+        to: '628123456789@c.us',
+        templateName: 'order',
+        language: 'id',
+        params: ['Sari', 'A-12'],
+      })
+      expect(text).toBe('order: Sari A-12')
+    })
+  })
+
   it('throws on non-2xx', async () => {
     fetchMock.mockResolvedValue(jsonResponse({ error: 'bad key' }, 401))
     await expect(makeProvider().sendText({ to: '6281@c.us', text: 'hi' })).rejects.toThrow()

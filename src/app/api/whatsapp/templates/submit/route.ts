@@ -15,6 +15,7 @@ import {
 import { buildMetaTemplatePayload } from '@/lib/whatsapp/template-components'
 import { ensureMediaHeaderHandle } from '@/lib/whatsapp/template-header-handle'
 import { normalizeStatus } from '@/lib/whatsapp/template-status-normalize'
+import { newLocalTemplateId, usesLocalTemplates } from '@/lib/whatsapp/local-template'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { getT } from '@/lib/i18n/translate'
 
@@ -181,10 +182,22 @@ export async function POST(request: Request) {
       process.env.WHATSAPP_TEMPLATES_DRY_RUN === 'true' ||
       process.env.WHATSAPP_TEMPLATES_DRY_RUN === '1'
 
+    // WAHA has no template review. For such an account the template is saved
+    // locally and is usable straight away; nothing is sent to Meta.
+    const { data: providerRow } = await supabase
+      .from('whatsapp_config')
+      .select('provider')
+      .eq('account_id', accountId)
+      .maybeSingle()
+    const isLocal = usesLocalTemplates(providerRow as { provider?: string | null } | null)
+
     let metaTemplateId: string
     let metaStatus: string
 
-    if (dryRun) {
+    if (isLocal) {
+      metaTemplateId = newLocalTemplateId()
+      metaStatus = 'APPROVED'
+    } else if (dryRun) {
       metaTemplateId = `dry-run-${crypto.randomUUID()}`
       metaStatus = 'PENDING'
     } else {
@@ -291,6 +304,7 @@ export async function POST(request: Request) {
       success: true,
       template: row,
       dry_run: dryRun,
+      local: isLocal,
     })
   } catch (error) {
     // Auth failures map to 401/403. Handled before the generic branch

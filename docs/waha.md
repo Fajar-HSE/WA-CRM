@@ -84,9 +84,16 @@ WAHA side:
 - `WAHA_BASE_URL` and `WAHA_API_KEY` must be set on the app: the download
   goes from the app server to WAHA, not from the browser.
 
+## Message templates
+
+Settings → Template holds reusable messages with blanks (`{{1}}`, `{{2}}`).
+They are saved on this server only, with no Meta review, and are usable at
+once in broadcasts, the inbox and automations. WAHA sends the text with the
+blanks filled in, plus the optional footer. There are no template buttons,
+headers or images: write the message as plain text.
+
 ## Known limits
 
-- Message templates are sent as plain text (`name: param1 param2`).
 - Interactive buttons and lists are sent as numbered text.
 - Reactions are not handled yet.
 - Group chats are not filtered out of the inbound webhook.

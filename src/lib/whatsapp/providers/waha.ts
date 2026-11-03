@@ -24,6 +24,7 @@ import type {
 } from './provider'
 import { WAHA_WEBHOOK_SECRET_HEADER } from '../waha-config'
 import { looksLikeLidNumber, phoneFromJid } from '../waha-ids'
+import { renderTemplateBody, templateBodyParams } from '../template-body'
 
 export class WahaHttpError extends Error {
   constructor(
@@ -281,11 +282,24 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
   }
 
   async sendTemplate(args: SendTemplateArgs): Promise<WhatsAppSendResult> {
-    // WAHA has no Meta template concept; send as plain text fallback.
-    const text =
-      args.params && args.params.length
-        ? `${args.templateName}: ${args.params.join(' ')}`
-        : args.templateName
+    // WAHA has no template concept, so a template is plain text: the saved
+    // body with its {{placeholders}} filled in (plus the footer, if any).
+    const row = args.template as
+      | { body_text?: string | null; footer_text?: string | null }
+      | null
+      | undefined
+    let text: string
+    if (row && typeof row.body_text === 'string' && row.body_text) {
+      text = renderTemplateBody(row.body_text, templateBodyParams(args.params, args.messageParams))
+      if (row.footer_text) text += `\n\n${row.footer_text}`
+    } else {
+      // No template row to read (it was deleted, or the caller gave none):
+      // all we have is the name and the values.
+      text =
+        args.params && args.params.length
+          ? `${args.templateName}: ${args.params.join(' ')}`
+          : args.templateName
+    }
     return this.sendText({ to: args.to, text, contextMessageId: args.contextMessageId })
   }
 

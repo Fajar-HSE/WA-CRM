@@ -219,3 +219,39 @@ describe('PATCH category changes', () => {
     )
   })
 })
+
+describe('local (WAHA) templates', () => {
+  const LOCAL = { ...TEMPLATE, meta_template_id: 'local-1234', status: 'APPROVED' }
+
+  it('edits the text without calling Meta and keeps the template usable', async () => {
+    templateRow = LOCAL
+    const res = await patchTemplate({ body_text: 'Halo, pesanan Anda dikirim.' })
+
+    expect(res.status).toBe(200)
+    expect(meta.editMessageTemplate).not.toHaveBeenCalled()
+    expect(templateUpdates).toHaveLength(1)
+    expect(templateUpdates[0]).toMatchObject({
+      body_text: 'Halo, pesanan Anda dikirim.',
+      status: 'APPROVED',
+    })
+    // The name and language are never rewritten from the request.
+    expect(templateUpdates[0]).not.toHaveProperty('name')
+    expect(templateUpdates[0]).not.toHaveProperty('language')
+  })
+
+  it('rejects an empty body for a local template', async () => {
+    templateRow = LOCAL
+    const res = await patchTemplate({ body_text: '' })
+    expect(res.status).toBe(400)
+    expect(templateUpdates).toHaveLength(0)
+  })
+
+  it('deletes the row without calling Meta', async () => {
+    templateRow = LOCAL
+    const res = await DELETE(new Request('http://localhost/t'), { params })
+    expect(res.status).toBe(200)
+    expect(meta.deleteMessageTemplate).not.toHaveBeenCalled()
+    expect(templateDeletes).toBe(1)
+  })
+})
+

@@ -5,6 +5,11 @@ vi.mock('@/lib/whatsapp/waha-inbound', () => ({
   processWahaInbound: (...args: unknown[]) => processWahaInbound(...args),
 }))
 
+const processWahaAck = vi.fn()
+vi.mock('@/lib/whatsapp/waha-ack', () => ({
+  processWahaAck: (...args: unknown[]) => processWahaAck(...args),
+}))
+
 import { POST } from './route'
 
 const URL_ = 'http://localhost/api/whatsapp/waha/webhook'
@@ -28,6 +33,7 @@ describe('WAHA webhook auth', () => {
 
   beforeEach(() => {
     processWahaInbound.mockReset()
+    processWahaAck.mockReset()
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
@@ -67,6 +73,19 @@ describe('WAHA webhook auth', () => {
       req({ ...message, payload: { ...message.payload, fromMe: true } }, { 'x-webhook-secret': 's3cret' }),
     )
     expect(await res.json()).toEqual({ status: 'ignored' })
+    expect(processWahaInbound).not.toHaveBeenCalled()
+  })
+
+  it('routes delivery receipts to the ack handler, not the inbound handler', async () => {
+    process.env.WAHA_WEBHOOK_SECRET = 's3cret'
+    const ack = {
+      event: 'message.ack',
+      session: 'sess-1',
+      payload: { id: 'true_628@c.us_ABC', fromMe: true, ack: 3 },
+    }
+    const res = await POST(req(ack, { 'x-webhook-secret': 's3cret' }))
+    expect(res.status).toBe(200)
+    expect(processWahaAck).toHaveBeenCalledWith({ sessionName: 'sess-1', payload: ack.payload })
     expect(processWahaInbound).not.toHaveBeenCalled()
   })
 })

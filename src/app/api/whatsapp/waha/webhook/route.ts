@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { processWahaInbound } from '@/lib/whatsapp/waha-inbound'
+import { processWahaAck } from '@/lib/whatsapp/waha-ack'
 import {
   WAHA_WEBHOOK_SECRET_HEADER,
   wahaSecretMatches,
@@ -45,7 +46,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing session' }, { status: 400 })
   }
 
-  // Only inbound messages here; acks/statuses can be added later.
+  // Delivery/read receipts for messages we sent.
+  if (event === 'message.ack') {
+    try {
+      await processWahaAck({ sessionName, payload: body.payload ?? {} })
+    } catch (err) {
+      console.error('[waha-webhook] ack processing failed:', err)
+    }
+    return NextResponse.json({ status: 'received' }, { status: 200 })
+  }
+
+  // Inbound messages.
   if (event !== 'message' && event !== 'message.any') {
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }

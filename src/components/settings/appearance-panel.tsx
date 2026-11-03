@@ -7,6 +7,7 @@ import { MODES, THEMES, type Mode, type ThemeId } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { SettingsPanelHead } from "./settings-panel-head";
+import { LanguageCard } from "./language-card";
 
 /**
  * Appearance panel — light/dark mode + accent-color picker.
@@ -52,6 +53,8 @@ export function AppearancePanel() {
           ))}
         </div>
       </div>
+
+      <LanguageCard />
 
       <div className="mt-8 space-y-4">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">

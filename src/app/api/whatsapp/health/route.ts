@@ -30,12 +30,18 @@ export async function GET() {
 
     const { data: config } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, access_token, status')
+      .select('provider, phone_number_id, access_token, status')
       .eq('account_id', accountId)
       .maybeSingle()
 
     if (!config || config.status !== 'connected' || !config.phone_number_id) {
       return reply({ state: 'disconnected', ...EMPTY })
+    }
+
+    // WAHA has no Meta quality rating or messaging limit; `status` is kept
+    // in sync with the WAHA session by /api/whatsapp/waha/session.
+    if (config.provider === 'waha') {
+      return reply({ state: 'connected', ...EMPTY })
     }
 
     try {

@@ -13,7 +13,15 @@
 import { getT } from "@/lib/i18n/translate";
 
 /** App-wide fallback when no account/deal currency is available. */
-export const DEFAULT_CURRENCY = "USD";
+export const DEFAULT_CURRENCY = "IDR";
+
+/**
+ * Locale used for number grouping. Rupiah is written "Rp 1.234.567"
+ * (dot as thousands separator), so we pin id-ID instead of following the
+ * server or browser locale, which would otherwise make the same amount
+ * read differently on two machines.
+ */
+const NUMBER_LOCALE = "id-ID";
 
 export interface CurrencyOption {
   /** ISO-4217 code, e.g. "USD". Stored verbatim in the DB. */
@@ -27,32 +35,18 @@ export interface CurrencyOption {
 const t = getT("Currency");
 
 /**
- * The currencies offered in pickers. Codes must be valid ISO-4217 so
- * `Intl.NumberFormat` renders the right symbol/grouping. Extend this
- * list to offer more — nothing else needs to change.
+ * The currencies offered in pickers. This fork is Rupiah-only. Codes must
+ * be valid ISO-4217 so `Intl.NumberFormat` renders the right
+ * symbol/grouping; add an entry here to offer another currency again.
  */
 export const CURRENCIES: CurrencyOption[] = [
-  { code: "USD", label: t("USD"), symbol: "$" },
-  { code: "EUR", label: t("EUR"), symbol: "€" },
-  { code: "GBP", label: t("GBP"), symbol: "£" },
-  { code: "INR", label: t("INR"), symbol: "₹" },
-  { code: "AUD", label: t("AUD"), symbol: "A$" },
-  { code: "CAD", label: t("CAD"), symbol: "C$" },
-  { code: "BRL", label: t("BRL"), symbol: "R$" },
-  { code: "JPY", label: t("JPY"), symbol: "¥" },
-  { code: "CNY", label: t("CNY"), symbol: "¥" },
-  { code: "AED", label: t("AED"), symbol: "د.إ" },
-  { code: "ZAR", label: t("ZAR"), symbol: "R" },
-  { code: "NGN", label: t("NGN"), symbol: "₦" },
-  { code: "SGD", label: t("SGD"), symbol: "S$" },
-  { code: "MXN", label: t("MXN"), symbol: "$" },
-  { code: "COP", label: t("COP"), symbol: "$" },
+  { code: "IDR", label: t("IDR"), symbol: "Rp" },
 ];
 
 /**
  * Format a deal value as a currency string. Whole-number output
  * (no minor units) — deal values are tracked to the dollar across
- * the app. `currency` defaults to USD so callers with nothing better
+ * the app. `currency` defaults to IDR so callers with nothing better
  * stay safe, but pass the account/deal currency wherever known.
  *
  * Total by design: `Intl.NumberFormat` throws a RangeError on a
@@ -69,7 +63,7 @@ export function formatCurrency(
   const code = (currency || DEFAULT_CURRENCY).trim();
   const amount = Number(value) || 0;
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat(NUMBER_LOCALE, {
       style: "currency",
       currency: code,
       minimumFractionDigits: 0,
@@ -78,7 +72,7 @@ export function formatCurrency(
   } catch {
     // Invalid ISO code — show the raw code + grouped number so the
     // value is still legible instead of throwing.
-    return `${code} ${new Intl.NumberFormat(undefined, {
+    return `${code} ${new Intl.NumberFormat(NUMBER_LOCALE, {
       maximumFractionDigits: 0,
     }).format(amount)}`;
   }
@@ -94,6 +88,7 @@ export function formatCurrencyShort(
   currency: string = DEFAULT_CURRENCY,
 ): string {
   const code = currency || DEFAULT_CURRENCY;
+  if (code === "IDR") return `Rp${formatCompactRupiah(value)}`;
   const symbol = CURRENCIES.find((c) => c.code === code)?.symbol ?? `${code} `;
   return `${symbol}${formatCompactNumber(value)}`;
 }
@@ -107,5 +102,18 @@ export function formatCompactNumber(value: number): string {
   const v = Number(value || 0);
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k`;
+  return v.toFixed(0);
+}
+
+/**
+ * Compact rupiah in the way Indonesians write it: 1_200_000 → "1,2jt",
+ * 3_400 → "3,4rb", 2_500_000_000 → "2,5M" (miliar), 900 → "900".
+ */
+export function formatCompactRupiah(value: number): string {
+  const v = Number(value || 0);
+  const fmt = (n: number) => n.toFixed(1).replace(".", ",");
+  if (v >= 1_000_000_000) return `${fmt(v / 1_000_000_000)}M`;
+  if (v >= 1_000_000) return `${fmt(v / 1_000_000)}jt`;
+  if (v >= 1_000) return `${fmt(v / 1_000)}rb`;
   return v.toFixed(0);
 }

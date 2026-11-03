@@ -9,6 +9,7 @@ import {
   getMediaUrl,
   getPhoneNumberHealth,
 } from '@/lib/whatsapp/meta-api'
+type MetaTemplateArgs = Parameters<typeof sendTemplateMessage>[0]
 import type { WhatsAppProvider, WhatsAppProviderCredentials, WhatsAppSendResult, WhatsAppMediaInfo } from './provider'
 
 export class MetaWhatsAppProvider implements WhatsAppProvider {
@@ -56,8 +57,8 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       templateName: args.templateName,
       language: args.language,
       params: args.params || [],
-      template: args.template as any,
-      messageParams: args.messageParams as any,
+      template: args.template as MetaTemplateArgs['template'],
+      messageParams: args.messageParams as MetaTemplateArgs['messageParams'],
       contextMessageId: args.contextMessageId,
     })
     return { messageId: r.messageId }

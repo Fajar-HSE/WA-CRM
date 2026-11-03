@@ -1,28 +1,42 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { processWahaInbound } from '@/lib/whatsapp/waha-inbound'
+import {
+  WAHA_WEBHOOK_SECRET_HEADER,
+  wahaSecretMatches,
+} from '@/lib/whatsapp/waha-config'
 
 export const maxDuration = 60
 
+interface WahaWebhookBody {
+  event?: string
+  session?: string
+  payload?: { fromMe?: boolean } & Record<string, unknown>
+}
+
 export async function POST(request: Request) {
-  const rawBody = await request.text()
-  let body: any
-  try {
-    body = JSON.parse(rawBody)
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  // Fail closed. A missing secret used to mean "accept everything" with a
+  // console warning, which left the endpoint open to forged inbound
+  // messages (and, through them, to the automations and AI auto-reply
+  // they trigger).
+  const secret = process.env.WAHA_WEBHOOK_SECRET?.trim()
+  if (!secret) {
+    console.error('[waha-webhook] WAHA_WEBHOOK_SECRET is not set - rejecting all deliveries')
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
   }
 
-  // Secret verification (fail-closed when configured).
-  const secret = process.env.WAHA_WEBHOOK_SECRET
-  if (secret) {
-    const presented = request.headers.get('x-waha-webhook-secret') || request.headers.get('x-webhook-secret')
-    if (presented !== secret) {
-      console.warn('[waha-webhook] rejected: bad secret')
-      return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
-    }
-  } else {
-    console.warn('[waha-webhook] WAHA_WEBHOOK_SECRET not set - accepting without verification (dev only)')
+  const presented =
+    request.headers.get(WAHA_WEBHOOK_SECRET_HEADER) ||
+    request.headers.get('x-waha-webhook-secret')
+  if (!wahaSecretMatches(presented, secret)) {
+    console.warn('[waha-webhook] rejected: bad secret')
+    return NextResponse.json({ error: 'Invalid secret' }, { status: 401 })
+  }
+
+  let body: WahaWebhookBody
+  try {
+    body = JSON.parse(await request.text()) as WahaWebhookBody
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
   const event = body?.event
@@ -31,12 +45,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing session' }, { status: 400 })
   }
 
-  // Only handle inbound messages here; acks/statuses can be added later.
+  // Only inbound messages here; acks/statuses can be added later.
   if (event !== 'message' && event !== 'message.any') {
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }
 
-  const payload = body?.payload
+  const payload = body.payload
   if (!payload || payload.fromMe) {
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }
@@ -45,7 +59,7 @@ export async function POST(request: Request) {
     await processWahaInbound({ sessionName, payload })
   } catch (err) {
     console.error('[waha-webhook] processing failed:', err)
-    // Ack 200 anyway to avoid WAHA retries storm; log for ops.
+    // Ack 200 anyway to avoid a WAHA retry storm; the error is logged.
   }
 
   return NextResponse.json({ status: 'received' }, { status: 200 })

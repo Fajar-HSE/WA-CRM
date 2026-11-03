@@ -7,7 +7,9 @@ import activeMessages from '@app-messages';
  * Components should keep using `useTranslations` / `getTranslations`.
  *
  * The locale is fixed at build time (NEXT_PUBLIC_APP_LOCALE, see
- * src/i18n/request.ts), so this resolves one catalogue per process.
+ * next.config.ts), so this resolves one catalogue per process and does NOT
+ * follow the per-user language cookie: React UI switches language live,
+ * messages produced here (API errors, validators) use the build default.
  * Unknown or unset locales fall back to English, which is also what the
  * test suite sees.
  */
@@ -16,7 +18,7 @@ type Catalogue = Record<string, unknown>;
 
 function loadCatalogue(): { locale: string; messages: Catalogue } {
   const env = process.env.NEXT_PUBLIC_APP_LOCALE ?? '';
-  const locale = ['en', 'pt', 'es', 'ko'].includes(env) ? env : 'en';
+  const locale = ['id', 'en'].includes(env) ? env : 'en';
   return { locale, messages: activeMessages as Catalogue };
 }
 

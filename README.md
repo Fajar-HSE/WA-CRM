@@ -90,9 +90,10 @@ npm run dev
 Open <http://localhost:3000>. You'll be redirected to `/login` (or
 `/dashboard` if already signed in).
 
-The UI ships in English, Korean, Brazilian Portuguese and Spanish — set
-`NEXT_PUBLIC_APP_LOCALE` to `en`, `ko`, `pt` or `es` in `.env.local`
-(catalogues live in `messages/`).
+The UI ships in Bahasa Indonesia (default) and English. Each user can
+switch in **Settings → Appearance**; `NEXT_PUBLIC_APP_LOCALE` (`id` or
+`en`) sets the default for new visitors (catalogues live in `messages/`).
+WhatsApp is connected through WAHA — see [docs/waha.md](./docs/waha.md).
 
 Prefer containers? See [docs/docker.md](./docs/docker.md) for the
 Dockerfile + Docker Compose setup.

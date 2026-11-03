@@ -6,13 +6,37 @@ import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
+import type { AutomationTriggerType } from '@/types'
 
 // NOTE: reopenClosedConversation / claimFirstInboundMessage may live in
 // different modules; adjust imports if typecheck complains.
 
+/** The subset of WAHA's `message` payload this module reads. */
+export interface WahaInboundPayload {
+  id?: string | null
+  from?: string | null
+  body?: string | null
+  timestamp?: number | null
+  hasMedia?: boolean
+  fromMe?: boolean
+  notifyName?: string | null
+  media?: { url?: string | null; mimetype?: string | null } | null
+  _data?: { notifyName?: string | null } | null
+}
+
 export interface WahaInboundInput {
   sessionName: string
-  payload: any
+  payload: WahaInboundPayload
+}
+
+interface InboundContact {
+  id: string
+}
+
+interface InboundConversation {
+  id: string
+  status?: string | null
+  first_inbound_at?: string | null
 }
 
 function extractPhone(from: string): string {
@@ -44,7 +68,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
   const lid = from.includes('@lid') ? from.split('@')[0] : null
 
   // Find or create contact.
-  let contact: any = null
+  let contact: InboundContact | null = null
   if (phone) {
     contact = await findExistingContact(db, accountId, phone)
   }
@@ -80,7 +104,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
     .order('created_at', { ascending: true })
     .limit(1)
 
-  let conversation: any = null
+  let conversation: InboundConversation | null = null
   let convCreated = false
   if (existingConvs && existingConvs.length > 0) {
     conversation = existingConvs[0]
@@ -173,7 +197,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
 
   // Automations
   const inboundText = contentText || ''
-  const automationTriggers: any[] = []
+  const automationTriggers: AutomationTriggerType[] = []
   if (!flowConsumed) {
     automationTriggers.push('new_message_received', 'keyword_match')
   }
@@ -186,7 +210,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
       triggerType,
       contactId: contact.id,
       context: { message_text: inboundText, conversation_id: conversation.id },
-    }).catch((err: any) => console.error('[waha-inbound] automation failed:', err))
+    }).catch((err: unknown) => console.error('[waha-inbound] automation failed:', err))
   }
 
   // AI auto-reply

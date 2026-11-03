@@ -101,13 +101,22 @@ export async function POST(request: Request) {
     // WhatsApp config + access token. Account-scoped post-multi-user.
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, access_token')
+      .select('provider, phone_number_id, access_token')
       .eq('account_id', accountId)
       .single();
 
     if (configError || !config) {
       return NextResponse.json(
         { error: t('common.whatsappNotConfiguredDot') },
+        { status: 400 },
+      );
+    }
+
+    // Reactions go through Meta's Graph API only; a WAHA account has no
+    // Meta token, so say so instead of crashing inside decrypt('').
+    if ((config.provider ?? 'meta') !== 'meta') {
+      return NextResponse.json(
+        { error: 'Reactions are not supported on the WAHA provider.' },
         { status: 400 },
       );
     }

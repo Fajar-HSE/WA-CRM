@@ -88,4 +88,16 @@ describe('WAHA webhook auth', () => {
     expect(processWahaAck).toHaveBeenCalledWith({ sessionName: 'sess-1', payload: ack.payload })
     expect(processWahaInbound).not.toHaveBeenCalled()
   })
+
+  it.each(['status@broadcast', '120363012345678901@g.us', '120363012345678901@newsletter'])(
+    'ignores messages from %s',
+    async (from) => {
+      process.env.WAHA_WEBHOOK_SECRET = 's3cret'
+      const res = await POST(
+        req({ ...message, payload: { ...message.payload, from } }, { 'x-webhook-secret': 's3cret' }),
+      )
+      expect(await res.json()).toEqual({ status: 'ignored' })
+      expect(processWahaInbound).not.toHaveBeenCalled()
+    },
+  )
 })

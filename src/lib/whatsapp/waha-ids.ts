@@ -11,6 +11,18 @@
 /** LIDs observed so far are 14-15 digits; real numbers (E.164) stop at 15 and Indonesian ones at 13. */
 const LID_MIN_DIGITS = 14
 
+/**
+ * Chats that are not a one-to-one conversation with a customer: WhatsApp
+ * Status updates (`status@broadcast`), broadcast lists, channels
+ * (`@newsletter`) and groups (`@g.us`). WAHA forwards them like any other
+ * message, but they have no phone number, so each one used to become its
+ * own junk contact and conversation named "status@broadcast".
+ */
+export function isNonCustomerChat(chatId: unknown): boolean {
+  if (typeof chatId !== 'string') return false
+  return /@(broadcast|newsletter|g\.us)$/i.test(chatId.trim())
+}
+
 /** Digits-only form of a phone, jid or chat id. */
 export function digitsOf(value: string): string {
   return value.replace(/\D/g, '')

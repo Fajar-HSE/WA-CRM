@@ -33,7 +33,7 @@ Set these in `.env.local` (see `.env.local.example` for the full text):
 | `WAHA_API_KEY`        | Same key WAHA was started with                                   |
 | `WAHA_WEBHOOK_SECRET` | Shared secret on the inbound webhook. Required.                  |
 | `WAHA_WEBHOOK_URL`    | App address as seen from WAHA, e.g. `http://app:3000/api/whatsapp/waha/webhook` |
-| `WAHA_SESSION_NAME`   | Optional. Set to `default` on WAHA Core (single session).        |
+| `WAHA_SESSION_NAME`   | Leave empty. Each account then gets its own session. Setting it forces one fixed name on everyone. |
 
 ## 3. Link the phone
 
@@ -67,6 +67,22 @@ the server from the account; it is never taken from the browser.
 - The ticks follow WAHA's `message.ack` receipts: sent, delivered, read,
   or failed. Press **Re-sync webhook** in Settings → WhatsApp once after
   updating so existing sessions start sending receipts.
+
+## Photos, voice notes and documents sent to you
+
+The app downloads each received file from WAHA (using the API key) and
+keeps a copy in the `chat-media` storage bucket, so it displays in the inbox
+and does not depend on WAHA's private address. Two things must be true on the
+WAHA side:
+
+- WAHA has to download media. That is its default; WAHA's own settings
+  `WAHA_EVENTS_DOWNLOAD_MEDIA` and `WAHA_EVENTS_DOWNLOAD_MEDIA_MIMETYPES`
+  control it, so check they have not been switched off. WAHA Core receives
+  and sends media, so no paid edition is needed. If WAHA sends no file, the message still arrives and the inbox shows the
+  attachment as unavailable. The app log then says
+  `[waha-media] message has media but WAHA sent no file URL`.
+- `WAHA_BASE_URL` and `WAHA_API_KEY` must be set on the app: the download
+  goes from the app server to WAHA, not from the browser.
 
 ## Known limits
 

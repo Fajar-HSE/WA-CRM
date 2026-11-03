@@ -436,6 +436,7 @@ export function MessageThread({
   // realtime channel.
   useEffect(() => {
     if (!conversationId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clears reactions when no conversation is selected
       setReactions([]);
       return;
     }
@@ -536,6 +537,7 @@ export function MessageThread({
   // Clear any in-progress reply draft when the active conversation changes —
   // a quote pulled from conversation A shouldn't bleed into conversation B.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- drops the quoted reply when the active conversation changes
     setReplyTo(null);
   }, [conversationId]);
 
@@ -891,9 +893,10 @@ export function MessageThread({
   // The "toggle" semantic (pill click) is computed at the call site where the
   // current reactions for the bubble are already in scope — keeps this
   // function dependency-free w.r.t. the reaction list.
+  const currentUserId = user?.id;
   const postReaction = useCallback(
     async (messageId: string, emoji: string) => {
-      if (!user?.id || !conversation) {
+      if (!currentUserId || !conversation) {
         console.warn("[reactions] missing user or conversation");
         return;
       }
@@ -903,7 +906,7 @@ export function MessageThread({
       }
 
       const convId = conversation.id;
-      const userId = user.id;
+      const userId = currentUserId;
       let snapshot: MessageReaction[] = [];
 
       // Functional updater — captures the freshest reactions list, never a
@@ -935,7 +938,7 @@ export function MessageThread({
         setReactions(snapshot);
       }
     },
-    [conversation, user?.id, t],
+    [conversation, currentUserId, t],
   );
 
   const handleAssignChange = useCallback(

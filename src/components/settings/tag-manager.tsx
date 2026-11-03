@@ -60,6 +60,7 @@ export function TagManager() {
   useEffect(() => {
     if (authLoading) return;
     if (!user || !accountId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- no signed-in account to load for, so end the loading state
       setLoading(false);
       return;
     }

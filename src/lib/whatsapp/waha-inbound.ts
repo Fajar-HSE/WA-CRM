@@ -6,7 +6,10 @@ import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
-import type { AutomationTriggerType } from '@/types'
+import type { AutomationTriggerType, WhatsAppConfig } from '@/types'
+import { createWhatsAppProvider } from '@/lib/whatsapp/providers'
+import { WahaWhatsAppProvider } from '@/lib/whatsapp/providers/waha'
+import { altPhoneFromPayload } from '@/lib/whatsapp/waha-ids'
 
 // NOTE: reopenClosedConversation / claimFirstInboundMessage may live in
 // different modules; adjust imports if typecheck complains.
@@ -21,7 +24,13 @@ export interface WahaInboundPayload {
   fromMe?: boolean
   notifyName?: string | null
   media?: { url?: string | null; mimetype?: string | null } | null
-  _data?: { notifyName?: string | null } | null
+  _data?: {
+    notifyName?: string | null
+    /** NOWEB: carries the real number next to a LID sender. */
+    key?: { remoteJidAlt?: string | null; participantAlt?: string | null } | null
+    /** GOWS: same idea. */
+    Info?: { SenderAlt?: string | null; RecipientAlt?: string | null } | null
+  } | null
 }
 
 export interface WahaInboundInput {
@@ -45,6 +54,17 @@ function extractPhone(from: string): string {
   return part.replace(/[^\d]/g, '')
 }
 
+async function lookupPhoneForLid(config: WhatsAppConfig, lid: string): Promise<string | null> {
+  try {
+    const provider = createWhatsAppProvider(config)
+    if (!(provider instanceof WahaWhatsAppProvider)) return null
+    return await provider.getPhoneForLid(lid)
+  } catch (err) {
+    console.warn('[waha-inbound] lid lookup failed:', err instanceof Error ? err.message : err)
+    return null
+  }
+}
+
 export async function processWahaInbound({ sessionName, payload }: WahaInboundInput): Promise<void> {
   const db = supabaseAdmin()
 
@@ -64,13 +84,42 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
   const ownerUserId = config.user_id as string
 
   const from = String(payload?.from || '')
-  const phone = extractPhone(from)
-  const lid = from.includes('@lid') ? from.split('@')[0] : null
+  const isLid = from.endsWith('@lid')
+  const lidDigits = isLid ? extractPhone(from) : null
+  let phone = extractPhone(from)
+
+  // A LID is an opaque id, not a phone number. Replying to it as if it
+  // were one reaches nobody, so find the real number: first in the
+  // payload itself, then by asking WAHA.
+  if (isLid) {
+    const real =
+      altPhoneFromPayload(payload as Record<string, unknown>) ??
+      (await lookupPhoneForLid(config as WhatsAppConfig, from))
+    if (real) phone = real
+  }
 
   // Find or create contact.
   let contact: InboundContact | null = null
   if (phone) {
     contact = await findExistingContact(db, accountId, phone)
+  }
+
+  // Contacts saved before this fix hold the LID digits as their "phone".
+  // Now that the real number is known, correct that contact in place so
+  // its history and the conversation stay together.
+  if (isLid && lidDigits && phone !== lidDigits) {
+    const legacy = await findExistingContact(db, accountId, lidDigits)
+    if (legacy && !contact) {
+      const { error: fixErr } = await db
+        .from('contacts')
+        .update({ phone })
+        .eq('id', legacy.id)
+        .eq('account_id', accountId)
+      contact = fixErr ? legacy : { ...legacy, phone }
+      if (fixErr) {
+        console.error('[waha-inbound] could not correct lid contact:', fixErr.message)
+      }
+    }
   }
   let wasCreated = false
   if (!contact) {

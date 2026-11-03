@@ -56,9 +56,21 @@ the server from the account; it is never taken from the browser.
   only. The `waha_base_url` column is ignored so an admin cannot redirect
   the API key to another host.
 
+## Hidden numbers (LID) and delivery ticks
+
+- WhatsApp may hide a sender's number behind an id ending in `@lid`. The
+  app asks WAHA for the real number and stores that. If WAHA cannot say,
+  the id is kept and replies go to it as an `@lid` chat.
+- Before sending to a plain number the app asks WAHA whether it is on
+  WhatsApp. A number that is not gives a clear error instead of a message
+  stuck at one tick.
+- The ticks follow WAHA's `message.ack` receipts: sent, delivered, read,
+  or failed. Press **Re-sync webhook** in Settings → WhatsApp once after
+  updating so existing sessions start sending receipts.
+
 ## Known limits
 
 - Message templates are sent as plain text (`name: param1 param2`).
 - Interactive buttons and lists are sent as numbered text.
-- Delivery/read receipts and reactions are not handled yet.
+- Reactions are not handled yet.
 - Group chats are not filtered out of the inbound webhook.

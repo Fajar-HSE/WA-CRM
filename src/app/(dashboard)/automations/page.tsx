@@ -83,6 +83,7 @@ export default function AutomationsPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-open: the loader sets loading/result state
     load()
   }, [])
 

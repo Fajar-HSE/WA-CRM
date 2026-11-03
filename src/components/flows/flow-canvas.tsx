@@ -355,6 +355,7 @@ function FlowCanvasInner() {
   const [rfNodes, setRfNodes] = useState<RfNode<NodeData>[]>(derivedRfNodes);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirrors derived nodes into React Flow state, which also holds drag positions
     setRfNodes(derivedRfNodes);
   }, [derivedRfNodes]);
 

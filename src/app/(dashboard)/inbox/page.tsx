@@ -79,6 +79,7 @@ function InboxPageInner() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(CONTACT_PANEL_STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reconcile with localStorage after mount; reading it during render would break hydration
       if (stored !== null) setContactPanelOpen(stored === "true");
     } catch {
       // localStorage can throw in private-browsing / sandboxed contexts.

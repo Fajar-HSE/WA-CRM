@@ -36,6 +36,7 @@ export function QuickReplyPicker({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-open: marks the list as loading before the request
     setLoading(true);
     void (async () => {
       try {

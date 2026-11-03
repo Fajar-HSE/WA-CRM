@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { WahaWhatsAppProvider } from './waha'
+import { WahaNumberNotFoundError, WahaWhatsAppProvider } from './waha'
 
 type FetchMock = ReturnType<typeof vi.fn>
 
@@ -48,12 +48,75 @@ describe('WahaWhatsAppProvider', () => {
     const res = await makeProvider().sendText({ to: '+628123456789', text: 'hello' })
     expect(res.messageId).toBe('msg-1')
 
-    const call = callAt(0)
+    // call 0 is the number check; its reply has no `numberExists`, so the
+    // provider falls back to the plain <digits>@c.us form.
+    const call = callAt(1)
     expect(call.url).toBe('http://waha:3000/api/sendText')
     expect(call.body.session).toBe('sess-1')
     expect(call.body.chatId).toBe('628123456789@c.us')
     expect(call.body.text).toBe('hello')
     expect(call.headers['X-Api-Key']).toBe('secret')
+  })
+
+  describe('chat id resolution', () => {
+    it('uses the chat id WAHA reports for a registered number', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse({ numberExists: true, chatId: '628123456789@c.us' }))
+        .mockResolvedValueOnce(jsonResponse({ id: 'm1' }))
+      await makeProvider().sendText({ to: '+628123456789', text: 'hi' })
+      expect(callAt(0).url).toBe(
+        'http://waha:3000/api/contacts/check-exists?phone=628123456789&session=sess-1',
+      )
+      expect(callAt(1).body.chatId).toBe('628123456789@c.us')
+    })
+
+    it('fails loudly for a number that is not on WhatsApp', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ numberExists: false }))
+      await expect(makeProvider().sendText({ to: '628123456789', text: 'hi' })).rejects.toBeInstanceOf(
+        WahaNumberNotFoundError,
+      )
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('addresses a lid-length number as @lid instead of a phone', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse({ numberExists: false }))
+        .mockResolvedValueOnce(jsonResponse({ id: 'm1' }))
+      await makeProvider().sendText({ to: '30601675599946', text: 'hi' })
+      expect(callAt(1).body.chatId).toBe('30601675599946@lid')
+    })
+
+    it('does not check ids that already carry a suffix', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ id: 'm1' }))
+      await makeProvider().sendText({ to: '30601675599946@lid', text: 'hi' })
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(callAt(0).body.chatId).toBe('30601675599946@lid')
+    })
+
+    it('falls back to @c.us when the check endpoint is unavailable', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse({ error: 'nope' }, 404))
+        .mockResolvedValueOnce(jsonResponse({ id: 'm1' }))
+      await makeProvider().sendText({ to: '628123456789', text: 'hi' })
+      expect(callAt(1).body.chatId).toBe('628123456789@c.us')
+    })
+  })
+
+  describe('getPhoneForLid', () => {
+    it('returns the phone WAHA maps a lid to', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ lid: '30601675599946@lid', pn: '628123456789@c.us' }))
+      expect(await makeProvider().getPhoneForLid('30601675599946@lid')).toBe('628123456789')
+      expect(callAt(0).url).toBe(
+        'http://waha:3000/api/sess-1/lids/30601675599946%40lid',
+      )
+    })
+
+    it('returns null when WAHA does not know it', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ lid: 'x@lid', pn: null }))
+      expect(await makeProvider().getPhoneForLid('30601675599946')).toBeNull()
+      fetchMock.mockResolvedValue(jsonResponse({}, 404))
+      expect(await makeProvider().getPhoneForLid('30601675599946')).toBeNull()
+    })
   })
 
   it('reads a serialized message id', async () => {
@@ -97,7 +160,7 @@ describe('WahaWhatsAppProvider', () => {
       expect(create.body.start).toBe(true)
       expect(create.body.config.webhooks[0]).toEqual({
         url: opts.webhookUrl,
-        events: ['message'],
+        events: ['message', 'message.ack'],
         customHeaders: [{ name: 'x-webhook-secret', value: 's3' }],
       })
     })
@@ -111,6 +174,7 @@ describe('WahaWhatsAppProvider', () => {
             webhooks: [
               {
                 url: opts.webhookUrl,
+                events: ['message', 'message.ack'],
                 customHeaders: [{ name: 'X-Webhook-Secret', value: 's3' }],
               },
             ],
@@ -119,6 +183,28 @@ describe('WahaWhatsAppProvider', () => {
       )
       await makeProvider().ensureSession(opts)
       expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('updates a session whose webhook lacks the ack event', async () => {
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse({
+            name: 'sess-1',
+            status: 'WORKING',
+            config: {
+              webhooks: [
+                {
+                  url: opts.webhookUrl,
+                  events: ['message'],
+                  customHeaders: [{ name: 'X-Webhook-Secret', value: 's3' }],
+                },
+              ],
+            },
+          }),
+        )
+        .mockResolvedValueOnce(jsonResponse({}))
+      await makeProvider().ensureSession(opts)
+      expect(callAt(1).init.method).toBe('PUT')
     })
 
     it('updates the webhook of an existing session and starts it if stopped', async () => {

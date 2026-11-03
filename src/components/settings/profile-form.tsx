@@ -49,6 +49,7 @@ export function ProfileForm() {
   // Seed form state once the profile loads.
   useEffect(() => {
     if (!profile) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs local state with a prop or an external value
     setFullName(profile.full_name ?? '');
     setEmail(profile.email ?? '');
   }, [profile]);

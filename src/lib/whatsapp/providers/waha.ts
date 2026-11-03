@@ -22,6 +22,7 @@ import type {
   GetMediaUrlArgs,
 } from './provider'
 import { WAHA_WEBHOOK_SECRET_HEADER } from '../waha-config'
+import { looksLikeLidNumber, phoneFromJid } from '../waha-ids'
 
 export class WahaHttpError extends Error {
   constructor(
@@ -31,6 +32,14 @@ export class WahaHttpError extends Error {
   ) {
     super(message)
     this.name = 'WahaHttpError'
+  }
+}
+
+/** Thrown when WAHA confirms a number is not registered on WhatsApp. */
+export class WahaNumberNotFoundError extends Error {
+  constructor(public digits: string) {
+    super(`Nomor ${digits} tidak terdaftar di WhatsApp. Periksa nomor kontak ini.`)
+    this.name = 'WahaNumberNotFoundError'
   }
 }
 
@@ -53,8 +62,8 @@ interface WahaSessionInfo {
   config?: { webhooks?: WahaWebhookConfig[] | null } | null
 }
 
-/** Events the CRM consumes. Acks and session.status can be added later. */
-const WEBHOOK_EVENTS = ['message']
+/** Events the CRM consumes: inbound messages and delivery/read receipts. */
+export const WEBHOOK_EVENTS = ['message', 'message.ack']
 
 function toChatId(to: string): string {
   const v = to.trim()
@@ -136,10 +145,64 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     return `/api/sessions/${encodeURIComponent(sessionName || this.sessionName)}`
   }
 
+  /**
+   * Ask WAHA whether a number is on WhatsApp. `null` means "could not
+   * find out" (older WAHA, engine without the endpoint, network error),
+   * in which case callers fall back to the plain `<digits>@c.us` form.
+   */
+  private async checkNumber(
+    digits: string,
+  ): Promise<{ exists: boolean; chatId: string | null } | null> {
+    try {
+      const res = await this.request<{ numberExists?: unknown; chatId?: unknown } | null>(
+        `/api/contacts/check-exists?phone=${encodeURIComponent(digits)}&session=${encodeURIComponent(this.sessionName)}`,
+      )
+      if (typeof res?.numberExists !== 'boolean') return null
+      return {
+        exists: res.numberExists,
+        chatId: typeof res.chatId === 'string' ? res.chatId : null,
+      }
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Chat id to send to. A raw phone is verified with WAHA first so a
+   * wrong number fails loudly instead of leaving a message at one tick,
+   * and so WAHA's own canonical chat id is used. A number WAHA does not
+   * know but that is long enough to be a LID is addressed as `@lid`.
+   */
+  private async resolveChatId(to: string): Promise<string> {
+    const value = to.trim()
+    if (value.includes('@')) return value
+    const digits = value.replace(/[^\d]/g, '')
+    if (!digits) throw new Error('Nomor tujuan kosong.')
+
+    const check = await this.checkNumber(digits)
+    if (check === null) return toChatId(digits)
+    if (check.exists) return check.chatId || toChatId(digits)
+    if (looksLikeLidNumber(digits)) return `${digits}@lid`
+    throw new WahaNumberNotFoundError(digits)
+  }
+
+  /** Real phone number behind a LID, or null when WAHA does not know it. */
+  async getPhoneForLid(lid: string): Promise<string | null> {
+    const full = lid.includes('@') ? lid : `${lid}@lid`
+    try {
+      const res = await this.request<{ pn?: unknown } | null>(
+        `/api/${encodeURIComponent(this.sessionName)}/lids/${encodeURIComponent(full)}`,
+      )
+      return phoneFromJid(res?.pn)
+    } catch {
+      return null
+    }
+  }
+
   async sendText(args: SendTextArgs): Promise<WhatsAppSendResult> {
     const body: Record<string, unknown> = {
       session: this.sessionName,
-      chatId: toChatId(args.to),
+      chatId: await this.resolveChatId(args.to),
       text: args.text,
     }
     if (args.contextMessageId) body.reply_to = args.contextMessageId
@@ -151,7 +214,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
   }
 
   async sendMedia(args: SendMediaArgs): Promise<WhatsAppSendResult> {
-    const chatId = toChatId(args.to)
+    const chatId = await this.resolveChatId(args.to)
     const mime = guessMime(args.kind, args.mimeType)
     const file = {
       mimetype: mime,
@@ -307,6 +370,7 @@ function webhookMatches(session: WahaSessionInfo, opts: EnsureSessionOptions): b
   return hooks.some(
     (h) =>
       h.url === opts.webhookUrl &&
+      WEBHOOK_EVENTS.every((e) => (h.events ?? []).includes(e)) &&
       (h.customHeaders ?? []).some(
         (c) =>
           c.name?.toLowerCase() === WAHA_WEBHOOK_SECRET_HEADER &&

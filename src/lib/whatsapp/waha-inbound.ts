@@ -9,7 +9,7 @@ import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import type { AutomationTriggerType, WhatsAppConfig } from '@/types'
 import { createWhatsAppProvider } from '@/lib/whatsapp/providers'
 import { WahaWhatsAppProvider } from '@/lib/whatsapp/providers/waha'
-import { altPhoneFromPayload } from '@/lib/whatsapp/waha-ids'
+import { altPhoneFromPayload, isNonCustomerChat } from '@/lib/whatsapp/waha-ids'
 
 // NOTE: reopenClosedConversation / claimFirstInboundMessage may live in
 // different modules; adjust imports if typecheck complains.
@@ -84,6 +84,9 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
   const ownerUserId = config.user_id as string
 
   const from = String(payload?.from || '')
+  // Defensive: the webhook already drops these, but this function is also
+  // the entry point for anything else that feeds it.
+  if (isNonCustomerChat(from)) return
   const isLid = from.endsWith('@lid')
   const lidDigits = isLid ? extractPhone(from) : null
   let phone = extractPhone(from)

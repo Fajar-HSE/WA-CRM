@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { processWahaInbound } from '@/lib/whatsapp/waha-inbound'
 import { processWahaAck } from '@/lib/whatsapp/waha-ack'
+import { isNonCustomerChat } from '@/lib/whatsapp/waha-ids'
 import {
   WAHA_WEBHOOK_SECRET_HEADER,
   wahaSecretMatches,
@@ -11,7 +12,7 @@ export const maxDuration = 60
 interface WahaWebhookBody {
   event?: string
   session?: string
-  payload?: { fromMe?: boolean } & Record<string, unknown>
+  payload?: { fromMe?: boolean; from?: string | null } & Record<string, unknown>
 }
 
 export async function POST(request: Request) {
@@ -63,6 +64,11 @@ export async function POST(request: Request) {
 
   const payload = body.payload
   if (!payload || payload.fromMe) {
+    return NextResponse.json({ status: 'ignored' }, { status: 200 })
+  }
+
+  // WhatsApp Status updates, channels and groups are not customer chats.
+  if (isNonCustomerChat(payload.from)) {
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }
 

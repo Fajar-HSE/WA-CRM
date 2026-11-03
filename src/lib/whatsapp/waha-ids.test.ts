@@ -3,6 +3,7 @@ import {
   ackToStatus,
   altPhoneFromPayload,
   digitsOf,
+  isNonCustomerChat,
   isLidChatId,
   looksLikeLidNumber,
   phoneFromJid,
@@ -66,5 +67,20 @@ describe('ackToStatus', () => {
     expect(ackToStatus(undefined, 'device')).toBe('delivered')
     expect(ackToStatus(undefined, 'READ')).toBe('read')
     expect(ackToStatus(undefined, 'PENDING')).toBeNull()
+  })
+})
+
+describe('isNonCustomerChat', () => {
+  it('flags status updates, broadcast lists, channels and groups', () => {
+    expect(isNonCustomerChat('status@broadcast')).toBe(true)
+    expect(isNonCustomerChat('1234567890@broadcast')).toBe(true)
+    expect(isNonCustomerChat('120363012345678901@newsletter')).toBe(true)
+    expect(isNonCustomerChat('120363012345678901@g.us')).toBe(true)
+  })
+
+  it('keeps one-to-one chats, including hidden-number ids', () => {
+    expect(isNonCustomerChat('628123456789@c.us')).toBe(false)
+    expect(isNonCustomerChat('30601675599946@lid')).toBe(false)
+    expect(isNonCustomerChat(undefined)).toBe(false)
   })
 })

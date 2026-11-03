@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { createWhatsAppProvider } from '@/lib/whatsapp/providers'
-import { decrypt } from '@/lib/whatsapp/encryption'
 import type { SendTimeParams } from '@/lib/whatsapp/template-send-builder'
 import { resolveTemplateRow } from '@/lib/whatsapp/template-body'
 import {
@@ -138,8 +137,6 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-
-    const accessToken = decrypt(config.access_token)
 
     const provider = createWhatsAppProvider(config)
 

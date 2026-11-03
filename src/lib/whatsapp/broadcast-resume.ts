@@ -21,7 +21,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { BroadcastError, type BroadcastPlan } from '@/lib/whatsapp/broadcast-core';
 import { DELIVERY_LOCK_STALE_MS } from '@/lib/whatsapp/broadcast-delivery-lease';
 import { chunk } from '@/lib/supabase/paged-query';
-import { decrypt } from '@/lib/whatsapp/encryption';
+import { resolveAccessToken } from '@/lib/whatsapp/providers';
 import { resolveTemplateRow } from '@/lib/whatsapp/template-body';
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils';
 
@@ -257,7 +257,8 @@ export async function planBroadcastResume(
     templateName: broadcast.template_name,
     templateLanguage: resolvedTemplate.language,
     phoneNumberId: config.phone_number_id,
-    accessToken: decrypt(config.access_token),
+    accessToken: resolveAccessToken(config),
+    providerConfig: config,
     templateRow: resolvedTemplate.row,
     planned: slice.map((row) => ({
       recipientRowId: row.id,

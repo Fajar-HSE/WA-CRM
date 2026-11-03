@@ -22,13 +22,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { MediaKind } from '@/lib/whatsapp/meta-api';
-import { createWhatsAppProvider } from '@/lib/whatsapp/providers';
+import { createWhatsAppProvider, resolveAccessToken } from '@/lib/whatsapp/providers';
 import {
   validateInteractivePayload,
   interactivePayloadPreviewText,
   type InteractiveMessagePayload,
 } from '@/lib/whatsapp/interactive';
-import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption';
+import { encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import {
   phoneVariants,
@@ -267,10 +267,12 @@ export async function sendMessageToConversation(
     );
   }
 
-  const accessToken = decrypt(config.access_token);
+  // WAHA rows hold no Meta token — resolveAccessToken returns '' for them
+  // instead of throwing on decrypt('').
+  const accessToken = resolveAccessToken(config);
 
-  // Self-heal legacy CBC ciphertexts. Fire-and-forget; idempotent.
-  if (isLegacyFormat(config.access_token)) {
+  // Self-heal legacy CBC ciphertexts (Meta only). Fire-and-forget; idempotent.
+  if (config.provider !== 'waha' && isLegacyFormat(config.access_token)) {
     void db
       .from('whatsapp_config')
       .update({ access_token: encrypt(accessToken) })

@@ -1,6 +1,5 @@
 // ============================================================
 // WhatsApp provider abstraction (Phase 1).
-// (same content)
 // ============================================================
 
 export type WhatsAppProviderName = 'meta' | 'waha' | string

@@ -19,14 +19,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { sendTemplateMessage } from '@/lib/whatsapp/meta-api';
-import { decrypt } from '@/lib/whatsapp/encryption';
+import {
+  createWhatsAppProvider,
+  resolveAccessToken,
+} from '@/lib/whatsapp/providers';
 import {
   parseInternationalPhone,
   phoneVariants,
   isRecipientNotAllowedError,
 } from '@/lib/whatsapp/phone-utils';
 import { resolveTemplateRow } from '@/lib/whatsapp/template-body';
-import type { MessageTemplate } from '@/types';
+import type { MessageTemplate, WhatsAppConfig } from '@/types';
 import { findOrCreateContact } from '@/lib/api/v1/contacts';
 
 /** Thrown by createBroadcast on a caller-visible failure; route maps it. */
@@ -67,6 +70,12 @@ export interface BroadcastPlan {
   templateLanguage: string;
   phoneNumberId: string;
   accessToken: string;
+  /**
+   * The `whatsapp_config` row. Only consulted for non-Meta providers
+   * (WAHA), which send through the provider adapter instead of the
+   * Meta Graph helpers below.
+   */
+  providerConfig?: WhatsAppConfig;
   templateRow: MessageTemplate | null;
   planned: PlannedRecipient[];
   /** Phones rejected up front (invalid E.164) — counted as failed. */
@@ -125,7 +134,7 @@ export async function createBroadcast(
       400
     );
   }
-  const accessToken = decrypt(config.access_token);
+  const accessToken = resolveAccessToken(config);
 
   // Template row (once) for header/button components; guard a
   // malformed local row rather than N identical opaque failures.
@@ -243,6 +252,7 @@ export async function createBroadcast(
     templateLanguage: resolvedTemplate.language,
     phoneNumberId: config.phone_number_id,
     accessToken,
+    providerConfig: config,
     templateRow,
     planned,
     rejected,
@@ -267,22 +277,38 @@ export async function deliverBroadcast(
   db: SupabaseClient,
   plan: BroadcastPlan
 ): Promise<void> {
+  const wahaProvider =
+    plan.providerConfig && plan.providerConfig.provider === 'waha'
+      ? createWhatsAppProvider(plan.providerConfig)
+      : null;
+
   for (const recipient of plan.planned) {
-    const variants = phoneVariants(recipient.phone);
+    // Phone-variant retry is a Meta sandbox workaround; WAHA gets one try.
+    const variants = wahaProvider
+      ? [recipient.phone]
+      : phoneVariants(recipient.phone);
     let sentMessageId: string | null = null;
     let lastError: string | null = null;
 
     for (const variant of variants) {
       try {
-        const result = await sendTemplateMessage({
-          phoneNumberId: plan.phoneNumberId,
-          accessToken: plan.accessToken,
-          to: variant,
-          templateName: plan.templateName,
-          language: plan.templateLanguage,
-          template: plan.templateRow ?? undefined,
-          params: recipient.params,
-        });
+        const result = wahaProvider
+          ? await wahaProvider.sendTemplate({
+              to: variant,
+              templateName: plan.templateName,
+              language: plan.templateLanguage,
+              template: plan.templateRow ?? undefined,
+              params: recipient.params,
+            })
+          : await sendTemplateMessage({
+              phoneNumberId: plan.phoneNumberId,
+              accessToken: plan.accessToken,
+              to: variant,
+              templateName: plan.templateName,
+              language: plan.templateLanguage,
+              template: plan.templateRow ?? undefined,
+              params: recipient.params,
+            });
         sentMessageId = result.messageId;
         lastError = null;
         break;

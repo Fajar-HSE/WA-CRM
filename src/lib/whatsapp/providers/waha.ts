@@ -4,17 +4,57 @@
 // Implements the WhatsAppProvider contract against WAHA's REST API.
 // Requires a running WAHA instance (Docker). Configure via env:
 //   WAHA_BASE_URL, WAHA_API_KEY
-// or per-config fields waha_base_url / waha_session_name.
+// The base URL and API key come from the server environment only —
+// never from a database row a tenant can edit, otherwise an admin
+// could point the adapter at their own host and read the API key.
 // ============================================================
 
-import type { WhatsAppProvider, WhatsAppProviderCredentials, WhatsAppSendResult, WhatsAppMediaInfo } from './provider'
+import type {
+  WhatsAppProvider,
+  WhatsAppProviderCredentials,
+  WhatsAppSendResult,
+  WhatsAppMediaInfo,
+  SendTextArgs,
+  SendMediaArgs,
+  SendTemplateArgs,
+  SendInteractiveButtonsArgs,
+  SendInteractiveListArgs,
+  GetMediaUrlArgs,
+} from './provider'
+import { WAHA_WEBHOOK_SECRET_HEADER } from '../waha-config'
 
 export class WahaHttpError extends Error {
-  constructor(message: string, public status: number, public body?: unknown) {
+  constructor(
+    message: string,
+    public status: number,
+    public body?: unknown,
+  ) {
     super(message)
     this.name = 'WahaHttpError'
   }
 }
+
+export interface EnsureSessionOptions {
+  /** Where WAHA should POST inbound events. */
+  webhookUrl: string
+  /** Sent back as the X-Webhook-Secret header on every delivery. */
+  webhookSecret: string
+}
+
+interface WahaWebhookConfig {
+  url?: string
+  events?: string[]
+  customHeaders?: { name?: string; value?: string }[] | null
+}
+
+interface WahaSessionInfo {
+  name?: string
+  status?: string
+  config?: { webhooks?: WahaWebhookConfig[] | null } | null
+}
+
+/** Events the CRM consumes. Acks and session.status can be added later. */
+const WEBHOOK_EVENTS = ['message']
 
 function toChatId(to: string): string {
   const v = to.trim()
@@ -26,11 +66,27 @@ function toChatId(to: string): string {
 function guessMime(kind: string, provided?: string): string {
   if (provided) return provided
   switch (kind) {
-    case 'image': return 'image/jpeg'
-    case 'video': return 'video/mp4'
-    case 'audio': return 'audio/ogg; codecs=opus'
-    default: return 'application/octet-stream'
+    case 'image':
+      return 'image/jpeg'
+    case 'video':
+      return 'video/mp4'
+    case 'audio':
+      return 'audio/ogg; codecs=opus'
+    default:
+      return 'application/octet-stream'
   }
+}
+
+function messageIdOf(res: unknown): string {
+  const r = (res ?? {}) as { id?: unknown; messageId?: unknown }
+  const id = r.id ?? r.messageId
+  if (typeof id === 'string') return id
+  // Some WAHA engines return the id as { _serialized: '...' }.
+  if (id && typeof id === 'object') {
+    const serialized = (id as { _serialized?: unknown })._serialized
+    if (typeof serialized === 'string') return serialized
+  }
+  return ''
 }
 
 export class WahaWhatsAppProvider implements WhatsAppProvider {
@@ -48,37 +104,53 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     this.apiKey = creds.apiKey
   }
 
-  private async request(path: string, init: RequestInit = {}): Promise<any> {
+  private async request<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${path}`
     const res = await fetch(url, {
       ...init,
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
         'X-Api-Key': this.apiKey,
         ...(init.headers || {}),
       },
     })
     const text = await res.text()
-    let body: any = null
-    try { body = text ? JSON.parse(text) : null } catch { body = text }
-    if (!res.ok) {
-      throw new WahaHttpError(`WAHA ${path} failed: ${res.status} ${res.statusText}`, res.status, body)
+    let body: unknown = null
+    try {
+      body = text ? JSON.parse(text) : null
+    } catch {
+      body = text
     }
-    return body
+    if (!res.ok) {
+      throw new WahaHttpError(
+        `WAHA ${path} failed: ${res.status} ${res.statusText}`,
+        res.status,
+        body,
+      )
+    }
+    return body as T
   }
 
-  async sendText(args: { to: string; text: string; contextMessageId?: string }): Promise<WhatsAppSendResult> {
-    const body: any = {
+  private sessionPath(sessionName?: string): string {
+    return `/api/sessions/${encodeURIComponent(sessionName || this.sessionName)}`
+  }
+
+  async sendText(args: SendTextArgs): Promise<WhatsAppSendResult> {
+    const body: Record<string, unknown> = {
       session: this.sessionName,
       chatId: toChatId(args.to),
       text: args.text,
     }
     if (args.contextMessageId) body.reply_to = args.contextMessageId
-    const res = await this.request('/api/sendText', { method: 'POST', body: JSON.stringify(body) })
-    return { messageId: res?.id ?? res?.messageId ?? '' }
+    const res = await this.request('/api/sendText', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+    return { messageId: messageIdOf(res) }
   }
 
-  async sendMedia(args: { to: string; kind: 'image' | 'video' | 'document' | 'audio'; link: string; caption?: string; filename?: string; mimeType?: string; contextMessageId?: string }): Promise<WhatsAppSendResult> {
+  async sendMedia(args: SendMediaArgs): Promise<WhatsAppSendResult> {
     const chatId = toChatId(args.to)
     const mime = guessMime(args.kind, args.mimeType)
     const file = {
@@ -91,7 +163,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     else if (args.kind === 'video') path = '/api/sendVideo'
     else if (args.kind === 'audio') path = '/api/sendVoice'
 
-    const body: any = {
+    const body: Record<string, unknown> = {
       session: this.sessionName,
       chatId,
       file,
@@ -101,64 +173,144 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     if (args.kind === 'audio') body.convert = false
 
     const res = await this.request(path, { method: 'POST', body: JSON.stringify(body) })
-    return { messageId: res?.id ?? res?.messageId ?? '' }
+    return { messageId: messageIdOf(res) }
   }
 
-  async sendTemplate(args: { to: string; templateName: string; language: string; params?: string[]; contextMessageId?: string }): Promise<WhatsAppSendResult> {
+  async sendTemplate(args: SendTemplateArgs): Promise<WhatsAppSendResult> {
     // WAHA has no Meta template concept; send as plain text fallback.
-    const text = args.params && args.params.length
-      ? `${args.templateName}: ${args.params.join(' ')}`
-      : args.templateName
+    const text =
+      args.params && args.params.length
+        ? `${args.templateName}: ${args.params.join(' ')}`
+        : args.templateName
     return this.sendText({ to: args.to, text, contextMessageId: args.contextMessageId })
   }
 
-  async sendInteractiveButtons(args: { to: string; bodyText: string; headerText?: string; footerText?: string; buttons: { id: string; title: string }[]; contextMessageId?: string }): Promise<WhatsAppSendResult> {
-    // WAHA supports buttons via /api/sendButtons (Plus). Fallback to text list.
+  async sendInteractiveButtons(
+    args: SendInteractiveButtonsArgs,
+  ): Promise<WhatsAppSendResult> {
+    // Native buttons need WAHA Plus. Fall back to a numbered text list.
     const lines = [args.bodyText, '', ...args.buttons.map((b, i) => `${i + 1}. ${b.title}`)]
-    return this.sendText({ to: args.to, text: lines.join('\n'), contextMessageId: args.contextMessageId })
+    return this.sendText({
+      to: args.to,
+      text: lines.join('\n'),
+      contextMessageId: args.contextMessageId,
+    })
   }
 
-  async sendInteractiveList(args: { to: string; bodyText: string; buttonLabel: string; headerText?: string; footerText?: string; sections: { title: string; rows: { id: string; title: string; description?: string }[] }[]; contextMessageId?: string }): Promise<WhatsAppSendResult> {
+  async sendInteractiveList(args: SendInteractiveListArgs): Promise<WhatsAppSendResult> {
     const lines = [args.bodyText, '']
     for (const s of args.sections) {
-      lines.push(`[${s.title}]`)
-      for (const r of s.rows) lines.push(`- ${r.title}${r.description ? `: ${r.description}` : ''}`)
+      if (s.title) lines.push(`[${s.title}]`)
+      for (const r of s.rows) {
+        lines.push(`- ${r.title}${r.description ? `: ${r.description}` : ''}`)
+      }
     }
-    return this.sendText({ to: args.to, text: lines.join('\n'), contextMessageId: args.contextMessageId })
+    return this.sendText({
+      to: args.to,
+      text: lines.join('\n'),
+      contextMessageId: args.contextMessageId,
+    })
   }
 
-  async getMediaUrl(args: { mediaId: string }): Promise<WhatsAppMediaInfo> {
-    // For WAHA, mediaId is often already a URL.
+  async getMediaUrl(args: GetMediaUrlArgs): Promise<WhatsAppMediaInfo> {
+    // For WAHA, mediaId is already a URL.
     return { url: args.mediaId, mimeType: 'application/octet-stream', fileSize: 0 }
   }
 
   // ---- Session management ----
+
+  /**
+   * Create the session if it does not exist, make sure its webhook
+   * points at this app (with the shared secret), and start it if it is
+   * stopped. Safe to call repeatedly: a session whose webhook is already
+   * correct is left alone, so a working (paired) session is not restarted.
+   *
+   * Without the webhook, WAHA never tells the CRM about inbound messages
+   * — sending would work and receiving would silently not.
+   */
+  async ensureSession(opts: EnsureSessionOptions): Promise<void> {
+    const config = {
+      webhooks: [
+        {
+          url: opts.webhookUrl,
+          events: WEBHOOK_EVENTS,
+          customHeaders: [
+            { name: WAHA_WEBHOOK_SECRET_HEADER, value: opts.webhookSecret },
+          ],
+        },
+      ],
+    }
+
+    let existing: WahaSessionInfo | null = null
+    try {
+      existing = await this.request<WahaSessionInfo>(this.sessionPath())
+    } catch (err) {
+      if (!(err instanceof WahaHttpError && err.status === 404)) throw err
+    }
+
+    if (!existing) {
+      await this.request('/api/sessions', {
+        method: 'POST',
+        body: JSON.stringify({ name: this.sessionName, start: true, config }),
+      })
+      return
+    }
+
+    if (!webhookMatches(existing, opts)) {
+      await this.request(this.sessionPath(), {
+        method: 'PUT',
+        body: JSON.stringify({ name: this.sessionName, config }),
+      })
+    }
+    if (existing.status === 'STOPPED' || existing.status === 'FAILED') {
+      await this.request(`${this.sessionPath()}/start`, { method: 'POST' })
+    }
+  }
+
   async startSession(sessionName: string): Promise<void> {
-    await this.request('/api/sessions', {
-      method: 'POST',
-      body: JSON.stringify({ name: sessionName || this.sessionName, config: { webhooks: [] } }),
-    })
+    await this.request(`${this.sessionPath(sessionName)}/start`, { method: 'POST' })
   }
 
   async stopSession(sessionName: string): Promise<void> {
-    await this.request(`/api/sessions/${encodeURIComponent(sessionName || this.sessionName)}/stop`, { method: 'POST' })
+    await this.request(`${this.sessionPath(sessionName)}/stop`, { method: 'POST' })
   }
 
   async getSessionStatus(sessionName: string): Promise<string> {
-    const res = await this.request(`/api/sessions/${encodeURIComponent(sessionName || this.sessionName)}`)
+    const res = await this.request<WahaSessionInfo>(this.sessionPath(sessionName))
     return res?.status ?? 'UNKNOWN'
   }
 
+  /**
+   * QR code as a `data:` URL ready for an <img>. WAHA answers with the
+   * raw image unless JSON is requested; JSON gives `{ mimetype, data }`
+   * where `data` is base64.
+   */
   async getQrCode(sessionName: string): Promise<string | null> {
     try {
-      const res = await this.request(`/api/${encodeURIComponent(sessionName || this.sessionName)}/auth/qr`)
-      return res?.qr ?? res?.value ?? null
+      const res = await this.request<{ mimetype?: string; data?: string } | null>(
+        `/api/${encodeURIComponent(sessionName || this.sessionName)}/auth/qr`,
+      )
+      if (!res?.data) return null
+      return `data:${res.mimetype || 'image/png'};base64,${res.data}`
     } catch {
       return null
     }
   }
 
   async logoutSession(sessionName: string): Promise<void> {
-    await this.request(`/api/sessions/${encodeURIComponent(sessionName || this.sessionName)}/logout`, { method: 'POST' })
+    await this.request(`${this.sessionPath(sessionName)}/logout`, { method: 'POST' })
   }
+}
+
+function webhookMatches(session: WahaSessionInfo, opts: EnsureSessionOptions): boolean {
+  const hooks = session.config?.webhooks ?? []
+  return hooks.some(
+    (h) =>
+      h.url === opts.webhookUrl &&
+      (h.customHeaders ?? []).some(
+        (c) =>
+          c.name?.toLowerCase() === WAHA_WEBHOOK_SECRET_HEADER &&
+          c.value === opts.webhookSecret,
+      ),
+  )
 }

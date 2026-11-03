@@ -28,6 +28,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { IccLogo } from '@/components/brand/icc-logo';
+
 export const metadata: Metadata = {
   referrer: 'no-referrer',
   // Belt-and-braces against an invite URL ending up in search
@@ -37,7 +39,8 @@ export const metadata: Metadata = {
 
 export default function JoinLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-background px-4 py-8">
+      <IccLogo variant="full" className="h-16 w-40" />
       {children}
     </div>
   );

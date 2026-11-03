@@ -41,7 +41,9 @@
     "defaultAvatar": "Avatar",
     "menuProfile": "Profil",
     "menuSettings": "Pengaturan",
-    "menuSignOut": "Keluar"
+    "menuSignOut": "Keluar",
+    "collapse": "Ciutkan menu",
+    "expand": "Perluas menu"
   },
   "Header": {
     "dashboard": "Dasbor",

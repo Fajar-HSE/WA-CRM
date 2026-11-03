@@ -10,6 +10,8 @@ import type { AutomationTriggerType, WhatsAppConfig } from '@/types'
 import { createWhatsAppProvider } from '@/lib/whatsapp/providers'
 import { WahaWhatsAppProvider } from '@/lib/whatsapp/providers/waha'
 import { altPhoneFromPayload, isNonCustomerChat } from '@/lib/whatsapp/waha-ids'
+import { mirrorWahaMedia } from '@/lib/whatsapp/waha-media'
+import type { MirrorStorage } from '@/lib/whatsapp/mirror-inbound-media'
 
 // NOTE: reopenClosedConversation / claimFirstInboundMessage may live in
 // different modules; adjust imports if typecheck complains.
@@ -195,9 +197,30 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
   const receivedAt = new Date((payload?.timestamp || Date.now() / 1000) * 1000).toISOString()
   const contentText = payload?.body || null
   const hasMedia = !!payload?.hasMedia
-  const mediaUrl = hasMedia ? payload?.media?.url || null : null
   const mediaType = hasMedia ? payload?.media?.mimetype || null : null
+  const contentKind = !hasMedia
+    ? 'text'
+    : mediaType?.startsWith('image')
+      ? 'image'
+      : mediaType?.startsWith('video')
+        ? 'video'
+        : mediaType?.startsWith('audio')
+          ? 'audio'
+          : 'document'
   const messageId = payload?.id || null
+
+  // WAHA's own file URL is unusable in a browser (needs the API key, often a
+  // private address). Copy the file into storage and keep that URL instead.
+  // Best effort: on failure the message still arrives, just without the file.
+  const mediaUrl = hasMedia
+    ? await mirrorWahaMedia({
+        storage: db.storage as unknown as MirrorStorage,
+        accountId,
+        messageId: messageId || `${from}-${receivedAt}`,
+        media: payload?.media,
+        timestamp: typeof payload?.timestamp === 'number' ? payload.timestamp : null,
+      })
+    : null
 
   // Idempotent insert.
   const { data: insertedRows, error: msgErr } = await db
@@ -206,7 +229,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
       {
         conversation_id: conversation.id,
         sender_type: 'customer',
-        content_type: hasMedia ? (mediaType?.startsWith('image') ? 'image' : mediaType?.startsWith('video') ? 'video' : mediaType?.startsWith('audio') ? 'audio' : 'document') : 'text',
+        content_type: contentKind,
         content_text: contentText,
         media_url: mediaUrl,
         media_type: mediaType,
@@ -231,7 +254,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
 
   await db.rpc('bump_conversation_on_inbound', {
     p_conversation_id: conversation.id,
-    p_last_message_text: contentText || (hasMedia ? `[${mediaType}]` : '[message]'),
+    p_last_message_text: contentText || (hasMedia ? `[${contentKind}]` : '[message]'),
   })
 
   await reopenClosedConversation(db, conversation)
@@ -280,7 +303,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
     conversation_id: conversation.id,
     contact_id: contact.id,
     whatsapp_message_id: messageId,
-    content_type: hasMedia ? 'image' : 'text',
+    content_type: contentKind,
     text: contentText,
   })
 }

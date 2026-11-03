@@ -68,6 +68,21 @@ the server from the account; it is never taken from the browser.
   or failed. Press **Re-sync webhook** in Settings → WhatsApp once after
   updating so existing sessions start sending receipts.
 
+## Photos, voice notes and documents sent to you
+
+The app downloads each received file from WAHA (using the API key) and
+keeps a copy in the `chat-media` storage bucket, so it displays in the inbox
+and does not depend on WAHA's private address. Two things must be true on the
+WAHA side:
+
+- WAHA has to download media. That is its default (`WHATSAPP_DOWNLOAD_MEDIA`
+  must not be set to `False`), and the edition you run has to include media.
+  If WAHA sends no file, the message still arrives and the inbox shows the
+  attachment as unavailable. The app log then says
+  `[waha-media] message has media but WAHA sent no file URL`.
+- `WAHA_BASE_URL` and `WAHA_API_KEY` must be set on the app: the download
+  goes from the app server to WAHA, not from the browser.
+
 ## Known limits
 
 - Message templates are sent as plain text (`name: param1 param2`).

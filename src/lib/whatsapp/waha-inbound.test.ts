@@ -6,6 +6,8 @@ const REAL = '628123456789'
 // ---- fake database ---------------------------------------------------
 const contactUpdates: { values: Record<string, unknown>; id: string }[] = []
 const contactInserts: Record<string, unknown>[] = []
+const messageUpserts: Record<string, unknown>[] = []
+const webhookEvents: Record<string, unknown>[] = []
 
 function makeDb() {
   const from = (table: string) => {
@@ -35,7 +37,10 @@ function makeDb() {
         state.values = values
         return chain
       },
-      upsert: () => chain,
+      upsert: (values: Record<string, unknown>) => {
+        if (table === 'messages') messageUpserts.push(values)
+        return chain
+      },
       then: (resolve: (v: unknown) => unknown) => {
         if (state.op === 'update' && table === 'contacts') {
           contactUpdates.push({ values: state.values!, id: state.id! })
@@ -59,7 +64,14 @@ vi.mock('@/lib/conversations/reopen', () => ({ reopenClosedConversation: async (
 vi.mock('@/lib/flows/engine', () => ({ dispatchInboundToFlows: async () => ({ consumed: false }) }))
 vi.mock('@/lib/automations/engine', () => ({ runAutomationsForTrigger: async () => undefined }))
 vi.mock('@/lib/ai/auto-reply', () => ({ dispatchInboundToAiReply: async () => undefined }))
-vi.mock('@/lib/webhooks/deliver', () => ({ dispatchWebhookEvent: async () => undefined }))
+vi.mock('@/lib/webhooks/deliver', () => ({
+  dispatchWebhookEvent: async (_db: unknown, _acct: string, _event: string, data: Record<string, unknown>) => {
+    webhookEvents.push(data)
+  },
+}))
+
+const mirrorWahaMedia = vi.fn()
+vi.mock('./waha-media', () => ({ mirrorWahaMedia: (...a: unknown[]) => mirrorWahaMedia(...a) }))
 
 const getPhoneForLid = vi.fn()
 vi.mock('@/lib/whatsapp/providers/waha', () => {
@@ -86,6 +98,9 @@ describe('processWahaInbound with a lid sender', () => {
   beforeEach(() => {
     contactUpdates.length = 0
     contactInserts.length = 0
+    messageUpserts.length = 0
+    webhookEvents.length = 0
+    mirrorWahaMedia.mockReset()
     findExistingContact.mockReset()
     getPhoneForLid.mockReset()
     vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -138,5 +153,66 @@ describe('processWahaInbound with a lid sender', () => {
     })
     expect(getPhoneForLid).not.toHaveBeenCalled()
     expect(contactInserts[0]).toMatchObject({ phone: REAL })
+  })
+
+  describe('inbound media', () => {
+    const imagePayload = {
+      id: 'false_628@c.us_IMG1',
+      from: `${REAL}@c.us`,
+      body: 'foto ktp',
+      timestamp: 1,
+      hasMedia: true,
+      media: { url: 'http://localhost:3000/api/files/s/x.jpeg', mimetype: 'image/jpeg' },
+    }
+
+    it('stores the mirrored public url, not WAHA\'s private one', async () => {
+      byPhone({})
+      mirrorWahaMedia.mockResolvedValue('https://cdn.test/chat-media/photo.jpg')
+      await processWahaInbound({ sessionName: 's', payload: imagePayload })
+
+      expect(mirrorWahaMedia).toHaveBeenCalledWith(
+        expect.objectContaining({ accountId: 'acct-1', messageId: 'false_628@c.us_IMG1', media: imagePayload.media }),
+      )
+      expect(messageUpserts[0]).toMatchObject({
+        content_type: 'image',
+        media_url: 'https://cdn.test/chat-media/photo.jpg',
+        media_type: 'image/jpeg',
+        content_text: 'foto ktp',
+      })
+      expect(webhookEvents[0]).toMatchObject({ content_type: 'image' })
+    })
+
+    it('still delivers the message, without a file, when the mirror fails', async () => {
+      byPhone({})
+      mirrorWahaMedia.mockResolvedValue(null)
+      await processWahaInbound({ sessionName: 's', payload: imagePayload })
+      expect(messageUpserts[0]).toMatchObject({ content_type: 'image', media_url: null })
+    })
+
+    it('does not touch media for a plain text message', async () => {
+      byPhone({})
+      await processWahaInbound({
+        sessionName: 's',
+        payload: { id: 'm1', from: `${REAL}@c.us`, body: 'halo', timestamp: 1 },
+      })
+      expect(mirrorWahaMedia).not.toHaveBeenCalled()
+      expect(messageUpserts[0]).toMatchObject({ content_type: 'text', media_url: null })
+    })
+
+    it('labels non-image media by its real kind', async () => {
+      byPhone({})
+      mirrorWahaMedia.mockResolvedValue('https://cdn.test/a.ogg')
+      await processWahaInbound({
+        sessionName: 's',
+        payload: {
+          id: 'm2',
+          from: `${REAL}@c.us`,
+          timestamp: 1,
+          hasMedia: true,
+          media: { url: 'http://x/api/files/a.ogg', mimetype: 'audio/ogg; codecs=opus' },
+        },
+      })
+      expect(messageUpserts[0]).toMatchObject({ content_type: 'audio' })
+    })
   })
 })

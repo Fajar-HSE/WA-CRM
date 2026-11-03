@@ -63,11 +63,18 @@ const SECURITY_HEADERS = [
   },
 ] as const;
 
-const APP_LOCALE = ["en", "pt", "es", "ko"].includes(process.env.NEXT_PUBLIC_APP_LOCALE ?? "")
+// Build-time default language (Indonesian unless overridden). Visitors can
+// switch to English at runtime from Settings → Appearance; that choice is a
+// cookie read in src/i18n/request.ts. This value also picks the catalogue
+// that server-side code outside React (API errors, validators) uses, since
+// that code cannot see the request.
+const APP_LOCALE = ["id", "en"].includes(process.env.NEXT_PUBLIC_APP_LOCALE ?? "")
   ? (process.env.NEXT_PUBLIC_APP_LOCALE as string)
-  : "en";
+  : "id";
 
 const nextConfig: NextConfig = {
+  // Inline the effective default so client and server agree on it.
+  env: { NEXT_PUBLIC_APP_LOCALE: APP_LOCALE },
   turbopack: {
     resolveAlias: {
       "@app-messages": `./messages/${APP_LOCALE}.json`,

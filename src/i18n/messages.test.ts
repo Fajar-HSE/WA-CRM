@@ -4,14 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { createTranslator } from 'next-intl';
 
 // Locale dictionaries are hand-maintained. English is the source of
-// truth (src/i18n/request.ts falls back to en.json only when a whole
-// locale file is missing — there is no per-key fallback), so a key
-// that lands in en.json and not in a translation renders as a raw
-// keypath for users on that locale. This guards the parity.
+// truth. src/i18n/request.ts lays the translation over en.json, so a
+// key missing from id.json would silently render in English; this test
+// keeps the two files in step so that never happens unnoticed.
 
 const MESSAGES_DIR = join(process.cwd(), 'messages');
 const SOURCE_LOCALE = 'en';
-const TRANSLATED_LOCALES = ['ko', 'pt', 'es'];
+const TRANSLATED_LOCALES = ['id'];
 
 type Catalogue = Record<string, unknown>;
 

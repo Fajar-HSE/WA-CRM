@@ -25,6 +25,7 @@ import { engineSendText, engineSendTemplate, engineSendInteractive } from './met
 import { validateInteractivePayload } from '@/lib/whatsapp/interactive'
 import { isDeliverableUrl } from '@/lib/webhooks/ssrf'
 import { getT } from '@/lib/i18n/translate'
+import { DEFAULT_CURRENCY } from '@/lib/currency'
 import { isWithinTimeWindow } from './time-of-day'
 
 /** Step errors land in automation_logs and are shown on the logs page. */
@@ -939,7 +940,7 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
       // Match the account's configured default currency rather than
       // the static `deals.currency` DB default — keeps automation-
       // created deals consistent with the one-currency-per-account
-      // rule (issue #218). Fall back to USD if the row is somehow
+      // rule (issue #218). Fall back to IDR if the row is somehow
       // missing the value (pre-021 forks).
       const { data: acct } = await db
         .from('accounts')
@@ -955,7 +956,7 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
         contact_id: args.contactId,
         title: interpolate(cfg.title, args),
         value: cfg.value ?? 0,
-        currency: acct?.default_currency ?? 'USD',
+        currency: acct?.default_currency ?? DEFAULT_CURRENCY,
         status: 'open',
       })
       return 'deal created'

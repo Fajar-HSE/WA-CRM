@@ -133,7 +133,7 @@ export async function GET() {
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
-      .select('phone_number_id, waba_id, access_token, status')
+      .select('provider, phone_number_id, waba_id, access_token, status')
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -153,6 +153,16 @@ export async function GET() {
           message: t('whatsappConfig.noConfig'),
         },
         { status: 200 }
+      )
+    }
+
+    // WAHA rows hold no Meta token and there is no Graph API to ping.
+    // /api/whatsapp/waha/session keeps `status` in sync with the WAHA
+    // session, so report that.
+    if (config.provider === 'waha') {
+      return NextResponse.json(
+        { connected: config.status === 'connected', provider: 'waha' },
+        { status: 200 },
       )
     }
 

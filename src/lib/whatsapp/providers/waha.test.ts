@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { WahaNumberNotFoundError, WahaWhatsAppProvider } from './waha'
+import { WahaNumberNotFoundError, WahaWhatsAppProvider, messageIdOf } from './waha'
 
 type FetchMock = ReturnType<typeof vi.fn>
 
@@ -123,6 +123,29 @@ describe('WahaWhatsAppProvider', () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: { _serialized: 'true_1@c.us_ABC' } }))
     const res = await makeProvider().sendText({ to: '6281', text: 'hi' })
     expect(res.messageId).toBe('true_1@c.us_ABC')
+  })
+
+  it('reads the message id from every known response shape', () => {
+    expect(messageIdOf({ id: 'true_1@c.us_A' })).toBe('true_1@c.us_A')
+    expect(messageIdOf({ id: { _serialized: 'true_1@c.us_B' } })).toBe('true_1@c.us_B')
+    expect(messageIdOf({ id: { fromMe: true, remote: '1@c.us', id: 'C' } })).toBe('true_1@c.us_C')
+    expect(messageIdOf({ _data: { id: { _serialized: 'true_1@c.us_D' } } })).toBe('true_1@c.us_D')
+    expect(messageIdOf({ key: { fromMe: true, remoteJid: '1@s.whatsapp.net', id: 'E' } })).toBe(
+      'true_1@s.whatsapp.net_E',
+    )
+    expect(messageIdOf({})).toBe('')
+    expect(messageIdOf(null)).toBe('')
+  })
+
+  it('never returns an empty id, so two sends cannot collide in the database', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    fetchMock.mockResolvedValue(jsonResponse({ status: 'ok' }))
+    const p = makeProvider()
+    const a = await p.sendText({ to: '628123456789@c.us', text: 'one' })
+    const b = await p.sendText({ to: '628123456789@c.us', text: 'two' })
+    expect(a.messageId).toMatch(/^waha-local-/)
+    expect(b.messageId).toMatch(/^waha-local-/)
+    expect(a.messageId).not.toBe(b.messageId)
   })
 
   it('throws on non-2xx', async () => {

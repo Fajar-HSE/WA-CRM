@@ -9,6 +9,7 @@
 // could point the adapter at their own host and read the API key.
 // ============================================================
 
+import { randomUUID } from 'node:crypto'
 import type {
   WhatsAppProvider,
   WhatsAppProviderCredentials,
@@ -86,16 +87,56 @@ function guessMime(kind: string, provided?: string): string {
   }
 }
 
-function messageIdOf(res: unknown): string {
-  const r = (res ?? {}) as { id?: unknown; messageId?: unknown }
-  const id = r.id ?? r.messageId
-  if (typeof id === 'string') return id
-  // Some WAHA engines return the id as { _serialized: '...' }.
-  if (id && typeof id === 'object') {
-    const serialized = (id as { _serialized?: unknown })._serialized
-    if (typeof serialized === 'string') return serialized
+function serializedFrom(fromMe: unknown, remote: unknown, id: unknown): string {
+  if (typeof remote === 'string' && typeof id === 'string' && id) {
+    return `${fromMe === false ? 'false' : 'true'}_${remote}_${id}`
   }
   return ''
+}
+
+/**
+ * Message id out of WAHA's send response. The shape depends on the engine:
+ * a plain string, `{ _serialized }`, `{ fromMe, remote, id }` (WEBJS),
+ * or a `key` object (NOWEB/GOWS), sometimes nested under `_data`.
+ * Returns '' when none is recognised.
+ */
+export function messageIdOf(res: unknown): string {
+  const r = (res ?? {}) as Record<string, unknown>
+  const candidates: unknown[] = [r.id, r.messageId]
+  for (const c of candidates) {
+    if (typeof c === 'string' && c) return c
+    if (c && typeof c === 'object') {
+      const o = c as Record<string, unknown>
+      if (typeof o._serialized === 'string' && o._serialized) return o._serialized
+      const composed = serializedFrom(o.fromMe, o.remote, o.id)
+      if (composed) return composed
+    }
+  }
+  const data = (r._data ?? {}) as Record<string, unknown>
+  const dataId = data.id as Record<string, unknown> | undefined
+  if (typeof dataId?._serialized === 'string' && dataId._serialized) return dataId._serialized
+  for (const key of [r.key, data.key] as (Record<string, unknown> | undefined)[]) {
+    const composed = serializedFrom(key?.fromMe, key?.remoteJid ?? key?.remote, key?.id)
+    if (composed) return composed
+  }
+  return ''
+}
+
+/**
+ * Id to store for a message we just sent. If WAHA's reply carries no id we
+ * can recognise, mint a unique local one rather than returning ''. The
+ * database keeps `messages (conversation_id, message_id)` and
+ * `broadcast_recipients.wamid` unique, so an empty string makes the SECOND
+ * send fail to save ("duplicate key") even though WhatsApp delivered it. A
+ * local id cannot match a later receipt, which only costs the ticks.
+ */
+function sentMessageId(res: unknown): string {
+  const id = messageIdOf(res)
+  if (id) return id
+  const shape =
+    res && typeof res === 'object' ? Object.keys(res as Record<string, unknown>).join(',') : typeof res
+  console.warn(`[waha] send response had no recognisable message id (keys: ${shape}); using a local id`)
+  return `waha-local-${randomUUID()}`
 }
 
 export class WahaWhatsAppProvider implements WhatsAppProvider {
@@ -210,7 +251,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
       method: 'POST',
       body: JSON.stringify(body),
     })
-    return { messageId: messageIdOf(res) }
+    return { messageId: sentMessageId(res) }
   }
 
   async sendMedia(args: SendMediaArgs): Promise<WhatsAppSendResult> {
@@ -236,7 +277,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     if (args.kind === 'audio') body.convert = false
 
     const res = await this.request(path, { method: 'POST', body: JSON.stringify(body) })
-    return { messageId: messageIdOf(res) }
+    return { messageId: sentMessageId(res) }
   }
 
   async sendTemplate(args: SendTemplateArgs): Promise<WhatsAppSendResult> {

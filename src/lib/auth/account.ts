@@ -150,11 +150,23 @@ export async function getCurrentAccount(): Promise<AccountContext> {
   // and takes down the entire account context (issue #294). A lookup by
   // id needs no relationship inference and is gated by the same accounts
   // RLS, so it stays robust against cache staleness and older schemas.
-  const { data: account, error: accountErr } = await supabase
+  // `disabled_at` (migration 064) is read in the same query so switching an
+  // account off costs no extra round trip. A database that has not run 064
+  // yet rejects the unknown column (42703); retry without it and treat the
+  // account as active, so deploying the code before the migration is safe.
+  type AccountRow = { id: string; name: string; disabled_at?: string | null };
+  let { data: account, error: accountErr } = (await supabase
     .from("accounts")
-    .select("id, name")
+    .select("id, name, disabled_at")
     .eq("id", data.account_id)
-    .maybeSingle();
+    .maybeSingle()) as { data: AccountRow | null; error: { code?: string } | null };
+  if (accountErr?.code === "42703") {
+    ({ data: account, error: accountErr } = (await supabase
+      .from("accounts")
+      .select("id, name")
+      .eq("id", data.account_id)
+      .maybeSingle()) as { data: AccountRow | null; error: { code?: string } | null });
+  }
 
   if (accountErr) {
     console.error("[getCurrentAccount] account fetch error:", accountErr);
@@ -164,6 +176,11 @@ export async function getCurrentAccount(): Promise<AccountContext> {
     // account_id points at no readable account row — orphaned profile
     // or an RLS gap. Same "can't scope this user" outcome as above.
     throw new ForbiddenError(t("notLinked"));
+  }
+
+  // The platform administrator switched this account off.
+  if (account.disabled_at) {
+    throw new ForbiddenError(t("accountDisabled"));
   }
 
   return {

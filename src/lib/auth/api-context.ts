@@ -103,6 +103,17 @@ export async function requireApiKey(
     throw forbidden(`This API key is missing the '${scope}' scope`);
   }
 
+  // A disabled account's keys stop working at once. `disabled_at` only exists
+  // after migration 064; an error here (column missing) means "not disabled".
+  const { data: acct } = await supabaseAdmin()
+    .from('accounts')
+    .select('disabled_at')
+    .eq('id', row.account_id)
+    .maybeSingle();
+  if (acct?.disabled_at) {
+    throw forbidden('This account has been disabled');
+  }
+
   touchLastUsed(row.id);
 
   return {

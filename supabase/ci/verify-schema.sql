@@ -191,6 +191,15 @@ BEGIN
     RAISE EXCEPTION 'accounts.can_create_workspaces is missing — migration 063 did not apply';
   END IF;
 
+  -- Disabling an account (064).
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'accounts'
+      AND column_name = 'disabled_at'
+  ) THEN
+    RAISE EXCEPTION 'accounts.disabled_at is missing — migration 064 did not apply';
+  END IF;
+
   RAISE NOTICE 'schema verification passed';
 END
 $$;

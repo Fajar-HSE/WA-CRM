@@ -85,6 +85,15 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
   const accountId = config.account_id as string
   const ownerUserId = config.user_id as string
 
+  // A disabled account takes in nothing (no contacts, no automations, no AI
+  // replies). `disabled_at` exists from migration 064; an error means "active".
+  const { data: acct } = await db
+    .from('accounts')
+    .select('disabled_at')
+    .eq('id', accountId)
+    .maybeSingle()
+  if (acct?.disabled_at) return
+
   const from = String(payload?.from || '')
   // Defensive: the webhook already drops these, but this function is also
   // the entry point for anything else that feeds it.

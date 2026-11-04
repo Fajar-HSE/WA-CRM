@@ -7,8 +7,19 @@ import { __resetRateLimitForTests, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Mock the service-role client factory — requireApiKey only stashes
 // the returned client in the context; tests never call through it.
+let accountDisabledAt: string | null = null;
 vi.mock("@/lib/flows/admin-client", () => ({
-  supabaseAdmin: () => ({ __isMockAdminClient: true }),
+  supabaseAdmin: () => ({
+    __isMockAdminClient: true,
+    from: () => {
+      const chain: Record<string, unknown> = {
+        select: () => chain,
+        eq: () => chain,
+        maybeSingle: async () => ({ data: { disabled_at: accountDisabledAt }, error: null }),
+      };
+      return chain;
+    },
+  }),
 }));
 
 // Mock the store so we control which row a hash resolves to.
@@ -44,6 +55,7 @@ function row(overrides: Partial<ApiKeyRow> = {}): ApiKeyRow {
 }
 
 beforeEach(() => {
+  accountDisabledAt = null;
   __resetRateLimitForTests();
   findActiveKeyByHash.mockReset();
   touchLastUsed.mockReset();
@@ -120,6 +132,13 @@ describe("requireApiKey", () => {
       "unavailable",
       503,
     );
+  });
+
+  it("403s when the key's account has been disabled", async () => {
+    findActiveKeyByHash.mockResolvedValue(row());
+    accountDisabledAt = "2026-03-01T00:00:00Z";
+    await expectApiError(requireApiKey(reqWith(`Bearer ${KEY}`)), "forbidden", 403);
+    expect(touchLastUsed).not.toHaveBeenCalled();
   });
 
   it("403s when the key lacks the required scope", async () => {

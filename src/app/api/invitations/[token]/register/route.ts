@@ -80,7 +80,7 @@ export async function POST(
 
   const { data: invitation, error: lookupError } = await db
     .from('account_invitations')
-    .select('id, kind, accepted_at, expires_at')
+    .select('id, account_id, kind, accepted_at, expires_at')
     .eq('token_hash', hashInviteToken(token))
     .maybeSingle()
   if (lookupError) {
@@ -96,6 +96,20 @@ export async function POST(
   }
 
   const isWorkspace = invitation.kind === 'workspace'
+
+  // The account that issued a workspace invitation must still be allowed to
+  // create accounts. This also retires any such invitation an ordinary
+  // account created before only the platform account could.
+  if (isWorkspace) {
+    const { data: inviter } = await db
+      .from('accounts')
+      .select('can_create_workspaces')
+      .eq('id', invitation.account_id)
+      .maybeSingle()
+    if (inviter?.can_create_workspaces !== true) {
+      return fail(t('invitations.registerInvalid'), 400)
+    }
+  }
 
   // Single use: claim it before creating anything. Two people racing with
   // the same link cannot both get past this UPDATE.

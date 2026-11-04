@@ -292,7 +292,7 @@ export function MessageComposer({
       }
       const draftText = typeof data.draft === "string" ? data.draft.trim() : "";
       if (!draftText) {
-        toast.error(t("draftEmpty"));
+        toast.error(data.handoff ? t("draftHandoff") : t("draftEmpty"));
         return;
       }
       setText(draftText);

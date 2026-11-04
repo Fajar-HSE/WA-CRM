@@ -107,7 +107,7 @@ export async function POST(request: Request) {
       knowledge,
     })
 
-    const { text, usage } = await generateReply({ config, systemPrompt, messages })
+    const { text, usage, handoff } = await generateReply({ config, systemPrompt, messages })
 
     // Record spend on the account's BYO key. Best-effort + via the
     // service role (the log has no `authenticated` INSERT policy). This
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
       console.error('[ai/draft] usage log skipped:', logErr)
     }
 
-    return NextResponse.json({ draft: text })
+    return NextResponse.json({ draft: text, handoff })
   } catch (err) {
     if (err instanceof AiError) {
       return NextResponse.json(

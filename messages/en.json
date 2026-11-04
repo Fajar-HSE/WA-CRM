@@ -439,7 +439,8 @@
         "document": "document",
         "audio": "audio"
       },
-      "uploadFailed": "Upload failed."
+      "uploadFailed": "Upload failed.",
+      "draftHandoff": "The assistant wanted a human to handle this (a hand-off rule in your AI instructions). Check Settings → AI assistant → Instructions."
     },
     "bubble": {
       "photo": "Photo",

@@ -439,7 +439,8 @@
         "document": "dokumen",
         "audio": "audio"
       },
-      "uploadFailed": "Unggahan gagal."
+      "uploadFailed": "Unggahan gagal.",
+      "draftHandoff": "Asisten memilih menyerahkan ke manusia (ada aturan serah-terima di Instruksi AI Anda). Periksa Pengaturan → Asisten AI → Instruksi."
     },
     "bubble": {
       "photo": "Foto",

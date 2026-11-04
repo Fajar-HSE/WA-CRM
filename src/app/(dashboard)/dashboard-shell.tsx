@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { Header } from "@/components/layout/header";
 import { AccountAccessAlert } from "@/components/layout/account-access-alert";
+import { AccountDisabledGate } from "@/components/layout/account-disabled-gate";
 import { PresenceHeartbeat } from "@/components/presence/presence-heartbeat";
 import { BrowserNotificationsListener } from "@/components/notifications/browser-notifications-listener";
 
@@ -47,6 +48,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
+    <AccountDisabledGate>
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Reports this tab's online/away presence once we know a user is
           signed in. Headless — renders nothing. */}
@@ -71,6 +73,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </AccountDisabledGate>
   );
 }
 

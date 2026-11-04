@@ -18,8 +18,11 @@ import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel'
 import { DealsSettings } from '@/components/settings/deals-settings';
 import { InboxSettings } from '@/components/settings/inbox-settings';
 import { MembersTab } from '@/components/settings/members-tab';
+import { AccountsPanel } from '@/components/settings/accounts-panel';
+import { usePlatformAdmin } from '@/hooks/use-platform-admin';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import {
+  DEFAULT_SECTION,
   resolveSection,
   type SettingsSection,
 } from '@/components/settings/settings-sections';
@@ -46,12 +49,16 @@ function SettingsPageInner() {
   const { defaultCurrency } = useAuth();
   const { mode } = useTheme();
   const t = useTranslations('Settings');
+  const isPlatformAdmin = usePlatformAdmin();
 
   // The URL (`?tab=`) is the single source of truth for the active
   // section — deep-linkable, and it keeps the existing links in the
   // app sidebar/header working. Legacy tab values (tags, custom-fields)
   // resolve onto their new home; unknown/empty → the Overview landing.
-  const section = resolveSection(searchParams.get('tab'));
+  const requested = resolveSection(searchParams.get('tab'));
+  // The Accounts section exists only for the platform administrator.
+  const section: SettingsSection =
+    requested === 'accounts' && !isPlatformAdmin ? DEFAULT_SECTION : requested;
 
   const go = (next: SettingsSection) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -83,6 +90,7 @@ function SettingsPageInner() {
     deals: <DealsSettings />,
     members: <MembersTab />,
     api: <ApiKeysSettings />,
+    accounts: <AccountsPanel />,
   };
 
   return (
@@ -97,7 +105,12 @@ function SettingsPageInner() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[236px_minmax(0,1fr)] lg:items-start">
-        <SettingsRail active={section} onSelect={go} hints={hints} />
+        <SettingsRail
+          active={section}
+          onSelect={go}
+          hints={hints}
+          hidden={isPlatformAdmin ? undefined : ['accounts']}
+        />
         <div className="min-w-0">{panel[section]}</div>
       </div>
     </div>

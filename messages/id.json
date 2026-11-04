@@ -1842,11 +1842,13 @@
       "deals": "Deal & mata uang",
       "inbox": "Kotak masuk",
       "members": "Anggota tim",
-      "api": "Kunci API"
+      "api": "Kunci API",
+      "accounts": "Akun"
     },
     "groups": {
       "account": "Akun",
-      "workspace": "Ruang kerja"
+      "workspace": "Ruang kerja",
+      "platform": "Platform"
     },
     "profile": {
       "title": "Profil Anda",
@@ -2447,7 +2449,9 @@
         "admin": "admin",
         "agent": "agen",
         "viewer": "pengamat"
-      }
+      },
+      "accountDisabled": "Akun ini dinonaktifkan. Hubungi pengelola.",
+      "platformOnly": "Hanya pengelola platform yang dapat melakukan ini."
     },
     "rateLimitExceeded": "Batas permintaan terlampaui",
     "send": {
@@ -2838,6 +2842,44 @@
       "submitFailed": "Gagal mengirim template.",
       "metaApiStatus": "Kesalahan API Meta: {status}",
       "syncFailed": "Gagal menyinkronkan template"
+    },
+    "platformAccounts": {
+      "notFound": "Akun tidak ditemukan.",
+      "badRequest": "Kirim { \"disabled\": true } atau { \"disabled\": false }.",
+      "ownAccount": "Anda tidak dapat menonaktifkan akun Anda sendiri.",
+      "isPlatform": "Ini akun platform. Hapus dulu tanda platformnya jika memang ingin menonaktifkan."
     }
+  },
+  "AccountDisabled": {
+    "title": "Akun ini dinonaktifkan",
+    "body": "Pengelola telah mematikan akun ini. Data Anda tetap tersimpan. Hubungi pengelola agar dapat masuk lagi.",
+    "signOut": "Keluar"
+  },
+  "PlatformAccounts": {
+    "title": "Akun",
+    "desc": "Semua akun di instalasi ini. Menonaktifkan akun memblokir penggunanya, kunci API, dan pesan WhatsApp masuk, serta menghentikan sesi WhatsApp-nya. Data tetap tersimpan dan akun bisa diaktifkan lagi.",
+    "loadFailed": "Daftar akun gagal dimuat.",
+    "colAccount": "Akun",
+    "colOwner": "Pemilik",
+    "colMembers": "Anggota",
+    "colWhatsapp": "WhatsApp",
+    "colCreated": "Dibuat",
+    "colStatus": "Status",
+    "active": "Aktif",
+    "disabled": "Nonaktif",
+    "platform": "Platform",
+    "you": "Anda",
+    "noWhatsapp": "Belum terhubung",
+    "disable": "Nonaktifkan",
+    "enable": "Aktifkan",
+    "empty": "Belum ada akun.",
+    "confirmDisableTitle": "Nonaktifkan {name}?",
+    "confirmDisableBody": "Penggunanya akan diblokir, kunci API berhenti bekerja, pesan WhatsApp masuk diabaikan, dan sesi WhatsApp dihentikan. Data tetap tersimpan. Akun bisa diaktifkan lagi.",
+    "confirmEnableTitle": "Aktifkan {name}?",
+    "confirmEnableBody": "Penggunanya bisa masuk lagi. Mereka harus memulai sesi WhatsApp lagi dari Pengaturan → WhatsApp.",
+    "cancel": "Batal",
+    "disabledToast": "Akun dinonaktifkan.",
+    "enabledToast": "Akun diaktifkan.",
+    "updateFailed": "Akun gagal diperbarui."
   }
 }

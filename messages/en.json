@@ -1842,11 +1842,13 @@
       "deals": "Deals & currency",
       "inbox": "Inbox",
       "members": "Team members",
-      "api": "API keys"
+      "api": "API keys",
+      "accounts": "Accounts"
     },
     "groups": {
       "account": "Account",
-      "workspace": "Workspace"
+      "workspace": "Workspace",
+      "platform": "Platform"
     },
     "profile": {
       "title": "Your profile",
@@ -2447,7 +2449,9 @@
         "admin": "admin",
         "agent": "agent",
         "viewer": "viewer"
-      }
+      },
+      "accountDisabled": "This account has been disabled. Contact the administrator.",
+      "platformOnly": "Only the platform administrator can do this."
     },
     "rateLimitExceeded": "Rate limit exceeded",
     "send": {
@@ -2838,6 +2842,44 @@
       "submitFailed": "Failed to submit template.",
       "metaApiStatus": "Meta API error: {status}",
       "syncFailed": "Failed to sync templates"
+    },
+    "platformAccounts": {
+      "notFound": "Account not found.",
+      "badRequest": "Send { \"disabled\": true } or { \"disabled\": false }.",
+      "ownAccount": "You cannot disable your own account.",
+      "isPlatform": "This is the platform account. Remove its platform flag first if you really want to disable it."
     }
+  },
+  "AccountDisabled": {
+    "title": "This account is disabled",
+    "body": "The administrator has switched this account off. Your data is kept. Contact the administrator to get access again.",
+    "signOut": "Sign out"
+  },
+  "PlatformAccounts": {
+    "title": "Accounts",
+    "desc": "Every account on this installation. Disabling an account blocks its users, API keys and incoming WhatsApp messages, and stops its WhatsApp session. Data is kept and you can enable it again.",
+    "loadFailed": "Could not load the accounts.",
+    "colAccount": "Account",
+    "colOwner": "Owner",
+    "colMembers": "Members",
+    "colWhatsapp": "WhatsApp",
+    "colCreated": "Created",
+    "colStatus": "Status",
+    "active": "Active",
+    "disabled": "Disabled",
+    "platform": "Platform",
+    "you": "You",
+    "noWhatsapp": "Not connected",
+    "disable": "Disable",
+    "enable": "Enable",
+    "empty": "No accounts yet.",
+    "confirmDisableTitle": "Disable {name}?",
+    "confirmDisableBody": "Its users will be blocked, API keys will stop working, incoming WhatsApp messages are dropped and the WhatsApp session is stopped. Data is kept. You can enable it again.",
+    "confirmEnableTitle": "Enable {name}?",
+    "confirmEnableBody": "Its users can sign in again. They must start the WhatsApp session again from Settings → WhatsApp.",
+    "cancel": "Cancel",
+    "disabledToast": "Account disabled.",
+    "enabledToast": "Account enabled.",
+    "updateFailed": "Could not update the account."
   }
 }

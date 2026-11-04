@@ -64,6 +64,27 @@ Settings → WhatsApp instead of the Connect button, and the server refuses
 the request. A user cannot grant this to themselves: the database blocks
 the change from any browser session.
 
+## Listing and disabling accounts
+
+The platform account (the one holding `can_create_workspaces`) sees an
+extra **Platform → Accounts** section in Settings. It lists every account
+with its owner, member count, WhatsApp status and creation date, and has a
+**Disable** / **Enable** button per account. Needs migration 064.
+
+Disabling an account:
+
+- shows its users a "this account is disabled" screen and refuses their
+  requests;
+- stops its API keys and drops incoming WhatsApp messages;
+- stops its WAHA session (best effort; the block works even if WAHA is down).
+
+Nothing is deleted. **Enable** clears the flag; the account's owner then
+starts the WhatsApp session again from Settings → WhatsApp.
+
+Limits: you cannot disable your own account or another platform account
+(remove its flag first), and scheduled automations are not skipped
+separately for a disabled account.
+
 ## WAHA
 
 Each account gets its own WAHA session (`wacrm-<account id>`). WAHA allows

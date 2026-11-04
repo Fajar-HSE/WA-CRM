@@ -14,7 +14,7 @@
 // shouts this in copy.
 // ============================================================
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Copy, Loader2, MessageCircle, Sparkles } from 'lucide-react';
 
@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/lib/supabase/client';
 
 type InviteRole = 'admin' | 'agent' | 'viewer';
 // 'workspace': the invitee registers an account of their own and connects
@@ -80,13 +81,35 @@ export function InviteMemberDialog({
 }: InviteMemberDialogProps) {
   const t = useTranslations('Settings.invite');
   const tRoles = useTranslations('Settings.roles');
-  const { account } = useAuth();
-  const [kind, setKind] = useState<InviteKind>('workspace');
+  const { account, accountId } = useAuth();
+  const supabase = useMemo(() => createClient(), []);
+  // Only the platform account may create new accounts. Anyone else sees just
+  // "join my team". Starts false so the restricted choice is the safe default
+  // while this loads, and if the column is missing (migration 063 not applied).
+  const [canCreateWorkspaces, setCanCreateWorkspaces] = useState(false);
+  const [chosenKind, setKind] = useState<InviteKind>('workspace');
+  const kind: InviteKind = canCreateWorkspaces ? chosenKind : 'member';
   const [role, setRole] = useState<InviteRole>('agent');
   const [expiry, setExpiry] = useState<string>('7');
   const [label, setLabel] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<CreatedInvite | null>(null);
+
+  useEffect(() => {
+    if (!open || !accountId) return;
+    let alive = true;
+    supabase
+      .from('accounts')
+      .select('can_create_workspaces')
+      .eq('id', accountId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (alive) setCanCreateWorkspaces(!error && data?.can_create_workspaces === true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [open, accountId, supabase]);
 
   function reset() {
     setKind('workspace');
@@ -278,6 +301,7 @@ export function InviteMemberDialog({
             </DialogHeader>
 
             <div className="space-y-4 py-2">
+              {canCreateWorkspaces ? (
               <div className="space-y-2">
                 <Label className="text-muted-foreground">{t('kindLabel')}</Label>
                 <Select
@@ -296,6 +320,11 @@ export function InviteMemberDialog({
                   {t(kind === 'workspace' ? 'kindWorkspaceHint' : 'kindMemberHint')}
                 </p>
               </div>
+              ) : (
+                <p className="rounded-lg border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
+                  {t('kindRestricted')}
+                </p>
+              )}
 
               {kind === 'member' && (
               <div className="space-y-2">

@@ -182,6 +182,15 @@ BEGIN
     RAISE EXCEPTION 'protect_whatsapp_waha_columns trigger is missing — migration 062 did not apply';
   END IF;
 
+  -- Only the platform account creates new accounts (063).
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'accounts'
+      AND column_name = 'can_create_workspaces'
+  ) THEN
+    RAISE EXCEPTION 'accounts.can_create_workspaces is missing — migration 063 did not apply';
+  END IF;
+
   RAISE NOTICE 'schema verification passed';
 END
 $$;

@@ -189,6 +189,25 @@ export async function POST(request: Request) {
     // connects their own WhatsApp number. 'member' (the default, as before)
     // joins this account. The role only matters for 'member'.
     const kind = body?.kind === "workspace" ? "workspace" : "member";
+
+    // Only the platform account hands out new accounts. Every invited person
+    // owns their own account, so without this check an invitee could invite
+    // more people, each adding a WhatsApp session to the server. They can
+    // still invite teammates INTO their own account ('member').
+    if (kind === "workspace") {
+      const { data: acct, error: acctErr } = await ctx.supabase
+        .from("accounts")
+        .select("can_create_workspaces")
+        .eq("id", ctx.accountId)
+        .maybeSingle();
+      if (acctErr || acct?.can_create_workspaces !== true) {
+        return NextResponse.json(
+          { error: t('account.invitations.workspaceNotAllowed') },
+          { status: 403 },
+        );
+      }
+    }
+
     const role = kind === "workspace" ? "admin" : body?.role;
     if (!isAccountRole(role) || role === "owner") {
       // The DB CHECK already rejects 'owner', but failing fast

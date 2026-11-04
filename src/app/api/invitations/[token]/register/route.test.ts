@@ -17,6 +17,8 @@ const script = {
   },
   profile: { account_id: 'acct-new' } as { account_id: string } | null,
   grantError: null as { message: string } | null,
+  /** accounts.can_create_workspaces of the inviting account. */
+  inviterCanCreate: true,
 }
 const deleteUser = vi.fn()
 const createUser = vi.fn()
@@ -55,6 +57,7 @@ vi.mock('@/lib/flows/admin-client', () => ({
           ops.push({ ...state })
           if (table === 'account_invitations') return { data: script.invitation, error: null }
           if (table === 'profiles') return { data: script.profile, error: null }
+          if (table === 'accounts') return { data: { can_create_workspaces: script.inviterCanCreate }, error: null }
           return { data: null, error: null }
         },
         then: (resolve: (v: unknown) => unknown) => {
@@ -93,7 +96,8 @@ function call(body: unknown, token = 'tok') {
 const good = { fullName: 'Sari', email: 'Sari@Example.com', password: 'password-1' }
 
 function resetScript() {
-  script.invitation = { id: 'inv-1', kind: 'workspace', accepted_at: null, expires_at: FUTURE }
+  script.invitation = { id: 'inv-1', account_id: 'acct-inviter', kind: 'workspace', accepted_at: null, expires_at: FUTURE }
+  script.inviterCanCreate = true
   script.claimRows = [{ id: 'inv-1' }]
   script.createUser = { data: { user: { id: 'user-1' } }, error: null }
   script.profile = { account_id: 'acct-new' }
@@ -144,11 +148,20 @@ describe('POST /api/invitations/[token]/register', () => {
     })
     const claim = ops.find((o) => o.table === 'account_invitations' && o.values?.accepted_at)
     expect(claim).toBeTruthy()
-    expect(ops.find((o) => o.table === 'accounts')?.values).toEqual({ can_connect_whatsapp: true })
+    expect(ops.find((o) => o.table === 'accounts' && o.values)?.values).toEqual({ can_connect_whatsapp: true })
     expect(
       ops.find((o) => o.table === 'account_invitations' && o.values?.accepted_by_user_id)?.values,
     ).toEqual({ accepted_by_user_id: 'user-1' })
     expect(releases()).toHaveLength(0)
+  })
+
+  it('refuses a workspace invitation from an account that may no longer create accounts', async () => {
+    script.inviterCanCreate = false
+    const res = await call(good)
+    expect(res.status).toBe(400)
+    expect(createUser).not.toHaveBeenCalled()
+    // Nothing was claimed, so there is nothing to release either.
+    expect(ops.some((o) => o.values?.accepted_at)).toBe(false)
   })
 
   it('loses gracefully when someone else claimed the link first', async () => {
@@ -183,7 +196,9 @@ describe('POST /api/invitations/[token]/register', () => {
   })
 
   it('does not claim or grant anything for a member invitation', async () => {
-    script.invitation = { id: 'inv-2', kind: 'member', accepted_at: null, expires_at: FUTURE }
+    script.invitation = { id: 'inv-2', account_id: 'acct-inviter', kind: 'member', accepted_at: null, expires_at: FUTURE }
+    // A member invitation does not depend on the inviter's account-creation right.
+    script.inviterCanCreate = false
     const res = await call(good)
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ ok: true, kind: 'member' })

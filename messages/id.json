@@ -1698,7 +1698,8 @@
       "kindWorkspaceHint": "Orang itu mendaftar akun CRM terpisah dan menghubungkan nomor WhatsApp-nya sendiri. Percakapannya tetap pribadi. Tautan hanya berlaku sekali.",
       "kindMemberHint": "Orang itu bergabung ke akun ini dan berbagi satu kotak masuk dan satu nomor WhatsApp.",
       "inviteCreatedDescWorkspace": "Bagikan tautan ini ke orang tersebut. Mereka dapat mendaftar akun sendiri dan menghubungkan nomor WhatsApp-nya. Tautan hanya berlaku <bold>sekali</bold> dan aktif selama <bold>{days} hari</bold>.",
-      "whatsappMessageWorkspace": "Anda diundang membuat akun sendiri di wacrm. Tautan hanya berlaku sekali dan aktif {expiresInDays} hari: {url}"
+      "whatsappMessageWorkspace": "Anda diundang membuat akun sendiri di wacrm. Tautan hanya berlaku sekali dan aktif {expiresInDays} hari: {url}",
+      "kindRestricted": "Anda dapat mengundang rekan tim ke akun Anda (mereka berbagi kotak masuk dan nomor WhatsApp Anda). Akun terpisah yang baru hanya dapat dibuat oleh pengelola."
     },
     "tagsAndFields": {
       "title": "Kolom & tag",
@@ -2667,7 +2668,8 @@
         "loadFailed": "Gagal memuat undangan",
         "roleInvalid": "'role' harus salah satu dari admin, agent, viewer",
         "labelTooLong": "Label maksimal {max} karakter",
-        "createFailed": "Gagal membuat undangan"
+        "createFailed": "Gagal membuat undangan",
+        "workspaceNotAllowed": "Hanya akun pengelola yang dapat membuat akun baru. Anda dapat mengundang rekan tim ke akun Anda sendiri."
       },
       "members": {
         "loadFailed": "Gagal memuat anggota",

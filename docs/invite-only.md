@@ -35,6 +35,27 @@ An own-account invitation works **once**. The moment the person registers
 the link is used up, so forwarding it gets nobody else in. An unused link
 expires on its date.
 
+## Who can create new accounts
+
+Only the **platform account** may send an "Own account" invitation (the
+accounts that existed before invitations, which includes yours). An invited
+person owns their own account but can only invite teammates **into** it
+("Join my team"); the "Own account" choice is not offered to them, and the
+server refuses it. This stops invitations chaining from person to person.
+
+The right is `accounts.can_create_workspaces`, set by migration 063 (accounts
+that arrived through an own-account invitation do not get it). To grant or
+remove it for a specific account, run in the Supabase SQL editor:
+
+```sql
+update accounts set can_create_workspaces = true where id = '<account id>';
+```
+
+Find an account id with `select a.id, a.name, p.email from accounts a join
+profiles p on p.account_id = a.id where p.account_role = 'owner';`. An
+own-account invitation that an ordinary account created before this rule is
+refused when someone tries to use it.
+
 ## Who can connect WhatsApp
 
 Only accounts created from an own-account invitation, plus the accounts

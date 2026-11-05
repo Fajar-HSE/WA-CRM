@@ -87,87 +87,170 @@ Skema yang belum tercantum dapat ditanyakan ke admin lewat WhatsApp 0852-2589-95
 
 ---
 
-## DOKUMEN 5
+## DOKUMEN 5A
 
-**Judul:** Sertifikasi GIS - Gambaran Umum
+**Judul:** Sertifikasi GIS - Gambaran Umum dan LSP Geospasial
 
-ICC melayani pelatihan dan sertifikasi di bidang Sistem Informasi Geografis (GIS/SIG), bagian dari bidang Pemetaan.
-Dasar hukum: UU Nomor 4 Tahun 2011 tentang Informasi Geospasial (pasal 55 mewajibkan pelaksana informasi geospasial memiliki kompetensi dari lembaga yang berwenang) dan SKKNI Bidang Informasi Geospasial, Kepmenaker Nomor 172 Tahun 2020.
-Sertifikat kompetensi BNSP. Uji dilakukan oleh asesor dari LSP bidang geospasial.
-Skema GIS yang diselenggarakan ICC: Analis Sistem Informasi Geografis, dan Pengolahan Data Foto Udara Lidar.
-Jenjang skema GIS di SKKNI: Operator Utama GIS (jenjang 4), Teknisi Pemetaan dan SIG (jenjang 5), Analis SIG (jenjang 6), Developer SIG (jenjang 6), Manajer SIG (jenjang 7).
-Operator mengolah data, teknisi mengakuisisi data, analis menafsirkan data, developer membangun sistem, manajer mengarahkan proyek.
-Satu orang boleh memiliki dua sertifikat GIS (misalnya Operator dan Analis) selama memenuhi syarat tiap skema. Biaya dibayar per skema.
-Untuk skema GIS yang sedang dibuka dan jadwalnya, hubungi admin: WhatsApp 0852-2589-9555.
+ICC menyelenggarakan pelatihan berbasis kompetensi bidang Sistem Informasi Geografis (GIS/SIG). Uji kompetensi dan penerbitan sertifikat dilakukan oleh **LSP Geospasial**, Lembaga Sertifikasi Profesi bidang informasi geospasial yang berlisensi BNSP.
+Dasar hukum: UU Nomor 4 Tahun 2011 tentang Informasi Geospasial (pasal 55: pelaksana informasi geospasial harus memiliki kompetensi dari lembaga berwenang) dan SKKNI Bidang Informasi Geospasial (Kepmenaker 172 Tahun 2020).
+Data LSP Geospasial (dari situs lspgeospasial.com):
+- Lisensi BNSP: BNSP-LSP-689-ID. Akreditasi KAN: LSP-022-IDN.
+- Lisensi sertifikasi jarak jauh: SK BNSP KEP.0565/BNSP/II/2025.
+- 15 skema sertifikasi, 34+ asesor, 24+ TUK mitra, 1.520+ peserta tersertifikasi.
+- Kontak LSP Geospasial (konsultasi pendaftaran): WhatsApp 0852-1694-8068.
+Sertifikat profesi berlisensi BNSP berlaku 3 tahun, lalu diperpanjang lewat sertifikasi ulang. Penerbitan sertifikat sekitar 3 sampai 4 minggu setelah uji kompetensi, tergantung antrean verifikasi di BNSP.
+Kelompok skema: Sistem Informasi Geografis (5 jenjang), Survei Kadastral (5 jenjang), dan Klaster (5 paket).
+Kategori peserta yang sering bertanya: lulusan perguruan tinggi yang sudah bekerja di bidang geospasial tetapi belum punya sertifikat profesi.
 
 ---
 
-## DOKUMEN 6
+## DOKUMEN 5B
 
-**Judul:** Sertifikasi Analis Sistem Informasi Geografis (Analis GIS)
+**Judul:** Biaya Uji Kompetensi GIS di LSP Geospasial
 
-Bentuk kegiatan: pelatihan berbasis kompetensi secara tatap muka, dilanjutkan uji kompetensi oleh asesor LSP bidang informasi geospasial.
-Sasaran peserta: analis pada aktivitas informasi geomatika di institusi pendidikan, instansi pemerintah, lembaga negara, atau perusahaan.
-Biaya yang tercantum di situs: Rp 6.499.000 per peserta (paket pelatihan dan uji kompetensi, BNSP).
-Jadwal: dibuka bergelombang dan bisa berubah. Tanyakan jadwal terbaru ke admin. In-house training dilaksanakan sesuai permintaan perusahaan. Pelatihan online bisa diminta lewat admin.
-Pelatihan ini bukan kelas dasar GIS. Isinya pendalaman dan penyelarasan pengalaman kerja SIG Anda dengan unit kompetensi standar, sebagai persiapan uji. Jika belum pernah mengoperasikan GIS, disarankan ikut pelatihan teknis GIS dulu.
-Unit kompetensi yang diuji (SKKNI 172/2020):
+Harga di bawah adalah biaya uji kompetensi (sertifikasi) di LSP Geospasial untuk wilayah Jawa dan Bali. Di luar Jawa dan Bali tersedia harga khusus, hubungi admin.
+Sistem Informasi Geografis:
+- Operator Utama: Rp 2.200.000
+- Teknisi dan Pemetaan: Rp 2.600.000
+- Analis: Rp 3.200.000
+- Programmer: Rp 3.200.000
+- Manajer/Spesialis: Rp 4.000.000
+Survei Kadastral:
+- Asisten Surveyor Kadastral Pertama: Rp 2.150.000
+- Asisten Surveyor Kadastral Muda: Rp 2.400.000
+- Asisten Surveyor Kadastral Madya: Rp 2.500.000
+- Surveyor Kadastral Muda: Rp 2.650.000
+- Surveyor Kadastral Madya: Rp 2.900.000
+Klaster:
+- Pembuatan Peta: Rp 2.600.000
+- Analisis SIG: Rp 3.200.000
+- Interpretasi Citra Visual: Rp 3.200.000
+- Interpretasi Citra Digital: Rp 3.200.000
+- Pengolahan Foto Udara dan Lidar: Rp 2.600.000
+Harga paket pelatihan berbasis kompetensi dari ICC berbeda dari biaya uji di atas. Contoh: situs ICC mencantumkan pelatihan dan uji kompetensi Analis GIS Rp 6.499.000 per peserta. Pelanggan yang hanya ingin uji tanpa pelatihan, atau pelatihan plus uji, perlu konfirmasi ke admin ICC.
+Metode: luring (tatap muka di TUK) dan jarak jauh (online).
+
+---
+
+## DOKUMEN 5C
+
+**Judul:** Metode Sertifikasi GIS: Luring dan Jarak Jauh
+
+Luring: uji tatap muka di Tempat Uji Kompetensi (TUK) bersama asesor, praktik langsung dengan peralatan di TUK. Tersedia untuk semua skema.
+Jarak jauh (online): uji daring sesuai SK BNSP KEP.0565/BNSP/II/2025, bisa dari mana saja tanpa hadir di TUK, hemat biaya dan waktu perjalanan. Tersedia untuk skema tertentu:
+- SIG: Operator Utama, Teknisi dan Pemetaan, Analis, Manajer/Spesialis
+- Survei Kadastral: Surveyor Kadastral Muda, Surveyor Kadastral Madya
+- Klaster: Pengolahan Foto Udara dan Lidar
+Skema Programmer GIS, tiga jenjang Asisten Surveyor Kadastral, serta klaster Pembuatan Peta, Analisis SIG, dan Interpretasi Citra hanya tersedia luring.
+Biaya jarak jauh sama dengan luring untuk skema yang tersedia.
+Asesmen berbasis demonstrasi, verifikasi portofolio, dan pertanyaan teknis, bukan ujian tulis semata.
+
+---
+
+## DOKUMEN 5D
+
+**Judul:** Skema Operator Utama GIS (jenjang 4)
+
+Untuk tenaga kerja yang mengoperasikan perangkat lunak SIG dan mengelola data geospasial dasar. Biaya uji Rp 2.200.000 (Jawa dan Bali).
+Unit kompetensi (9):
+- Menggunakan Perangkat Komputer
+- Mengoperasikan Perangkat Lunak SIG
+- Membaca Peta
+- Mengonversi Data Geospasial Analog menjadi Digital
+- Menginput Data Hasil Pengukuran Lapangan
+- Melakukan Pemberian Sistem Koordinat Peta
+- Melakukan Konversi Antar Format File Penyimpanan Data Geospasial
+- Mengedit Data Geospasial
+- Melakukan Transformasi Sistem Koordinat
+Syarat (salah satu):
+- Lulus D1 bidang SIG, Survei dan Pemetaan, Teknik Geomatika, atau Informasi Geospasial, dengan sertifikat pelatihan operator SIG atau pengalaman kerja minimal 1 tahun.
+- Lulus SMK Survei dan Pemetaan/Informasi Geospasial program 4 tahun, dengan sertifikat pelatihan operator SIG atau pengalaman kerja minimal 1 tahun.
+- Lulus SMK bidang terkait, dengan sertifikat pelatihan operator SIG atau pengalaman kerja bidang SIG minimal 2 tahun.
+- Lulus SMK/SMA sederajat, dengan sertifikat pelatihan operator SIG atau pengalaman kerja minimal 3 tahun.
+- Lulus D2 bidang SIG, Survei dan Pemetaan, Teknik Geomatika, atau Informasi Geospasial.
+- Memiliki sertifikat pelatihan operator SIG dan pengalaman kerja operator SIG minimal 4 tahun.
+Syarat umum semua skema: penglihatan, pendengaran, dan mobilitas baik, tidak buta warna, berperilaku baik.
+
+---
+
+## DOKUMEN 5E
+
+**Judul:** Skema Teknisi Pemetaan dan SIG (jenjang 5)
+
+Untuk tenaga teknis yang mengompilasi, mengintegrasikan, dan menyajikan data geospasial. Biaya uji Rp 2.600.000 (Jawa dan Bali).
+Unit kompetensi (9):
+- Mengoperasikan Perangkat Lunak SIG
+- Membaca Peta
+- Melakukan Deteksi Permasalahan Perangkat Lunak dan Perangkat Keras SIG
+- Melakukan Kompilasi Data Geospasial
+- Mengintegrasikan Data Spasial dengan Data Nonspasial
+- Melakukan Konversi Antar Format File Penyimpanan Data Geospasial
+- Mengedit Data Geospasial
+- Membangun Basis Data Kartografi
+- Menyajikan Informasi Geospasial Sesuai Template yang Telah Disiapkan oleh Kartografer
+Syarat (salah satu):
+- Operator SIG dengan pengalaman kerja minimal 1 tahun pada jenjangnya.
+- Lulusan S1 Pendidikan Geografi dengan sertifikat pelatihan SIG jenjang 5 dan pengalaman kerja SIG minimal 1 tahun.
+- Lulusan D3 bidang SIG, Survei dan Pemetaan, atau Geomatika.
+- Lulusan D3 selain bidang SIG, dengan sertifikat pelatihan atau pengalaman kerja Teknisi Pemetaan dan SIG minimal 1 tahun.
+- Lulusan D1 bidang terkait dengan pengalaman kerja Teknisi Pemetaan dan SIG minimal 2 tahun.
+- Lulusan SMK bidang terkait program 4 tahun dengan pengalaman kerja Teknisi Pemetaan dan SIG minimal 2 tahun.
+
+---
+
+## DOKUMEN 5F
+
+**Judul:** Skema Analis SIG (jenjang 6)
+
+Untuk tenaga kerja yang melakukan analisis SIG, membangun model SIG, dan mengelola data geospasial. Biaya uji Rp 3.200.000 (Jawa dan Bali). Paket pelatihan plus uji dari ICC: lihat Dokumen 5B.
+Unit kompetensi (10):
+- Mengelola Tim Kerja
+- Mengoperasikan Perangkat Lunak SIG
+- Membaca Peta
 - Merancang Basis Data Spasial
 - Membuat Basis Data Spasial
-- Melakukan Kontrol Kualitas
-- Mengintegrasikan Data Spasial dengan Data Non Spasial
-- Melakukan Transformasi Sistem Koordinat
 - Melakukan Analisis SIG Tingkat Dasar
 - Membangun Model SIG Tingkat Dasar
 - Melakukan Analisis SIG Tingkat Lanjut
-- Membaca Peta
 - Mengelola Data Geospasial
-- Membuat Web GIS
-- Melakukan Visualisasi Informasi Geospasial dalam Bentuk Simbol pada Peta
-- Menyajikan Peta
-- Mematuhi Prinsip Dasar K3LL di Tempat Kerja
-- Melakukan Komunikasi Efektif di Tempat Kerja
-Metode asesmen: pra-asesmen (isi APL-01 dan APL-02), verifikasi berkas dan portofolio, praktik dan simulasi, uji tulis sesuai skema, wawancara.
+- Melakukan Kontrol Kualitas Pekerjaan SIG
+Syarat (salah satu):
+- Lulus D4/S1 bidang SIG, Geografi, Kartografi dan Penginderaan Jauh, Geografi Lingkungan, Pengembangan Wilayah, Geodesi, atau Geomatika.
+- Lulus D4/S1 bidang informasi geospasial lainnya, dengan sertifikat pelatihan Analis SIG dan pengalaman kerja minimal 1 tahun sebagai analis SIG.
+Pelatihan Analis SIG dapat berasal dari perguruan tinggi terakreditasi, institusi pemerintah bidang survei dan pemetaan, atau lembaga pelatihan terakreditasi.
+Pelatihan di ICC bersifat pelatihan berbasis kompetensi: mendalami dan menyelaraskan pengalaman kerja SIG dengan unit kompetensi standar sebagai persiapan uji. Bukan kelas dasar GIS. Jika belum pernah mengoperasikan GIS, disarankan ikut pelatihan teknis GIS dulu.
+Berkas yang biasa diminta: CV terbaru, surat rekomendasi atau SK kerja, pas foto 3x4 latar merah, fotokopi ijazah dan KTP, portofolio hasil kerja.
 
 ---
 
-## DOKUMEN 7
+## DOKUMEN 5G
 
-**Judul:** Syarat Peserta Analis GIS
+**Judul:** Skema Programmer/Developer SIG dan Manajer/Spesialis SIG
 
-Syarat dasar (salah satu jalur):
-1. Lulusan D4/S1 bidang SIG, Geografi, Kartografi dan Penginderaan Jauh, Geografi Lingkungan, Pengembangan Wilayah, Geodesi, atau Geomatika; atau
-2. Lulusan D4/S1 bidang informasi geospasial lainnya, memiliki sertifikat pelatihan Analis SIG, dan pengalaman kerja 1 tahun di bidang Analis SIG.
-Berkas yang disiapkan:
-- Sertifikat pelatihan di bidang informasi geomatika atau keahlian terkait
-- Curriculum vitae terbaru
-- Surat rekomendasi perusahaan atau SK, atau bukti sah bahwa pemohon mengoperasikan GIS di tempat kerja
-- Pas foto 3x4 sebanyak 4 lembar (latar merah)
-- Fotokopi ijazah terakhir
-- Fotokopi KTP
-- Portofolio hasil pekerjaan
-Latar belakang pendidikan di luar daftar (misalnya Matematika) perlu ditanyakan ke admin. Penilaian akhirnya mengikuti ketentuan LSP.
+Programmer/Developer SIG (jenjang 6). Untuk yang mengembangkan, mengonfigurasi, mengelola, dan mengamankan aplikasi Web SIG. Biaya uji Rp 3.200.000. Hanya luring.
+Unit kompetensi: Mengelola Tim Kerja, Mengoperasikan Perangkat Lunak SIG, Membaca Peta, Melakukan Kustomisasi Perangkat Lunak SIG, Membangun Aplikasi SIG, Melakukan Konfigurasi Sistem Spasial Berbasis Client Server, Membuat Web SIG, Mengelola Web SIG, Melakukan Penanganan Masalah Web SIG, Melakukan Pengamanan Sistem Web SIG.
+Syarat: D4/S1 bidang SIG, Geografi, Kartografi dan Penginderaan Jauh, Geografi Lingkungan, Pengembangan Wilayah, Geodesi, Geomatika, Ilmu Komputer, Teknik Informatika, atau Sistem Informasi; atau D4/S1 informasi geospasial lainnya dengan sertifikat pelatihan Programmer/Developer SIG dan pengalaman kerja minimal 1 tahun.
+
+Manajer/Spesialis SIG (jenjang 7). Untuk yang mengelola pekerjaan, data, analisis, dan kualitas SIG. Biaya uji Rp 4.000.000.
+Unit kompetensi (7): Mengelola Pekerjaan Geospasial, Mengoperasikan Perangkat Lunak SIG, Membaca Peta, Melakukan Analisis SIG Tingkat Lanjut, Membangun Model SIG Tingkat Lanjut, Mengelola Data Geospasial, Melakukan Kontrol Kualitas Pekerjaan SIG.
+Syarat (salah satu): Analis SIG dengan pengalaman kerja minimal 2 tahun pada jenjangnya; S1 bidang terkait dengan sertifikat pelatihan Manajer/Spesialis SIG dan pengalaman minimal 2 tahun; S1 informasi geospasial lainnya dengan sertifikat pelatihan dan pengalaman minimal 3 tahun; D4/S1 dan S2 bidang SIG, Geografi, Kartografi dan Penginderaan Jauh, Geografi Lingkungan, Pengembangan Wilayah, Geodesi, atau Geomatika.
 
 ---
 
-## DOKUMEN 8
+## DOKUMEN 5H
 
-**Judul:** Sertifikasi Operator GIS
+**Judul:** Pilihan Skema GIS untuk Pelanggan (panduan memilih)
 
-Skema Operator Utama GIS (jenjang 4) berdasar SKKNI Bidang Informasi Geospasial 172 Tahun 2020. Terdiri atas 9 unit kompetensi:
-- Menggunakan perangkat komputer
-- Mengoperasikan perangkat lunak GIS
-- Mengonversi data analog ke digital
-- Menginput data hasil pengukuran lapangan
-- Pemberian sistem koordinat peta
-- Konversi antar format file geospasial
-- Mengedit data geospasial
-- Membaca peta
-- Transformasi sistem koordinat
-Syarat umum: pendidikan minimal SMA atau sederajat dan pengalaman mengoperasikan perangkat lunak GIS minimal 1 tahun. Berkas: portofolio atau bukti pekerjaan GIS, pas foto 3x4 latar merah, surat rekomendasi perusahaan. Peserta membawa laptop berisi ArcGIS.
-Biaya uji kompetensi umumnya sekitar Rp 2.200.000 per peserta (wilayah Jawa dan Bali, hanya uji). Besarnya bervariasi menurut LSP, lokasi, dan paket (uji saja atau pelatihan plus uji). Biaya pasti ditanyakan ke admin.
-Persiapan berkas: 3 sampai 14 hari. Pelatihan berbasis kompetensi: sekitar 3 sampai 5 hari. Penerbitan sertifikat: sekitar 3 sampai 4 minggu setelah asesmen. Masa berlaku sertifikat 3 tahun, lalu diperpanjang lewat re-sertifikasi.
-Perangkat lunak yang lazim: ArcGIS, QGIS, AutoCAD Map 3D.
+Cara memilih skema:
+- Mengolah dan mengedit data peta sehari-hari: Operator Utama.
+- Kompilasi data dan penyajian peta: Teknisi Pemetaan dan SIG.
+- Analisis spasial dan pemodelan: Analis SIG.
+- Membuat aplikasi atau web GIS: Programmer/Developer SIG.
+- Memimpin proyek dan kualitas pekerjaan GIS: Manajer/Spesialis SIG.
+- Survei kadastral (pertanahan): skema Surveyor Kadastral.
+- Hanya ingin satu kompetensi: pilih paket Klaster (Pembuatan Peta, Analisis SIG, Interpretasi Citra Visual, Interpretasi Citra Digital, Pengolahan Foto Udara dan Lidar).
+Satu orang boleh memiliki lebih dari satu sertifikat GIS selama syaratnya terpenuhi. Biaya dibayar per skema.
+Pertanyaan yang perlu diajukan ke pelanggan sebelum menyarankan skema: latar belakang pendidikan, lama pengalaman kerja GIS, jabatan saat ini, dan apakah punya sertifikat pelatihan GIS.
 
 ---
 
@@ -321,5 +404,5 @@ Catatan: aturan `[[HANDOFF]]` tidak mengganggu Suggest AI setelah perbaikan kode
 3. **Cara pembayaran, rekening, dan batas waktu** (Dokumen 9). Situs tidak menyebutnya, jadi tidak saya isi.
 4. **Jadwal dan harga Analis GIS dan Operator GIS terbaru.** Situs menulis jadwal Analis GIS "Coming Soon" (27-29 Oktober 2026, sudah lewat). Harga Operator GIS Rp 2,2 juta adalah angka umum dari artikel situs, bukan penawaran resmi ICC.
 5. **Jadwal (Dokumen 10)** mudah kedaluwarsa. Perbarui tiap bulan atau hapus dokumen ini jika Anda tidak mau memeliharanya.
-6. **Nama LSP mitra** untuk tiap skema. Situs hanya menyebut LSP Geospasial dan LSP MAPIN sebagai contoh untuk GIS.
+6. **Hubungan ICC dengan LSP Geospasial.** Dokumen GIS menyebut LSP Geospasial sebagai penyelenggara uji. Pastikan itu benar untuk kerja sama ICC, karena situs ICC juga menyebut LSP MAPIN dalam artikelnya. Situs LSP Geospasial menulis nomor lisensi BNSP dua cara (BNSP-LSP-689-ID dan LSP-589-ID). Saya memakai BNSP-LSP-689-ID, periksa ulang.
 7. Data kontak yang dikumpulkan bot hanya tertulis di percakapan. Bot belum menyimpannya otomatis ke kolom kontak (lihat catatan di balasan).

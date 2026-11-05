@@ -254,6 +254,160 @@ Pertanyaan yang perlu diajukan ke pelanggan sebelum menyarankan skema: latar bel
 
 ---
 
+## DOKUMEN 6A
+
+**Judul:** Sertifikasi Lingkungan Hidup dan Kehutanan - Gambaran Umum dan LSP LIK
+
+ICC melayani pelatihan berbasis kompetensi dan sertifikasi di bidang Lingkungan Hidup dan Kehutanan (bidang Environment). Uji kompetensi dan penerbitan sertifikat dilakukan oleh **LSP Lingkungan Kehutanan (LSP LIK)**.
+Data LSP LIK (dari situs lsp-lik.id):
+- Lembaga pendukung BNSP, lisensi BNSP-LSP-2117-ID (izin BNSP sejak 2022).
+- Terdaftar di KLHK: Sertifikat Registrasi SF.161/BP2SDM/SET/PEG.15.1/B/08/2024.
+- Asesor dari Kementerian Lingkungan Hidup dan Kehutanan (aktif) dan widyaiswara.
+- Lebih dari 50 Tempat Uji Kompetensi (TUK) di seluruh Indonesia.
+- Kontak LSP LIK untuk pendaftaran dan harga: WhatsApp 0818-0387-8888. Instagram @lsp.lik. Situs lsp-lik.id.
+Kelompok skema: pengendalian pencemaran air, pengendalian pencemaran udara dan emisi, pengelolaan limbah B3, pengambilan contoh uji, dan pengendalian kebakaran hutan dan lahan (Manggala Agni).
+Penting: sesuai SK Ketua BNSP KEP.475/BNSP/II/2026, LSP LIK **tidak dapat menyelenggarakan uji kompetensi jarak jauh (online) atau nirkertas (paperless)**. Uji hanya tatap muka sesuai prosedur. Jika pelanggan meminta uji online untuk skema lingkungan, jelaskan hal ini. Pelatihan berbasis kompetensi dari ICC boleh dilaksanakan online jika jadwalnya tersedia, tetapi ujinya tetap tatap muka.
+
+---
+
+## DOKUMEN 6B
+
+**Judul:** Biaya, Jadwal, dan Proses Uji Lingkungan di LSP LIK
+
+Biaya uji kompetensi berbeda untuk tiap skema dan **tidak dipublikasikan** di situs LSP LIK. Harga diperoleh langsung dari kontak LSP LIK (WhatsApp 0818-0387-8888) atau dari admin ICC. Jangan menyebut angka biaya uji lingkungan jika tidak ada di dokumen ini.
+Jadwal uji dipublikasikan berkala di lsp-lik.id dan Instagram @lsp.lik.
+Tempat uji: TUK Mandiri (permanen), TUK Sewaktu (misalnya hotel di daerah tanpa TUK mandiri), atau TUK Tempat Kerja (di lokasi kerja peserta).
+Tahapan: registrasi, pra uji kompetensi, uji kompetensi, rekomendasi asesor, pleno dan penyerahan sertifikat.
+Pendaftaran: isi formulir APL-01 dan APL-02, serahkan dokumen yang diminta. Dokumen umum untuk semua skema:
+- Fotokopi KTP
+- Pas foto 3x4 latar merah, 2 lembar
+- Portofolio: fotokopi ijazah terakhir, fotokopi sertifikat pelatihan, daftar riwayat hidup, uraian tugas (job description), surat keterangan kerja, laporan kerja
+- Surat rekomendasi dari pimpinan usaha atau kegiatan (untuk sebagian besar skema)
+Waktu layanan sampai sertifikat terbit: standar 30 hari kerja sejak hari pertama uji, tergantung ketersediaan blangko sertifikat dari BNSP.
+Masa berlaku sertifikat: 3 tahun. Perpanjangan lewat uji kompetensi ulang melalui TUK atau LSP LIK, dikenai biaya sesuai ketetapan LSP LIK.
+Uji tanpa pelatihan diperbolehkan jika peserta merasa mampu. Pelatihan hanya pemantapan.
+LSP tidak boleh memberi pelatihan kepada peserta ujinya (menjaga independensi). Pelatihan dilakukan oleh lembaga pelatihan seperti ICC.
+Kerahasiaan: asesor dan pihak LSP menandatangani fakta integritas. Informasi peserta tidak dibuka tanpa izin peserta.
+
+---
+
+## DOKUMEN 6C
+
+**Judul:** Skema Pengendalian Pencemaran Air (PPPA dan POPAL)
+
+1. Penanggung Jawab Pengendalian Pencemaran Air (PPPA), level manajer.
+Unit kompetensi: mengidentifikasi sumber pencemaran air limbah; menentukan karakteristik sumber; menilai tingkat pencemaran; menentukan peralatan IPAL; mengoperasikan IPAL; melaksanakan daur ulang olahan air limbah; menyusun rencana pemantauan kualitas air limbah; melaksanakan pemantauan kualitas air limbah; mengidentifikasi bahaya dalam pengolahan air limbah; melakukan tindakan K3 terhadap bahaya dalam pengolahan air limbah.
+Syarat pendidikan dan pengalaman (salah satu): S2; S1 rumpun ilmu lingkungan dan pengalaman 2 tahun di bidang pengendalian pencemaran air; S1 selain rumpun lingkungan dan pengalaman 3 tahun; D3 rumpun lingkungan dan pengalaman 3 tahun; D3 selain rumpun lingkungan dan pengalaman 5 tahun; SMA/SMK dan pengalaman 7 tahun.
+Syarat tambahan: sertifikat pelatihan berbasis kompetensi bidang operasional pengolahan air limbah, dan rekomendasi pimpinan usaha atau kegiatan.
+
+2. Penanggung Jawab Operasional Pengolahan Air Limbah (POPAL), level operator.
+Unit kompetensi: mengoperasikan IPAL; menilai tingkat pencemaran air limbah; melakukan perawatan IPAL; mengidentifikasi bahaya dalam pengolahan air limbah; melakukan tindakan K3 terhadap bahaya dalam pengolahan air limbah.
+Syarat (salah satu): D3 rumpun lingkungan dan pengalaman minimal 1 tahun; D3 selain rumpun lingkungan dan pengalaman 2 tahun; SMA/SMK dan pengalaman 4 tahun di operasional pengolahan air limbah.
+Syarat tambahan: sertifikat pelatihan berbasis kompetensi operasional pengolahan air limbah, dan rekomendasi pimpinan.
+Program ICC: Penanggung Jawab Pengendalian Pencemaran Air (PPPA), Rp 5.500.000, luring. Jadwal dan lokasi terbaru ditanyakan ke admin.
+
+---
+
+## DOKUMEN 6D
+
+**Judul:** Skema Pengendalian Pencemaran Udara dan Emisi (PPPU, POPU, Emisi, PPCUU)
+
+1. Penanggung Jawab Pengendalian Pencemaran Udara (PPPU), level manajer.
+Unit kompetensi: mengidentifikasi sumber pencemar udara dari emisi; menentukan karakteristik sumber; menilai tingkat pencemaran udara dari emisi; melaksanakan pengendalian pencemaran udara dari emisi; menentukan peralatan pengendalian; mengoperasikan alat pengendali; menyusun rencana pemantauan; melaksanakan pemantauan; mengidentifikasi bahaya; melakukan tindakan K3.
+Syarat (salah satu): S2; S1 rumpun lingkungan dan pengalaman 2 tahun; S1 selain rumpun lingkungan dan pengalaman 3 tahun; D3 rumpun lingkungan dan pengalaman 3 tahun; D3 selain rumpun lingkungan dan pengalaman 5 tahun; SMA/SMK dan pengalaman 7 tahun di bidang pengendalian pencemaran udara. Ditambah sertifikat pelatihan berbasis kompetensi di bidang operasional pengendalian pencemaran udara dan rekomendasi pimpinan.
+Program ICC: PPPU, online, Rp 5.500.000. Jadwal terbaru ditanyakan ke admin.
+
+2. Penanggung Jawab Operasional Instalasi Pengendalian Pencemaran Udara (POPU), level operator.
+Unit kompetensi: mengoperasikan alat pengendali pencemaran udara dari emisi; melakukan perawatan peralatan pengendali; menilai tingkat pencemaran udara dari emisi; mengidentifikasi bahaya; melakukan tindakan K3.
+Syarat: D3 rumpun lingkungan dan pengalaman 1 tahun; D3 selain rumpun lingkungan dan pengalaman 2 tahun; SMA/SMK dan pengalaman 4 tahun di operasional pengendalian pencemaran udara; atau sertifikat pelatihan berbasis kompetensi di bidang itu. Ditambah rekomendasi pimpinan.
+
+3. Petugas Pengukuran Emisi Sumber Bergerak (jenjang kualifikasi 3), level operator.
+Unit kompetensi: menerapkan kerja sama di tempat kerja; menerapkan K3L; menyusun rencana pengukuran emisi sumber bergerak; melakukan uji kinerja peralatan; melakukan pengukuran emisi sumber bergerak.
+Syarat: SMAK/SMA-IPA/SMF/STM-Kimia atau SMK teknis dengan pengalaman 2 sampai 3 tahun di bidang otomotif dan/atau pengukuran emisi sumber bergerak; SMA non-eksakta dengan pengalaman 4 tahun. Ditambah fotokopi sertifikat pelatihan berbasis kompetensi pengukuran emisi sumber bergerak dari lembaga pelatihan terakreditasi atau yang punya penjaminan mutu KLHK.
+
+4. Petugas Pengambilan Contoh Uji Udara Ambien dan Kebauan (PPCUU), level operator.
+Unit kompetensi: menerapkan K3L; melakukan uji kinerja peralatan; menerapkan kerja sama; menyusun rencana pengambilan contoh uji udara ambien dan kebauan; melakukan persiapan; melakukan pengambilan contoh uji.
+Syarat: sarjana/D3 eksakta dengan pengalaman 1 tahun; sarjana/D3 non-eksakta dengan pengalaman 3 tahun; SMAK/SMAK sederajat dengan pengalaman 2 tahun; SMA-IPA/SMF/STM-Kimia atau kejuruan teknis dengan pengalaman 3 tahun; SMA non-eksakta dengan pengalaman 4 tahun. Ditambah surat keterangan perusahaan atau surat rekomendasi.
+
+---
+
+## DOKUMEN 6E
+
+**Judul:** Skema Pengelolaan Limbah B3 (MPLB3, OPLB3, OPPLB3, PLB3, PPLB3)
+
+1. Manajer Pengumpulan Limbah B3 (MPLB3), level manajer.
+Unit kompetensi: tindakan K3 terhadap bahaya pengelolaan limbah B3; evaluasi hasil analisis limbah B3; pemantauan pengelolaan limbah B3; evaluasi pengelolaan limbah B3; menyusun laporan kegiatan pengelolaan limbah B3; verifikasi limbah B3 yang diterima; pemantauan dampak pengelolaan limbah B3; penyimpanan limbah B3; pemilahan (segregasi) limbah B3.
+Syarat: S2; S1 Kimia/Teknik Kimia/Teknik Lingkungan/Ilmu Lingkungan dengan pengalaman 2 tahun di pengumpulan limbah B3; S1 jurusan lain dengan pengalaman 3 tahun; D3 jurusan tersebut dengan pengalaman 3 tahun; D3 jurusan lain dengan pengalaman 5 tahun; SMA/SMK dengan pengalaman 7 tahun. Ditambah sertifikat pelatihan atau bimtek berbasis kompetensi pengelolaan limbah B3 dan rekomendasi pimpinan.
+
+2. Operator Pengumpulan Limbah B3 (OPLB3), level operator.
+Unit kompetensi: K3 terhadap bahaya pengelolaan limbah B3; pemantauan pengelolaan limbah B3; penanggulangan kedaruratan; pengemasan; penyimpanan; menyiapkan manifes pengangkutan; pemilahan; pembongkaran limbah B3 dari alat angkut.
+3. Operator Penyimpanan Limbah B3 (OPPLB3), level operator.
+Unit kompetensi sama dengan OPLB3 tanpa pembongkaran dari alat angkut (7 unit).
+Syarat OPLB3 dan OPPLB3 (salah satu): S1 semua jurusan; D3 Kimia/Teknik Kimia/Teknik Lingkungan/Ilmu Lingkungan dengan pengalaman 1 tahun; D3 jurusan lain dengan pengalaman 2 tahun; SMA/SMK dengan pengalaman 3 tahun di bidang pengumpulan (OPLB3) atau penyimpanan (OPPLB3) limbah B3. Ditambah sertifikat pelatihan berbasis kompetensi pengelolaan limbah B3 dan rekomendasi pimpinan.
+
+Program ICC bidang limbah B3:
+- Penentuan Potensi dan Karakteristik Pencemaran Limbah B3 (PLB3), sertifikasi BNSP: Rp 11.500.000.
+- Pemantauan Pengelolaan Limbah B3 (PPLB3): informasi di indonesiancertification.com/sertifikasi-pplb3 atau tanya admin.
+Jadwal terbaru program-program ini ditanyakan ke admin.
+
+---
+
+## DOKUMEN 6F
+
+**Judul:** Skema Petugas Pengambilan Contoh Uji Air (PPCUA)
+
+Level operator. Unit kompetensi: menerapkan K3L; melakukan uji kinerja peralatan; menerapkan kerja sama di tempat kerja; menyusun rencana pengambilan contoh uji air; melakukan persiapan pengambilan contoh uji air; melakukan pengambilan contoh uji air.
+Syarat (salah satu): sarjana/D3 eksakta dengan pengalaman 1 tahun di bidang pengambilan contoh uji air; sarjana/D3 non-eksakta dengan pengalaman 3 tahun; SMAK atau sederajat dengan pengalaman 2 tahun; SMA-IPA, SMF, STM-Kimia atau kejuruan teknis dengan pengalaman 3 tahun; SMA non-eksakta dengan pengalaman 4 tahun. Ditambah surat keterangan perusahaan atau surat rekomendasi.
+
+---
+
+## DOKUMEN 6G
+
+**Judul:** Skema Pengendalian Kebakaran Hutan dan Lahan (Manggala Agni)
+
+LSP LIK menyelenggarakan sertifikasi jabatan pengendalian kebakaran hutan dan lahan (karhutla):
+- Manggala Agni 1 (Fire Crew 1), operator. Syarat: minimal tamat SD; pengalaman 2 tahun di pemadaman karhutla, atau sertifikat pelatihan Manggala Agni 1 / Masyarakat Peduli Api / diklat sejenis, atau SK penetapan jabatan. Rekomendasi pimpinan. Fokus unit: K3 pemadaman, pertolongan luka bakar, pemadaman langsung, pemeliharaan sekat bakar, deteksi dini lewat menara pengawas, patroli.
+- Manggala Agni 2 (Fire Crew 2), operator. Syarat: SMA/SMK dengan pengalaman 3 tahun di pengendalian karhutla, atau lulus diklat Manggala Agni 2, atau SK penetapan jabatan. Fokus unit: ground check hotspot, mopping-up, pemadaman tidak langsung, pemeliharaan tabat/sekat kanal gambut, penampungan air, pengelolaan bahan bakar.
+- Manggala Agni 3 (Fire Crew 3), operator. Syarat: S1 rumpun kehutanan, atau S1 lain dengan pengalaman 1 tahun, atau D3 kehutanan, atau D3 lain dengan pengalaman 2 tahun, atau SMA/SMK dengan pengalaman 3 tahun; atau lulus diklat atau SK jabatan. Fokus: kampanye pencegahan, size-up kebakaran, pendampingan teknik pencegahan.
+- Kepala Regu Manggala Agni (Crew Leader), manajer. Syarat antara lain Manggala Agni 3 dengan pengalaman 3 tahun, atau lulus diklat Kepala Regu, atau S1 dengan pengalaman karhutla 3 sampai 4 tahun.
+- Kepala DAOPS, Sekretaris DAOPS, Kepala Brigade, dan Sekretaris Brigade, manajer. Syarat bervariasi menurut pendidikan (S1/D3/SMA) dan pengalaman 3 sampai 10 tahun di bidang pengendalian karhutla, atau lulus diklat atau SK jabatan. Fokus: rencana aksi pengendalian karhutla, jejaring kerja, mobilisasi sumber daya, rencana kerja operasional, monitoring dan evaluasi.
+Semua skema ini mensyaratkan rekomendasi pimpinan usaha atau kegiatan. Untuk syarat rinci tiap jenjang, rujuk lsp-lik.id atau tanyakan ke admin.
+
+---
+
+## DOKUMEN 6H
+
+**Judul:** Panduan Memilih Skema Lingkungan dan Pertanyaan Umum
+
+Cara memilih skema:
+- Mengelola atau mengawasi pengolahan air limbah: PPPA (manajer) atau POPAL (operator).
+- Mengelola atau mengawasi pengendalian emisi udara: PPPU (manajer) atau POPU (operator).
+- Mengukur emisi kendaraan: Petugas Pengukuran Emisi Sumber Bergerak.
+- Mengambil sampel air atau udara ambien: PPCUA atau PPCUU.
+- Mengelola limbah B3: MPLB3 (manajer), OPLB3 atau OPPLB3 (operator), atau PLB3 dan PPLB3 dari ICC.
+- Pemadam dan pengendali kebakaran hutan dan lahan: Manggala Agni dan jabatan struktural di atasnya.
+Pertanyaan yang diajukan ke pelanggan sebelum menyarankan skema: jabatan sekarang, jenis kegiatan perusahaan (IPAL, cerobong, limbah B3, laboratorium, kehutanan), pendidikan, lama pengalaman di bidang itu, apakah punya sertifikat pelatihan berbasis kompetensi, dan apakah ada surat rekomendasi dari perusahaan.
+
+T: Apakah wajib ikut pelatihan sebelum uji?
+J: Tidak wajib. Pelatihan adalah pemantapan. Tetapi banyak skema lingkungan mensyaratkan sertifikat pelatihan berbasis kompetensi sebagai syarat pendaftaran, jadi pelatihan sering diperlukan.
+
+T: Apa beda sertifikat pelatihan dan sertifikat kompetensi?
+J: Sertifikat pelatihan diterbitkan lembaga pelatihan dan diakui oleh lembaga itu dan jejaringnya. Sertifikat kompetensi diterbitkan atas nama BNSP melalui LSP berlisensi dan diakui secara nasional.
+
+T: Apakah sertifikat LSP LIK diakui KLHK?
+J: LSP LIK terdaftar di KLHK (Sertifikat Registrasi SF.161/BP2SDM/SET/PEG.15.1/B/08/2024) dan berlisensi BNSP nomor BNSP-LSP-2117-ID.
+
+T: Bisakah uji dilakukan online?
+J: Untuk skema lingkungan di LSP LIK, tidak. Uji dilakukan tatap muka, di TUK atau di tempat kerja.
+
+T: Setelah lulus apakah langsung menjadi ahli?
+J: Sertifikat menyatakan kompeten pada bidang yang diuji, sesuai skema yang diambil, bukan gelar ahli otomatis.
+
+T: Siapa yang menguji?
+J: Asesor kompetensi dari LSP, termasuk asesor dari KLHK dan widyaiswara.
+
+---
+
 ## DOKUMEN 9
 
 **Judul:** Alur Pendaftaran Sertifikasi ICC
@@ -422,4 +576,5 @@ Catatan: aturan `[[HANDOFF]]` tidak mengganggu Suggest AI setelah perbaikan kode
 4. **Jadwal dan harga Analis GIS dan Operator GIS terbaru.** Situs menulis jadwal Analis GIS "Coming Soon" (27-29 Oktober 2026, sudah lewat). Harga Operator GIS Rp 2,2 juta adalah angka umum dari artikel situs, bukan penawaran resmi ICC.
 5. **Jadwal (Dokumen 10)** mudah kedaluwarsa. Perbarui tiap bulan atau hapus dokumen ini jika Anda tidak mau memeliharanya.
 6. **Hubungan ICC dengan LSP Geospasial.** Dokumen GIS menyebut LSP Geospasial sebagai penyelenggara uji. Pastikan itu benar untuk kerja sama ICC, karena situs ICC juga menyebut LSP MAPIN dalam artikelnya. Situs LSP Geospasial menulis nomor lisensi BNSP dua cara (BNSP-LSP-689-ID dan LSP-589-ID). Saya memakai BNSP-LSP-689-ID, periksa ulang.
-7. Data kontak yang dikumpulkan bot hanya tertulis di percakapan. Bot belum menyimpannya otomatis ke kolom kontak (lihat catatan di balasan).
+8. **Bidang lingkungan:** biaya uji LSP LIK tidak dipublikasikan di situs, jadi bot diarahkan ke admin. Jadwal uji lingkungan di situs LSP LIK berupa gambar (Mei 2026, PCUA/PCUU/uji emisi) dan tidak terbaca. Harga PPPA, PPPU, dan PLB3 diambil dari situs ICC dan jadwalnya sudah lewat. Syarat lengkap tiap jenjang Manggala Agni saya ringkas, rujuk situs untuk rinci.
+9. Data kontak yang dikumpulkan bot hanya tertulis di percakapan. Bot belum menyimpannya otomatis ke kolom kontak (lihat catatan di balasan).

@@ -50,6 +50,8 @@ it. Grant the minimum.
 | `conversations:read` | List and read conversations              |
 | `broadcasts:send`    | Launch broadcast campaigns               |
 | `webhooks:manage`    | Register and manage outbound webhooks    |
+| `knowledge:read`     | List and read AI knowledge-base documents |
+| `knowledge:write`    | Create, update and delete knowledge-base documents |
 
 A key with **no scopes** still authenticates and can call
 `GET /api/v1/me` — useful for verifying a key works.
@@ -391,6 +393,46 @@ reconcile with the read endpoints when it matters.
 resolve to a public address — requests to `localhost`, private/RFC1918
 ranges, link-local (incl. cloud metadata `169.254.169.254`), and similar
 internal targets are refused at delivery time.
+
+### Knowledge base
+
+The documents the AI assistant answers from (Settings → AI assistant →
+Knowledge base). Scopes: `knowledge:read` to list/read,
+`knowledge:write` to create/update/delete. Grant `knowledge:write` only
+to integrations you trust: it changes what the assistant tells
+customers. Read does not imply write.
+
+Writes chunk the text and, when the account has an embeddings key,
+embed it, exactly as the dashboard does. A saved document whose
+indexing fails is **not** rolled back: the response carries
+`index_status` and a `warning` instead.
+
+- `GET /api/v1/knowledge`: list documents (`id`, `title`, `created_at`,
+  `updated_at`; no text), newest first, paginated.
+- `GET /api/v1/knowledge/{id}`: one document including `content`.
+- `POST /api/v1/knowledge`: `{ "title": "…", "content": "…" }`. Returns
+  `201` with `created: true`. Add `"replace_existing": true` to update a
+  document with the same title (case-insensitive) in place; that returns
+  `200` with `created: false`, so re-running an import never duplicates.
+- `PATCH /api/v1/knowledge/{id}`: send `title` and/or `content`; text is
+  re-indexed only when `content` is sent.
+- `DELETE /api/v1/knowledge/{id}`: removes the document and its chunks.
+
+Limits: `title` up to 200 characters, `content` up to 100,000
+characters (split larger material into several documents). A document
+in another account returns `404`.
+
+`index_status` is `indexed` (searchable, embedded when a key exists),
+`keyword_only` (embedding failed or its key is unusable; keyword search
+only) or `not_indexed` (saved, not searchable yet; re-index from
+Settings → AI assistant).
+
+```bash
+curl -X POST https://your-crm.example.com/api/v1/knowledge \
+  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{ "title": "Jam layanan", "content": "Admin membalas Senin-Jumat 08.00-17.00 WIB.", "replace_existing": true }'
+```
 
 ## Roadmap
 

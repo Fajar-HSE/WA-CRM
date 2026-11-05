@@ -21,6 +21,8 @@ export const API_SCOPES = [
   'conversations:read',
   'broadcasts:send',
   'webhooks:manage',
+  'knowledge:read',
+  'knowledge:write',
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];
@@ -34,6 +36,9 @@ export const SCOPE_DESCRIPTIONS: Record<ApiScope, string> = {
   'conversations:read': 'List and read conversations',
   'broadcasts:send': 'Launch broadcast campaigns',
   'webhooks:manage': 'Register and manage outbound event webhooks',
+  'knowledge:read': 'List and read AI knowledge-base documents',
+  'knowledge:write':
+    'Create, update and delete AI knowledge-base documents (changes what the AI assistant says)',
 };
 
 /** Type-narrow an unknown value into a valid `ApiScope`. */

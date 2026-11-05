@@ -92,4 +92,58 @@ export function registerWriteTools(server: McpServer, client: WacrmClient): void
     },
     handle(async ({ id, ...body }) => jsonResult(await client.updateContact(id, body))),
   );
+
+  server.registerTool(
+    'add_knowledge_document',
+    {
+      title: 'Add knowledge-base document',
+      description:
+        'Add a document to the AI assistant knowledge base. The assistant answers customers from these documents, so write plain, factual text (one topic per document, at most 100,000 characters) and never include secrets or private customer data. The text is chunked and indexed automatically. Set replace_existing to true to update the document with the same title instead of creating a duplicate (safe to re-run). Check the returned index_status: "indexed" is fully searchable, "keyword_only" works for keyword search only, "not_indexed" means it was saved but is not searchable yet.',
+      inputSchema: {
+        title: z.string().min(1).max(200).describe('Short document title, e.g. "Sertifikasi GIS - Biaya".'),
+        content: z.string().min(1).max(100000).describe('The document text.'),
+        replace_existing: z
+          .boolean()
+          .optional()
+          .describe('If a document with this title exists, replace its content instead of adding a new one.'),
+      },
+      annotations: { title: 'Add knowledge-base document', readOnlyHint: false, openWorldHint: true },
+    },
+    handle(async (args) => jsonResult(await client.createKnowledgeDocument(args))),
+  );
+
+  server.registerTool(
+    'update_knowledge_document',
+    {
+      title: 'Update knowledge-base document',
+      description:
+        'Change the title and/or text of an existing knowledge-base document. Only the fields you pass are changed; the text is re-indexed when it changes. This changes what the AI assistant tells customers.',
+      inputSchema: {
+        id: z.string().describe('Document id.'),
+        title: z.string().min(1).max(200).optional(),
+        content: z.string().min(1).max(100000).optional(),
+      },
+      annotations: { title: 'Update knowledge-base document', readOnlyHint: false, openWorldHint: true },
+    },
+    handle(async ({ id, ...body }) => jsonResult(await client.updateKnowledgeDocument(id, body))),
+  );
+
+  server.registerTool(
+    'delete_knowledge_document',
+    {
+      title: 'Delete knowledge-base document',
+      description:
+        'Permanently delete a knowledge-base document and its indexed chunks. The AI assistant stops using it immediately. Confirm with the user before calling.',
+      inputSchema: {
+        id: z.string().describe('Document id.'),
+      },
+      annotations: {
+        title: 'Delete knowledge-base document',
+        readOnlyHint: false,
+        destructiveHint: true,
+        openWorldHint: true,
+      },
+    },
+    handle(async ({ id }) => jsonResult(await client.deleteKnowledgeDocument(id))),
+  );
 }

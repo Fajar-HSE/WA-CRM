@@ -77,9 +77,14 @@ when their guard is set.
 | `get_conversation`   | read      | `conversations:read` | Read one conversation                           |
 | `list_messages`      | read      | `messages:read`      | List a conversation's messages                  |
 | `get_broadcast`      | read      | `broadcasts:send`    | Poll a broadcast's delivery status              |
+| `list_knowledge_documents` | read | `knowledge:read`    | List AI knowledge-base documents                |
+| `get_knowledge_document` | read   | `knowledge:read`     | Read one knowledge-base document                |
 | `send_message`       | write     | `messages:send`      | Send a WhatsApp message (text/template/media)   |
 | `create_contact`     | write     | `contacts:write`     | Create (find-or-create) a contact               |
 | `update_contact`     | write     | `contacts:write`     | Update a contact / replace its tags             |
+| `add_knowledge_document` | write | `knowledge:write`    | Add (or replace by title) a knowledge-base document |
+| `update_knowledge_document` | write | `knowledge:write` | Change a document's title or text               |
+| `delete_knowledge_document` | write | `knowledge:write` | Delete a document (destructive)                 |
 | `send_broadcast`     | broadcast | `broadcasts:send`    | Launch a template broadcast (requires `confirm`)|
 
 ## Safety model

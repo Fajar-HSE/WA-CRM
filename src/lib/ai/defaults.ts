@@ -73,6 +73,16 @@ export function buildSystemPrompt(args: {
     )
   }
 
+  if (mode === 'draft') {
+    // A human reviews every draft, so an empty draft is never useful. The
+    // account's own instructions often describe a hand-off rule written for
+    // the auto-reply bot; without this line the model obeys it and returns
+    // only the control phrase, which the agent sees as "no reply".
+    parts.push(
+      `A human agent will review and edit your reply before it is sent. Always write a best-effort draft. Never output ${HANDOFF_SENTINEL}, even if the business instructions below tell you to hand off or escalate: in that case write a short, polite reply that acknowledges the question and says the team will follow up, and put anything you are unsure of in a neutral way.`,
+    )
+  }
+
   if (userPrompt && userPrompt.trim()) {
     parts.push(`Business context and instructions:\n${userPrompt.trim()}`)
   }

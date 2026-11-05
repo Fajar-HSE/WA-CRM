@@ -124,4 +124,32 @@ export function registerReadTools(server: McpServer, client: WacrmClient): void 
     },
     handle(async ({ id }) => jsonResult(await client.getBroadcast(id))),
   );
+
+  server.registerTool(
+    'list_knowledge_documents',
+    {
+      title: 'List knowledge-base documents',
+      description:
+        'List the documents in the AI assistant knowledge base (title and dates only, newest first). Use get_knowledge_document to read the full text. Paginated.',
+      inputSchema: {
+        limit: z.number().int().min(1).max(100).optional().describe('Page size, 1–100 (default 50).'),
+        cursor: z.string().optional().describe('Opaque pagination cursor.'),
+      },
+      annotations: { ...READ_ONLY, title: 'List knowledge-base documents' },
+    },
+    handle(async (args) => jsonResult(await client.listKnowledgeDocuments(args))),
+  );
+
+  server.registerTool(
+    'get_knowledge_document',
+    {
+      title: 'Get knowledge-base document',
+      description: 'Read one knowledge-base document, including its full text, by id.',
+      inputSchema: {
+        id: z.string().describe('Document id.'),
+      },
+      annotations: { ...READ_ONLY, title: 'Get knowledge-base document' },
+    },
+    handle(async ({ id }) => jsonResult(await client.getKnowledgeDocument(id))),
+  );
 }

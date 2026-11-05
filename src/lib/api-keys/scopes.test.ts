@@ -61,3 +61,12 @@ describe('SCOPE_DESCRIPTIONS', () => {
     }
   });
 });
+
+describe('knowledge scopes', () => {
+  it('are known scopes with descriptions and are kept separate (read does not imply write)', () => {
+    expect(isApiScope('knowledge:read')).toBe(true);
+    expect(isApiScope('knowledge:write')).toBe(true);
+    expect(normalizeScopes(['knowledge:read'])).toEqual(['knowledge:read']);
+    expect(hasScope(['knowledge:read'], 'knowledge:write')).toBe(false);
+  });
+});

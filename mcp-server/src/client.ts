@@ -167,6 +167,28 @@ export class WacrmClient {
     return this.list(`/conversations/${encodeURIComponent(id)}/messages`, query);
   }
 
+  // --- Knowledge base -----------------------------------------------
+
+  listKnowledgeDocuments(query: { limit?: number; cursor?: string }): Promise<Paginated<unknown>> {
+    return this.list('/knowledge', query);
+  }
+
+  getKnowledgeDocument(id: string): Promise<{ data: unknown }> {
+    return this.request('GET', `/knowledge/${encodeURIComponent(id)}`);
+  }
+
+  createKnowledgeDocument(body: unknown): Promise<{ data: unknown }> {
+    return this.request('POST', '/knowledge', { body });
+  }
+
+  updateKnowledgeDocument(id: string, body: unknown): Promise<{ data: unknown }> {
+    return this.request('PATCH', `/knowledge/${encodeURIComponent(id)}`, { body });
+  }
+
+  deleteKnowledgeDocument(id: string): Promise<{ data: unknown }> {
+    return this.request('DELETE', `/knowledge/${encodeURIComponent(id)}`);
+  }
+
   // --- Broadcasts ---------------------------------------------------
 
   sendBroadcast(body: unknown): Promise<{ data: unknown }> {

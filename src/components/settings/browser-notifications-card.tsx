@@ -89,7 +89,7 @@ export function BrowserNotificationsCard({ className }: { className?: string }) 
       new Notification(t('testTitle'), {
         body: t('testBody'),
         icon: '/brand/icc-mark.png',
-        tag: 'wacrm-test-notification',
+        tag: 'wa-crm-test-notification',
       });
     } catch {
       toast.error(t('unsupported'));

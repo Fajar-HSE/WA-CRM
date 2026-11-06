@@ -15,7 +15,7 @@ describe('wahaSessionNameForAccount', () => {
   it('derives a distinct, valid name per account', () => {
     const a = wahaSessionNameForAccount(ACCOUNT_A, undefined)
     const b = wahaSessionNameForAccount(ACCOUNT_B, undefined)
-    expect(a).toBe('wacrm-6f1c2b0e4a3d4f7e9d2a0b1c2d3e4f50')
+    expect(a).toBe('wa-crm-6f1c2b0e4a3d4f7e9d2a0b1c2d3e4f50')
     expect(a).not.toBe(b)
     expect(isValidWahaSessionName(a)).toBe(true)
   })

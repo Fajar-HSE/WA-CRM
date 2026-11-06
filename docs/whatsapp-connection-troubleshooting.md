@@ -2,10 +2,10 @@
 
 Settings → WhatsApp connection talks to the Meta Graph API in a fixed
 order when you click **Save Configuration**. When one of those calls
-fails, wacrm now tells you *which* call failed, *which field* to check,
+fails, WA-CRM now tells you *which* call failed, *which field* to check,
 and gives you the Meta error code and trace id to quote to Meta support
 (issue #505). This page lists the common causes and the exact text
-wacrm shows for each.
+WA-CRM shows for each.
 
 ## What Save Configuration does
 
@@ -48,7 +48,7 @@ The HTTP status also tells you who has to act: **400** means the fix
 is on the settings form (token, ids, PIN); **502** means Meta has to
 change something (rate limit, restriction, outage).
 
-## Common causes and what wacrm shows
+## Common causes and what WA-CRM shows
 
 ### Phone Number ID is not an id
 
@@ -120,7 +120,7 @@ webhook simply never fired.
 ### Number not registered with the Cloud API (code 133010)
 
 > This phone number is not registered with the WhatsApp Cloud API yet.
-> Enter the two-step verification PIN below and save again so wacrm can
+> Enter the two-step verification PIN below and save again so WA-CRM can
 > register it (POST /register).
 
 ### Wrong two-step PIN (codes 133005, 136025)
@@ -137,11 +137,11 @@ Too many wrong guesses (133008 / 133009) lock attempts for a while:
 
 ### Account restricted by Meta (code 131031, 368)
 
-Nothing in wacrm fixes this — it is a Meta policy or verification
+Nothing in WA-CRM fixes this — it is a Meta policy or verification
 state.
 
 > Meta has restricted or locked this WhatsApp Business Account, so
-> nothing in wacrm can connect it. Open Meta Business Manager → Account
+> nothing in WA-CRM can connect it. Open Meta Business Manager → Account
 > quality (or WhatsApp Manager → Overview) to see the restriction and
 > appeal it.
 
@@ -185,7 +185,7 @@ If the server cannot reach `graph.facebook.com` at all:
    the verify token must match the one saved here, and the `messages`
    field must be subscribed. `META_APP_SECRET` in the server
    environment must be *that* app's secret, or every delivery is
-   rejected with a 401 before wacrm looks at it.
+   rejected with a 401 before WA-CRM looks at it.
 
 ## Where the mapping lives
 

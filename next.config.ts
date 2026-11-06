@@ -51,11 +51,11 @@ const SECURITY_HEADERS = [
       "img-src 'self' data: blob: https:",
       // Outbound media previews (blob: from MediaRecorder + file picker)
       // and Supabase public-bucket audio/video the inbox renders.
-      "media-src 'self' blob: https://*.supabase.co",
+      "media-src 'self' blob: https://*.supabase.co https://db.amcicccrm.my.id",
       "font-src 'self' data:",
       // Supabase REST + realtime (WSS). All Meta API calls happen
       // server-side, so graph.facebook.com does not belong here.
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://db.amcicccrm.my.id wss://db.amcicccrm.my.id",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

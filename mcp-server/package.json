@@ -1,20 +1,20 @@
 {
-  "name": "wacrm-mcp",
-  "version": "0.1.1",
-  "mcpName": "io.github.ArnasDon/wacrm-mcp",
-  "description": "Model Context Protocol (MCP) server for wacrm — drive your self-hosted WhatsApp CRM from Claude, Cursor, and other MCP clients.",
+  "name": "wa-crm-mcp",
+  "version": "1.0.0",
+  "mcpName": "io.github.Fajar-HSE/wa-crm-mcp",
+  "description": "Model Context Protocol (MCP) server for WA-CRM — drive your self-hosted WhatsApp CRM from Claude, Cursor, and other MCP clients.",
   "license": "MIT",
-  "author": "Arnas Donauskas",
-  "homepage": "https://github.com/ArnasDon/wacrm",
+  "author": "Fajar-HSE",
+  "homepage": "https://github.com/Fajar-HSE/WA-CRM",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ArnasDon/wacrm.git",
+    "url": "git+https://github.com/Fajar-HSE/WA-CRM.git",
     "directory": "mcp-server"
   },
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "wacrm",
+    "wa-crm",
     "whatsapp",
     "crm",
     "claude",
@@ -25,7 +25,7 @@
     "node": ">=22.0.0"
   },
   "bin": {
-    "wacrm-mcp": "./dist/index.js"
+    "wa-crm-mcp": "./dist/index.js"
   },
   "files": [
     "dist",

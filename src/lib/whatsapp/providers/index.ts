@@ -32,7 +32,7 @@ export function createWhatsAppProvider(
 
   if (provider === 'waha') {
     const creds: WhatsAppProviderCredentials = {
-      sessionName: config.waha_session_name || `wacrm-${config.id.replace(/-/g, '')}`,
+      sessionName: config.waha_session_name || `wa-crm-${config.id.replace(/-/g, '')}`,
       // Server env only. `config.waha_base_url` is deliberately ignored: the
       // column is writable by account admins, and honouring it would send
       // WAHA_API_KEY to a host they control.

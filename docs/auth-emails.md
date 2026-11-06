@@ -1,6 +1,6 @@
 # Auth emails: confirmation and password-reset links
 
-wacrm uses Supabase Auth for sign-up, sign-in and password reset. Two
+WA-CRM uses Supabase Auth for sign-up, sign-in and password reset. Two
 of those flows send an email with a link, and the link has to come back
 to **your** deployment. This page explains how the app asks for that,
 what Supabase needs to be told for it to comply, and what the symptoms
@@ -69,7 +69,7 @@ ADDITIONAL_REDIRECT_URLS=https://crm.example.com/**,http://localhost:3000/**
 (Older setups name these `GOTRUE_SITE_URL` and `GOTRUE_URI_ALLOW_LIST`.)
 Restart the auth container afterwards. A self-hosted stack whose `.env`
 still has the example `SITE_URL=http://localhost:3000` produces exactly
-the symptom in [issue #595](https://github.com/ArnasDon/wacrm/issues/595).
+the symptom in [issue #595](https://github.com/Fajar-HSE/WA-CRM/issues/595).
 
 ### Local Supabase CLI (`supabase start`)
 

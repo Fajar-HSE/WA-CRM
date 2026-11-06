@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const ACCOUNT = '6f1c2b0e-4a3d-4f7e-9d2a-0b1c2d3e4f50'
-const OTHER_SESSION = 'wacrm-victim-account'
+const OTHER_SESSION = 'wa-crm-victim-account'
 
 const requireRole = vi.fn()
 vi.mock('@/lib/auth/account', () => ({
@@ -79,7 +79,7 @@ function makeCtx(row: Record<string, unknown> | null, canConnect = true) {
   }
 }
 
-const own = `wacrm-${ACCOUNT.replace(/-/g, '')}`
+const own = `wa-crm-${ACCOUNT.replace(/-/g, '')}`
 
 describe('WAHA session route tenancy', () => {
   beforeEach(() => {

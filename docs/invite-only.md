@@ -87,6 +87,6 @@ separately for a disabled account.
 
 ## WAHA
 
-Each account gets its own WAHA session (`wacrm-<account id>`). WAHA allows
+Each account gets its own WAHA session (`wa-crm-<account id>`). WAHA allows
 unlimited sessions, so nothing extra is needed. Do **not** set
 `WAHA_SESSION_NAME`: that pins every account to the same session.

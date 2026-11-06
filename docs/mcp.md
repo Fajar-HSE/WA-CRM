@@ -14,6 +14,30 @@ it's a thin wrapper over the [public API](./public-api.md), so every
 request is authenticated and scoped by your instance exactly like any
 other API call.
 
+## Using it from this repository (Claude Code)
+
+The repo ships a project-scoped [`.mcp.json`](../.mcp.json). It starts
+the local build of the server (so it includes the knowledge-base tools,
+which the published npm version may not yet) and reads the secret from
+your environment instead of storing it in the file:
+
+- `WACRM_API_KEY` (required): your key from Settings → API keys.
+- `WACRM_BASE_URL` (optional): defaults to `https://kompeten.my.id`.
+- Writes are on (`WACRM_ENABLE_WRITES=true`). Remove that line for read-only.
+
+One-time setup (Windows PowerShell shown):
+
+```powershell
+setx WACRM_API_KEY "wacrm_live_xxx"   # then open a NEW terminal
+cd mcp-server
+npm install
+npm run build
+```
+
+Start Claude Code in the repo folder, approve the `wacrm` project server
+when asked, and run `/mcp` to check it is connected. Rebuild
+(`npm run build`) after pulling changes to `mcp-server/`.
+
 ## Quick start
 
 1. Create an API key in the dashboard: **Settings → API keys**. Grant

@@ -144,7 +144,7 @@ describe("explainMetaError — registration and PIN", () => {
 });
 
 describe("explainMetaError — account state and throttling", () => {
-  it("131031 → account restricted, Meta side, nothing to fix in wacrm", () => {
+  it("131031 → account restricted, Meta side, nothing to fix in WA-CRM", () => {
     const x = explainMetaError(metaErr({ code: 131031 }), "verify_number");
     expect(x.field).toBe("meta_account");
     expect(x.side).toBe("meta");

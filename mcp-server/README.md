@@ -1,7 +1,7 @@
-# wacrm MCP server
+# WA-CRM MCP server
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server for
-**[wacrm](https://github.com/ArnasDon/wacrm)** — the self-hostable
+**[WA-CRM](https://github.com/Fajar-HSE/WA-CRM)** — the self-hostable
 WhatsApp CRM. It lets MCP clients (Claude Desktop, Claude Code, Cursor,
 and others) drive your CRM in natural language:
 
@@ -9,13 +9,13 @@ and others) drive your CRM in natural language:
 > "Find the contact for +1 415 555 0123 and show the last few messages."
 > "Draft and send an order-update template to Jane."
 
-It's a thin wrapper over wacrm's public [`/api/v1`](../docs/public-api.md)
+It's a thin wrapper over WA-CRM's public [`/api/v1`](../docs/public-api.md)
 REST API. All auth, scoping, and rate limiting are enforced by your
-wacrm instance — this server just exposes the API as MCP tools.
+WA-CRM instance — this server just exposes the API as MCP tools.
 
 ## Prerequisites
 
-1. A running wacrm instance (your own self-hosted deploy).
+1. A running WA-CRM instance (your own self-hosted deploy).
 2. An API key: in the dashboard go to **Settings → API keys → New API
    key** and grant only the scopes you need. The key is shown once.
 
@@ -26,10 +26,10 @@ write guards:
 
 | Variable                  | Required | Purpose                                                        |
 | ------------------------- | -------- | -------------------------------------------------------------- |
-| `WACRM_BASE_URL`          | yes      | Your instance URL, e.g. `https://crm.example.com`              |
-| `WACRM_API_KEY`           | yes      | An API key from the dashboard                                  |
-| `WACRM_ENABLE_WRITES`     | no       | `true` to expose contact writes + message sending             |
-| `WACRM_ENABLE_BROADCASTS` | no       | `true` to expose mass broadcasts (needs `WACRM_ENABLE_WRITES`) |
+| `WA_CRM_BASE_URL`          | yes      | Your instance URL, e.g. `https://crm.example.com`              |
+| `WA_CRM_API_KEY`           | yes      | An API key from the dashboard                                  |
+| `WA_CRM_ENABLE_WRITES`     | no       | `true` to expose contact writes + message sending             |
+| `WA_CRM_ENABLE_BROADCASTS` | no       | `true` to expose mass broadcasts (needs `WA_CRM_ENABLE_WRITES`) |
 
 ### Claude Desktop / Claude Code / Cursor
 
@@ -39,12 +39,12 @@ Add to your MCP client config (e.g. `claude_desktop_config.json`, or
 ```jsonc
 {
   "mcpServers": {
-    "wacrm": {
+    "WA-CRM": {
       "command": "npx",
-      "args": ["-y", "wacrm-mcp"],
+      "args": ["-y", "wa-crm-mcp"],
       "env": {
-        "WACRM_BASE_URL": "https://crm.example.com",
-        "WACRM_API_KEY": "wacrm_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+        "WA_CRM_BASE_URL": "https://crm.example.com",
+        "WA_CRM_API_KEY": "wa_crm_live_xxxxxxxxxxxxxxxxxxxxxxxx"
       }
     }
   }
@@ -56,10 +56,10 @@ assistant change data or send messages, add the write guards:
 
 ```jsonc
 "env": {
-  "WACRM_BASE_URL": "https://crm.example.com",
-  "WACRM_API_KEY": "wacrm_live_xxxxxxxxxxxxxxxxxxxxxxxx",
-  "WACRM_ENABLE_WRITES": "true",
-  "WACRM_ENABLE_BROADCASTS": "true"
+  "WA_CRM_BASE_URL": "https://crm.example.com",
+  "WA_CRM_API_KEY": "wa_crm_live_xxxxxxxxxxxxxxxxxxxxxxxx",
+  "WA_CRM_ENABLE_WRITES": "true",
+  "WA_CRM_ENABLE_BROADCASTS": "true"
 }
 ```
 
@@ -94,8 +94,8 @@ the server layers three guards:
 
 1. **Read-only by default.** Write and broadcast tools are not even
    registered — the model can't see them — unless you opt in via
-   `WACRM_ENABLE_WRITES` / `WACRM_ENABLE_BROADCASTS`.
-2. **API-key scopes.** Whatever the guards allow, your wacrm instance
+   `WA_CRM_ENABLE_WRITES` / `WA_CRM_ENABLE_BROADCASTS`.
+2. **API-key scopes.** Whatever the guards allow, your WA-CRM instance
    still enforces the key's scopes. A call without the right scope
    returns a clean `forbidden` error. Issue a read-only key for a
    read-only assistant.
@@ -116,4 +116,4 @@ Logs go to **stderr** — stdout is reserved for the MCP protocol.
 
 ## License
 
-MIT — same as wacrm.
+MIT — same as WA-CRM.

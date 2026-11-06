@@ -11,8 +11,8 @@ import { useCallback, useSyncExternalStore } from 'react';
 // hydration warning, and a second tab stays in step through the `storage`
 // event.
 
-const KEY = 'wacrm:sidebar-collapsed';
-const CHANGE_EVENT = 'wacrm:sidebar-collapsed-change';
+const KEY = 'WA-CRM:sidebar-collapsed';
+const CHANGE_EVENT = 'WA-CRM:sidebar-collapsed-change';
 
 function subscribe(onChange: () => void): () => void {
   window.addEventListener('storage', onChange);

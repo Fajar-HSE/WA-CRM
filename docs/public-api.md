@@ -1,6 +1,6 @@
 # Public API (`/api/v1`)
 
-The public API lets you drive your wacrm instance from your own
+The public API lets you drive your WA-CRM instance from your own
 scripts and automations — send messages, manage contacts, launch
 broadcasts — without going through the dashboard UI.
 
@@ -14,7 +14,7 @@ Every request authenticates with an **API key**, sent as a bearer
 token:
 
 ```
-Authorization: Bearer wacrm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Authorization: Bearer wa_crm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 Keys are **account-scoped**: a key acts on exactly one account, the
@@ -27,7 +27,7 @@ In the dashboard: **Settings → API keys → New API key**. Only
 
 1. Give the key a name (after the integration that will use it).
 2. Grant the **scopes** it needs — nothing more (see below).
-3. Copy the key. **The full key is shown exactly once.** wacrm
+3. Copy the key. **The full key is shown exactly once.** WA-CRM
    stores only a SHA-256 hash, so it can never be shown again. If you
    lose it, revoke it and create a new one.
 
@@ -106,7 +106,7 @@ and to discover its scopes.
 
 ```bash
 curl https://your-crm.example.com/api/v1/me \
-  -H "Authorization: Bearer wacrm_live_xxx"
+  -H "Authorization: Bearer wa_crm_live_xxx"
 ```
 
 ```json
@@ -135,7 +135,7 @@ deliver to +41, Switzerland), so it doesn't guess.
 
 ```bash
 curl -X POST https://your-crm.example.com/api/v1/messages \
-  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Authorization: Bearer wa_crm_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{ "to": "+14155550123", "type": "text", "text": "Hi 👋" }'
 ```
@@ -243,7 +243,7 @@ returns fast — poll `GET /api/v1/broadcasts/{id}` for progress.
 
 ```bash
 curl -X POST https://your-crm.example.com/api/v1/broadcasts \
-  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Authorization: Bearer wa_crm_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{
         "name": "July promo",
@@ -303,7 +303,7 @@ is returned.
 
 ## Webhooks
 
-Rather than polling, register an endpoint and wacrm will POST to it when
+Rather than polling, register an endpoint and WA-CRM will POST to it when
 things happen in your account. **Migration required:** apply
 `supabase/migrations/028_webhook_endpoints.sql`.
 
@@ -319,7 +319,7 @@ things happen in your account. **Migration required:** apply
 
 All under scope `webhooks:manage`.
 
-- `POST /api/v1/webhooks` — register `{ "url": "https://…", "events": ["message.received"] }`. `url` must be `https://` and must not embed a username or password (`https://user:pass@…` is rejected with `400`; verify deliveries with the signing secret instead). **The response includes `secret` exactly once** — store it to verify signatures; wacrm keeps only an encrypted copy.
+- `POST /api/v1/webhooks` — register `{ "url": "https://…", "events": ["message.received"] }`. `url` must be `https://` and must not embed a username or password (`https://user:pass@…` is rejected with `400`; verify deliveries with the signing secret instead). **The response includes `secret` exactly once** — store it to verify signatures; WA-CRM keeps only an encrypted copy.
 - `GET /api/v1/webhooks` — list your endpoints (never returns the secret).
 - `GET /api/v1/webhooks/{id}` — read one.
 - `PATCH /api/v1/webhooks/{id}` — update `url`, `events`, or `is_active` (re-enabling clears the failure counter).
@@ -327,9 +327,9 @@ All under scope `webhooks:manage`.
 
 ```bash
 curl -X POST https://your-crm.example.com/api/v1/webhooks \
-  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Authorization: Bearer wa_crm_live_xxx" \
   -H "Content-Type: application/json" \
-  -d '{ "url": "https://example.com/hooks/wacrm", "events": ["message.received"] }'
+  -d '{ "url": "https://example.com/hooks/WA-CRM", "events": ["message.received"] }'
 # → 201 { "data": { "id": "…", "url": "…", "events": [...], "secret": "whsec_…" } }
 ```
 
@@ -359,11 +359,11 @@ delivery uuid you can dedupe on, and `data` varies by `event`:
 { "whatsapp_message_id": "wamid.…", "conversation_id": "…", "status": "delivered" }
 ```
 
-Headers: `X-Wacrm-Event`, `X-Wacrm-Webhook-Id`, and `X-Wacrm-Signature`.
+Headers: `X-WaCrm-Event`, `X-WaCrm-Webhook-Id`, and `X-WaCrm-Signature`.
 
 ### Verifying the signature
 
-`X-Wacrm-Signature: t=<unix_seconds>,v1=<hex>` where `v1 =
+`X-WaCrm-Signature: t=<unix_seconds>,v1=<hex>` where `v1 =
 HMAC-SHA256(secret, "${t}.${rawBody}")`. Recompute it over the **raw
 request body** and compare in constant time; reject if `t` is more than
 a few minutes old (replay protection).
@@ -379,7 +379,7 @@ const ok = crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(v1));
 
 Delivery is **best-effort**: a single attempt per event with a short
 timeout, and **redirects are not followed**. `message.status_updated`
-covers messages wacrm stores (inbox + API sends), not broadcast-only
+covers messages WA-CRM stores (inbox + API sends), not broadcast-only
 sends, and — because providers re-send and re-order status callbacks —
 the same status may arrive more than once or out of order; **dedupe on
 `id` and don't assume ordering**. Each consecutive failure increments
@@ -429,7 +429,7 @@ Settings → AI assistant).
 
 ```bash
 curl -X POST https://your-crm.example.com/api/v1/knowledge \
-  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Authorization: Bearer wa_crm_live_xxx" \
   -H "Content-Type: application/json" \
   -d '{ "title": "Jam layanan", "content": "Admin membalas Senin-Jumat 08.00-17.00 WIB.", "replace_existing": true }'
 ```
@@ -438,6 +438,6 @@ curl -X POST https://your-crm.example.com/api/v1/knowledge \
 
 The public API now covers messaging, contacts, conversations,
 broadcasts, and outbound webhooks — the full scope of
-[#245](https://github.com/ArnasDon/wacrm/issues/245). Future ideas
+[#245](https://github.com/Fajar-HSE/WA-CRM/issues/245). Future ideas
 (deals/pipelines, templates, flows, a delivery queue for webhooks) are
 not yet scheduled.

@@ -60,7 +60,7 @@ beforeEach(() => {
   process.env.WAHA_API_KEY = "k";
   requirePlatformAdmin.mockResolvedValue({ accountId: "platform-acct" });
   target = { id: ID, can_create_workspaces: false };
-  cfg = { provider: "waha", waha_session_name: "wacrm-abc" };
+  cfg = { provider: "waha", waha_session_name: "wa-crm-abc" };
 });
 
 describe("PATCH /api/platform/accounts/[id]", () => {
@@ -68,7 +68,7 @@ describe("PATCH /api/platform/accounts/[id]", () => {
     const res = await call(ID, { disabled: true });
     expect(res.status).toBe(200);
     expect(updates[0].disabled_at).toEqual(expect.any(String));
-    expect(stopSession).toHaveBeenCalledWith("wacrm-abc");
+    expect(stopSession).toHaveBeenCalledWith("wa-crm-abc");
     expect((await res.json()).sessionStopped).toBe(true);
   });
 

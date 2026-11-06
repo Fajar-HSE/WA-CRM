@@ -2,7 +2,7 @@
  * The two UI languages this fork ships, and how the active one is picked.
  *
  * Order of precedence on every request:
- *   1. the `wacrm_locale` cookie, set from Settings → Appearance
+ *   1. the `WA-CRM_locale` cookie, set from Settings → Appearance
  *   2. NEXT_PUBLIC_APP_LOCALE (build-time default for new visitors)
  *   3. Indonesian
  */
@@ -10,7 +10,7 @@ export const LOCALES = ['id', 'en'] as const;
 export type AppLocale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: AppLocale = 'id';
-export const LOCALE_COOKIE = 'wacrm_locale';
+export const LOCALE_COOKIE = 'WA-CRM_locale';
 /** One year, in seconds. */
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 

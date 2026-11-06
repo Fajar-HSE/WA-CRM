@@ -1,12 +1,12 @@
 {
   "mcpServers": {
-    "wacrm": {
+    "wa-crm": {
       "command": "node",
       "args": ["mcp-server/dist/index.js"],
       "env": {
-        "WACRM_BASE_URL": "${WACRM_BASE_URL:-https://kompeten.my.id}",
-        "WACRM_API_KEY": "${WACRM_API_KEY}",
-        "WACRM_ENABLE_WRITES": "true"
+        "WA_CRM_BASE_URL": "${WA_CRM_BASE_URL:-https://kompeten.my.id}",
+        "WA_CRM_API_KEY": "${WA_CRM_API_KEY}",
+        "WA_CRM_ENABLE_WRITES": "true"
       }
     }
   }

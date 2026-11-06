@@ -29,7 +29,7 @@ export function isValidWahaSessionName(name: string): boolean {
  *   `default`; set `WAHA_SESSION_NAME=default` there. The unique index
  *   on `whatsapp_config.waha_session_name` (migration 060) then lets
  *   only one account claim it.
- * - otherwise → `wacrm-<account id without dashes>`, unique per account.
+ * - otherwise → `wa-crm-<account id without dashes>`, unique per account.
  */
 export function wahaSessionNameForAccount(
   accountId: string,
@@ -45,7 +45,7 @@ export function wahaSessionNameForAccount(
     return pinned
   }
   const compact = accountId.replace(/-/g, '')
-  const name = `wacrm-${compact}`
+  const name = `wa-crm-${compact}`
   if (!isValidWahaSessionName(name)) {
     throw new Error('Cannot derive a WAHA session name from this account id.')
   }

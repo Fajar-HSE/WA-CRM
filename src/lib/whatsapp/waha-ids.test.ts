@@ -5,7 +5,9 @@ import {
   digitsOf,
   isNonCustomerChat,
   isLidChatId,
+  isPlaceholderName,
   looksLikeLidNumber,
+  pushNameFromPayload,
   phoneFromJid,
 } from './waha-ids'
 
@@ -82,5 +84,52 @@ describe('isNonCustomerChat', () => {
     expect(isNonCustomerChat('628123456789@c.us')).toBe(false)
     expect(isNonCustomerChat('30601675599946@lid')).toBe(false)
     expect(isNonCustomerChat(undefined)).toBe(false)
+  })
+})
+
+describe('pushNameFromPayload', () => {
+  it('reads the NOWEB field', () => {
+    expect(pushNameFromPayload({ _data: { pushName: ' Budi Santoso ' } })).toBe('Budi Santoso')
+  })
+
+  it('reads the WEBJS fields', () => {
+    expect(pushNameFromPayload({ _data: { notifyName: 'Sari' } })).toBe('Sari')
+    expect(pushNameFromPayload({ notifyName: 'Sari' })).toBe('Sari')
+  })
+
+  it('reads the GOWS field', () => {
+    expect(pushNameFromPayload({ _data: { Info: { PushName: 'Andi' } } })).toBe('Andi')
+  })
+
+  it('ignores empty, non-string and number-like values', () => {
+    expect(pushNameFromPayload({ _data: { pushName: '   ' } })).toBeNull()
+    expect(pushNameFromPayload({ _data: { pushName: 123 } })).toBeNull()
+    expect(pushNameFromPayload({ _data: { pushName: '+62 812-3456-789' } })).toBeNull()
+    expect(pushNameFromPayload(null)).toBeNull()
+    expect(pushNameFromPayload({})).toBeNull()
+  })
+
+  it('skips a number-like candidate and uses the next real name', () => {
+    expect(
+      pushNameFromPayload({ _data: { notifyName: '628123456789', pushName: 'Dewi' } }),
+    ).toBe('Dewi')
+  })
+
+  it('caps very long names', () => {
+    expect(pushNameFromPayload({ _data: { pushName: 'a'.repeat(300) } })).toHaveLength(120)
+  })
+})
+
+describe('isPlaceholderName', () => {
+  it('treats empty and number-only names as placeholders', () => {
+    expect(isPlaceholderName(null)).toBe(true)
+    expect(isPlaceholderName('')).toBe(true)
+    expect(isPlaceholderName('628123456789')).toBe(true)
+    expect(isPlaceholderName('+62 812-3456 (789)')).toBe(true)
+  })
+
+  it('keeps real names', () => {
+    expect(isPlaceholderName('Budi')).toBe(false)
+    expect(isPlaceholderName('PT Maju 2')).toBe(false)
   })
 })

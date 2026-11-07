@@ -13,11 +13,12 @@
     "signIn": "Sign in",
     "noAccount": "Don't have an account?",
     "createAccount": "Create account",
+    "inviteOnlyHint": "Sign-up is by invitation only. Ask your administrator for an invitation link.",
     "linkExpired": "That link has expired. For a password reset, use “Forgot password?” to request a new one; if you were confirming your email, sign up again.",
     "linkInvalid": "That link couldn’t be used to sign you in. If you were confirming your email, it may already be verified — just sign in below. For a password reset, request a new link and open it in the same browser you requested it from."
   },
   "Sidebar": {
-    "title": "CRM Template for WhatsApp",
+    "title": "Kompeten CRM",
     "primaryNav": "Primary",
     "dashboard": "Dashboard",
     "inbox": "Inbox",
@@ -1674,7 +1675,7 @@
       "done": "Done",
       "dialogTitle": "Invite a teammate",
       "networkError": "Could not reach the server. Try again?",
-      "fallbackAccountName": "our WA-CRM account",
+      "fallbackAccountName": "our Kompeten CRM account",
       "dialogDesc": "Generate a one-time invite link. Share it via WhatsApp, Slack, or any channel you like — no email service required.",
       "roleLabel": "Role",
       "validForLabel": "Link valid for",
@@ -1691,7 +1692,7 @@
       "labelTooLong": "Label must be {max} characters or fewer",
       "copied": "Invite link copied",
       "clipboardBlocked": "Clipboard blocked — copy the link manually",
-      "whatsappMessage": "Join {accountName} on WA-CRM using this link (valid for {expiresInDays} days): {url}",
+      "whatsappMessage": "Join {accountName} on Kompeten CRM using this link (valid for {expiresInDays} days): {url}",
       "createFailed": "Failed to create invitation",
       "kindLabel": "Invitation type",
       "kindWorkspace": "Own account (own WhatsApp number)",
@@ -1699,7 +1700,7 @@
       "kindWorkspaceHint": "The person registers a separate CRM account and connects their own WhatsApp number. Their conversations stay private to them. The link works once.",
       "kindMemberHint": "The person joins this account and shares one inbox and one WhatsApp number.",
       "inviteCreatedDescWorkspace": "Share this link with the person. They can register their own account and connect their own WhatsApp number. The link works <bold>once</bold> and is valid for <bold>{days} {days, plural, =1 {day} other {days}}</bold>.",
-      "whatsappMessageWorkspace": "You are invited to create your own account on WA-CRM. The link works once and is valid for {expiresInDays} days: {url}",
+      "whatsappMessageWorkspace": "You are invited to create your own account on Kompeten CRM. The link works once and is valid for {expiresInDays} days: {url}",
       "kindRestricted": "You can invite teammates into your account (they share your inbox and WhatsApp number). New separate accounts can only be created by the platform administrator."
     },
     "tagsAndFields": {
@@ -2013,7 +2014,7 @@
     },
     "aiConfig": {
       "title": "Agent setup",
-      "description": "Bring your own OpenAI, Anthropic, or OpenAI-compatible API key. WA-CRM calls the provider directly with your key — no per-seat AI fees, and your data stays yours. This powers AI-drafted replies in the inbox, the auto-reply bot, and the Playground.",
+      "description": "Bring your own OpenAI, Anthropic, or OpenAI-compatible API key. Kompeten CRM calls the provider directly with your key — no per-seat AI fees, and your data stays yours. This powers AI-drafted replies in the inbox, the auto-reply bot, and the Playground.",
       "adminOnlyConfig": "Only admins and owners can change the AI configuration.",
       "loadFailed": "Failed to load AI configuration",
       "providerAndKey": "Provider & key",
@@ -2116,7 +2117,7 @@
     "titleJoin": "Create account & join",
     "title": "Create account",
     "descJoin": "Verify your email, then accept the invitation to join your team.",
-    "desc": "Get started with CRM Template for WhatsApp",
+    "desc": "Get started with Kompeten CRM",
     "fullNameLabel": "Full name",
     "fullNamePlaceholder": "John Doe",
     "emailLabel": "Email",
@@ -2310,8 +2311,12 @@
       "sendMessages": "send messages"
     }
   },
+  "PasswordInput": {
+    "show": "Show password",
+    "hide": "Hide password"
+  },
   "Metadata": {
-    "description": "Self-hostable CRM template for WhatsApp."
+    "description": "WhatsApp CRM with AI for sales and service teams."
   },
   "Currency": {
     "USD": "US Dollar",
@@ -2786,7 +2791,7 @@
       "wabaIdDigits": "WhatsApp Business Account ID must contain only digits — copy it from Meta → WhatsApp → API Setup.",
       "pinDigits": "PIN must be exactly 6 digits.",
       "validateFailed": "Failed to validate configuration",
-      "numberLinkedElsewhere": "This WhatsApp phone number is already linked to another account on this instance. Each phone number can only be connected to one WA-CRM user.",
+      "numberLinkedElsewhere": "This WhatsApp phone number is already linked to another account on this instance. Each phone number can only be connected to one Kompeten CRM user.",
       "encryptFailed": "Failed to encrypt token. Check that ENCRYPTION_KEY is a valid 64-character hex string in your environment variables.",
       "updateFailed": "Failed to update configuration",
       "saveFailed": "Failed to save configuration",

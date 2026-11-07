@@ -110,3 +110,38 @@ export function ackToStatus(
       return null
   }
 }
+
+const MAX_NAME_LEN = 120
+
+/**
+ * The customer's own WhatsApp profile name (push name), when the engine
+ * provides one. Field names differ per WAHA engine: WEBJS sends
+ * `notifyName`, NOWEB `_data.pushName`, GOWS `_data.Info.PushName`.
+ * A value that is only digits / phone punctuation is not a name.
+ */
+export function pushNameFromPayload(payload: Loose): string | null {
+  const candidates = [
+    pick(payload, '_data', 'notifyName'),
+    pick(payload, 'notifyName'),
+    pick(payload, '_data', 'pushName'),
+    pick(payload, 'pushName'),
+    pick(payload, '_data', 'Info', 'PushName'),
+  ]
+  for (const c of candidates) {
+    if (typeof c !== 'string') continue
+    const name = c.trim().slice(0, MAX_NAME_LEN)
+    if (name && !isPlaceholderName(name)) return name
+  }
+  return null
+}
+
+/**
+ * True when a contact "name" is really just a stand-in: empty, or only
+ * digits and phone punctuation (the number itself, a LID, "+62 812...").
+ * Such a name may be replaced by the customer's profile name; a name a
+ * person typed in is never a placeholder.
+ */
+export function isPlaceholderName(name: string | null | undefined): boolean {
+  const n = (name ?? '').trim()
+  return n === '' || /^[+\d\s().-]+$/.test(n)
+}

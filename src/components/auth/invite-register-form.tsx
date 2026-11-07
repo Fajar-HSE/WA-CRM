@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 import type { InvitationKind } from '@/lib/auth/peek-result';
@@ -118,9 +119,8 @@ export function InviteRegisterForm({
         <Label htmlFor="reg-password" className="text-muted-foreground">
           {t('password')}
         </Label>
-        <Input
+        <PasswordInput
           id="reg-password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -134,9 +134,8 @@ export function InviteRegisterForm({
         <Label htmlFor="reg-confirm" className="text-muted-foreground">
           {t('confirmPassword')}
         </Label>
-        <Input
+        <PasswordInput
           id="reg-confirm"
-          type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           required

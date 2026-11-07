@@ -180,4 +180,80 @@ export function registerReadTools(server: McpServer, client: WaCrmClient): void 
     },
     handle(async ({ id }) => jsonResult(await client.getTemplate(id))),
   );
+
+  // --- Pipelines & Deals (read) ---
+
+  server.registerTool(
+    'list_pipelines',
+    {
+      title: 'List pipelines',
+      description: 'List sales pipelines with their stages (ordered by position).',
+      inputSchema: {},
+      annotations: { ...READ_ONLY, title: 'List pipelines' },
+    },
+    handle(async () => jsonResult(await client.listPipelines())),
+  );
+
+  server.registerTool(
+    'get_pipeline',
+    {
+      title: 'Get pipeline',
+      description: 'Read one pipeline with its stages.',
+      inputSchema: { id: z.string().describe('Pipeline id.') },
+      annotations: { ...READ_ONLY, title: 'Get pipeline' },
+    },
+    handle(async ({ id }) => jsonResult(await client.getPipeline(id))),
+  );
+
+  server.registerTool(
+    'list_deals',
+    {
+      title: 'List deals',
+      description: 'List deals, newest first. Optional filters: pipeline_id, stage_id, status. Paginated.',
+      inputSchema: {
+        pipeline_id: z.string().optional().describe('Filter by pipeline id.'),
+        stage_id: z.string().optional().describe('Filter by stage id.'),
+        status: z.string().optional().describe('Filter by status (e.g. active).'),
+        limit: z.number().int().min(1).max(100).optional().describe('Page size, 1–100 (default 50).'),
+        cursor: z.string().optional().describe('Opaque pagination cursor.'),
+      },
+      annotations: { ...READ_ONLY, title: 'List deals' },
+    },
+    handle(async (args) => jsonResult(await client.listDeals(args))),
+  );
+
+  server.registerTool(
+    'get_deal',
+    {
+      title: 'Get deal',
+      description: 'Read one deal by id.',
+      inputSchema: { id: z.string().describe('Deal id.') },
+      annotations: { ...READ_ONLY, title: 'Get deal' },
+    },
+    handle(async ({ id }) => jsonResult(await client.getDeal(id))),
+  );
+
+  // --- Tags (read) ---
+
+  server.registerTool(
+    'list_tags',
+    {
+      title: 'List tags',
+      description: 'List account tags (name + color).',
+      inputSchema: {},
+      annotations: { ...READ_ONLY, title: 'List tags' },
+    },
+    handle(async () => jsonResult(await client.listTags())),
+  );
+
+  server.registerTool(
+    'get_tag',
+    {
+      title: 'Get tag',
+      description: 'Read one tag by id.',
+      inputSchema: { id: z.string().describe('Tag id.') },
+      annotations: { ...READ_ONLY, title: 'Get tag' },
+    },
+    handle(async ({ id }) => jsonResult(await client.getTag(id))),
+  );
 }

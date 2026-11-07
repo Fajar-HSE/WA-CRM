@@ -54,6 +54,11 @@ it. Grant the minimum.
 | `knowledge:write`    | Create, update and delete knowledge-base documents |
 | `templates:read`     | List and read WhatsApp message templates |
 | `templates:write`    | Create, update and delete WhatsApp message templates |
+| `deals:read`         | List and read deals and pipelines |
+| `deals:write`        | Create, update and delete deals and pipelines |
+| `conversations:write` | Update conversation status, assignment and unread count |
+| `tags:read`          | List and read tags |
+| `tags:write`         | Create, update and delete tags |
 
 A key with **no scopes** still authenticates and can call
 `GET /api/v1/me` — useful for verifying a key works.
@@ -461,11 +466,64 @@ create/update/delete.
 
 A template in another account returns `404`.
 
+### Pipelines & deals
+
+Manage sales pipelines and deals (Settings → Pipelines). Scopes:
+`deals:read` / `deals:write`.
+
+- `GET /api/v1/pipelines`: list pipelines with their stages (ordered
+  by position).
+- `GET /api/v1/pipelines/{id}`: one pipeline with its stages.
+- `POST /api/v1/pipelines`: create. Body: `name` (required) and
+  optional `stages` (array of `{ name, position, color }`).
+- `PATCH /api/v1/pipelines/{id}`: rename (`name`) and/or upsert
+  stages.
+- `DELETE /api/v1/pipelines/{id}`: delete (cascades to stages and
+  deals).
+- `GET /api/v1/deals`: list deals, newest first, paginated. Optional
+  filters: `pipeline_id`, `stage_id`, `status` (`open`/`won`/`lost`).
+- `GET /api/v1/deals/{id}`: one deal.
+- `POST /api/v1/deals`: create. Required: `title`, `pipeline_id`,
+  `stage_id`, `contact_id`. Optional: `conversation_id`, `value`,
+  `currency`, `notes`, `expected_close_date`, `status`.
+- `PATCH /api/v1/deals/{id}`: update any subset (move stage, change
+  value/status/notes/etc.).
+- `DELETE /api/v1/deals/{id}`: delete.
+
+A pipeline or deal in another account returns `404`.
+
+### Conversation management
+
+Update an existing conversation (scope: `conversations:write`; reads
+use `conversations:read`).
+
+- `PATCH /api/v1/conversations/{id}`: update `status`
+  (`open`/`pending`/`closed`), `assigned_agent_id` (agent user id or
+  `null` to unassign) and/or `unread_count`.
+
+A conversation in another account returns `404`.
+
+### Tags
+
+Manage account tags (Settings → Tags). Scopes: `tags:read` /
+`tags:write`. Tags are also assignable to contacts via the `tags`
+array on `POST/PATCH /api/v1/contacts`.
+
+- `GET /api/v1/tags`: list tags.
+- `GET /api/v1/tags/{id}`: one tag.
+- `POST /api/v1/tags`: create. Body: `name` (required), `color`
+  (optional hex).
+- `PATCH /api/v1/tags/{id}`: update `name` and/or `color`.
+- `DELETE /api/v1/tags/{id}`: delete.
+
+A tag in another account returns `404`.
+
 ## Roadmap
 
 The public API now covers messaging, contacts, conversations,
-broadcasts, outbound webhooks, knowledge base, and message templates —
-the full scope of
+broadcasts, outbound webhooks, knowledge base, message templates, deals
+& pipelines, conversation management and tags — the full scope of
 [#245](https://github.com/Fajar-HSE/WA-CRM/issues/245). Future ideas
-(deals/pipelines, flows, a delivery queue for webhooks) are not yet
+(flows, quick replies, notes, dashboard stats, scheduled messages,
+contact import, media upload, a delivery queue for webhooks) are not yet
 scheduled.

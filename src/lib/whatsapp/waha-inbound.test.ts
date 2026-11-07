@@ -215,4 +215,60 @@ describe('processWahaInbound with a lid sender', () => {
       expect(messageUpserts[0]).toMatchObject({ content_type: 'audio' })
     })
   })
+
+  describe('contact name', () => {
+    it('uses the NOWEB push name for a new contact', async () => {
+      byPhone({})
+      await processWahaInbound({
+        sessionName: 's',
+        payload: {
+          id: 'm1',
+          from: `${REAL}@c.us`,
+          body: 'halo',
+          timestamp: 1,
+          _data: { pushName: 'Budi Santoso' },
+        },
+      })
+      expect(contactInserts[0]).toMatchObject({ phone: REAL, name: 'Budi Santoso' })
+    })
+
+    it('falls back to the number when no name is sent', async () => {
+      byPhone({})
+      await processWahaInbound({
+        sessionName: 's',
+        payload: { id: 'm1', from: `${REAL}@c.us`, body: 'halo', timestamp: 1 },
+      })
+      expect(contactInserts[0]).toMatchObject({ name: REAL })
+    })
+
+    it('fills in the name of an existing contact that only has its number', async () => {
+      byPhone({ [REAL]: { id: 'c-1', phone: REAL, name: REAL } })
+      await processWahaInbound({
+        sessionName: 's',
+        payload: {
+          id: 'm1',
+          from: `${REAL}@c.us`,
+          body: 'halo',
+          timestamp: 1,
+          _data: { pushName: 'Budi Santoso' },
+        },
+      })
+      expect(contactUpdates).toEqual([{ id: 'c-1', values: { name: 'Budi Santoso' } }])
+    })
+
+    it('never overwrites a name a person typed in', async () => {
+      byPhone({ [REAL]: { id: 'c-1', phone: REAL, name: 'Pak Budi (ICC)' } })
+      await processWahaInbound({
+        sessionName: 's',
+        payload: {
+          id: 'm1',
+          from: `${REAL}@c.us`,
+          body: 'halo',
+          timestamp: 1,
+          _data: { pushName: 'Budi Santoso' },
+        },
+      })
+      expect(contactUpdates).toEqual([])
+    })
+  })
 })

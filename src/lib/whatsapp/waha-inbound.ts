@@ -9,7 +9,12 @@ import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import type { AutomationTriggerType, WhatsAppConfig } from '@/types'
 import { createWhatsAppProvider } from '@/lib/whatsapp/providers'
 import { WahaWhatsAppProvider } from '@/lib/whatsapp/providers/waha'
-import { altPhoneFromPayload, isNonCustomerChat } from '@/lib/whatsapp/waha-ids'
+import {
+  altPhoneFromPayload,
+  isNonCustomerChat,
+  isPlaceholderName,
+  pushNameFromPayload,
+} from '@/lib/whatsapp/waha-ids'
 import { mirrorWahaMedia } from '@/lib/whatsapp/waha-media'
 import type { MirrorStorage } from '@/lib/whatsapp/mirror-inbound-media'
 
@@ -28,10 +33,12 @@ export interface WahaInboundPayload {
   media?: { url?: string | null; mimetype?: string | null } | null
   _data?: {
     notifyName?: string | null
+    /** NOWEB: the customer's WhatsApp profile name. */
+    pushName?: string | null
     /** NOWEB: carries the real number next to a LID sender. */
     key?: { remoteJidAlt?: string | null; participantAlt?: string | null } | null
     /** GOWS: same idea. */
-    Info?: { SenderAlt?: string | null; RecipientAlt?: string | null } | null
+    Info?: { SenderAlt?: string | null; RecipientAlt?: string | null; PushName?: string | null } | null
   } | null
 }
 
@@ -42,6 +49,7 @@ export interface WahaInboundInput {
 
 interface InboundContact {
   id: string
+  name?: string | null
 }
 
 interface InboundConversation {
@@ -135,6 +143,12 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
       }
     }
   }
+
+  // The customer's WhatsApp profile name. Which field carries it depends on
+  // the WAHA engine (WEBJS notifyName, NOWEB _data.pushName, GOWS
+  // _data.Info.PushName), so ask the helper that knows all of them.
+  const profileName = pushNameFromPayload(payload as Record<string, unknown>)
+
   let wasCreated = false
   if (!contact) {
     const { data: newContact, error: createErr } = await db
@@ -143,7 +157,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
         account_id: accountId,
         user_id: ownerUserId,
         phone: phone || from,
-        name: payload?._data?.notifyName || payload?.notifyName || phone || from,
+        name: profileName || phone || from,
       })
       .select()
       .single()
@@ -157,6 +171,23 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
     }
   }
   if (!contact) return
+
+  // An existing contact whose name is just a number (it was created before
+  // the name was readable) gets the profile name. A name someone typed in
+  // is left alone.
+  if (!wasCreated && profileName) {
+    const existingName = (contact as { name?: string | null }).name
+    if (isPlaceholderName(existingName)) {
+      const { error: nameErr } = await db
+        .from('contacts')
+        .update({ name: profileName })
+        .eq('id', contact.id)
+        .eq('account_id', accountId)
+      if (nameErr) {
+        console.error('[waha-inbound] could not set contact name:', nameErr.message)
+      }
+    }
+  }
 
   // Find or create conversation.
   const { data: existingConvs } = await db

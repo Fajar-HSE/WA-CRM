@@ -198,4 +198,105 @@ export class WaCrmClient {
   getBroadcast(id: string): Promise<{ data: unknown }> {
     return this.request('GET', `/broadcasts/${encodeURIComponent(id)}`);
   }
+
+  // --- Templates ----------------------------------------------------
+
+  listTemplates(query: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Paginated<unknown>> {
+    return this.list('/templates', query);
+  }
+
+  getTemplate(id: string): Promise<{ data: unknown }> {
+    return this.request('GET', `/templates/${encodeURIComponent(id)}`);
+  }
+
+  createTemplate(body: unknown): Promise<{ data: unknown }> {
+    return this.request('POST', '/templates', { body });
+  }
+
+  updateTemplate(id: string, body: unknown): Promise<{ data: unknown }> {
+    return this.request('PATCH', `/templates/${encodeURIComponent(id)}`, { body });
+  }
+
+  deleteTemplate(id: string): Promise<{ data: unknown }> {
+    return this.request('DELETE', `/templates/${encodeURIComponent(id)}`);
+  }
+
+  // --- Pipelines & Deals -------------------------------------------
+
+  listPipelines(): Promise<{ data: unknown }> {
+    return this.request('GET', '/pipelines');
+  }
+
+  getPipeline(id: string): Promise<{ data: unknown }> {
+    return this.request('GET', `/pipelines/${encodeURIComponent(id)}`);
+  }
+
+  createPipeline(body: unknown): Promise<{ data: unknown }> {
+    return this.request('POST', '/pipelines', { body });
+  }
+
+  updatePipeline(id: string, body: unknown): Promise<{ data: unknown }> {
+    return this.request('PATCH', `/pipelines/${encodeURIComponent(id)}`, { body });
+  }
+
+  deletePipeline(id: string): Promise<{ data: unknown }> {
+    return this.request('DELETE', `/pipelines/${encodeURIComponent(id)}`);
+  }
+
+  listDeals(query: { pipeline_id?: string; stage_id?: string; status?: string; limit?: number; cursor?: string }): Promise<Paginated<unknown>> {
+    return this.list('/deals', {
+      limit: query.limit,
+      cursor: query.cursor,
+      pipeline_id: query.pipeline_id,
+      stage_id: query.stage_id,
+      status: query.status,
+    });
+  }
+
+  getDeal(id: string): Promise<{ data: unknown }> {
+    return this.request('GET', `/deals/${encodeURIComponent(id)}`);
+  }
+
+  createDeal(body: unknown): Promise<{ data: unknown }> {
+    return this.request('POST', '/deals', { body });
+  }
+
+  updateDeal(id: string, body: unknown): Promise<{ data: unknown }> {
+    return this.request('PATCH', `/deals/${encodeURIComponent(id)}`, { body });
+  }
+
+  deleteDeal(id: string): Promise<{ data: unknown }> {
+    return this.request('DELETE', `/deals/${encodeURIComponent(id)}`);
+  }
+
+  // --- Conversations (write) ---------------------------------------
+
+  updateConversation(id: string, body: unknown): Promise<{ data: unknown }> {
+    return this.request('PATCH', `/conversations/${encodeURIComponent(id)}`, { body });
+  }
+
+  // --- Tags --------------------------------------------------------
+
+  listTags(): Promise<{ data: unknown }> {
+    return this.request('GET', '/tags');
+  }
+
+  getTag(id: string): Promise<{ data: unknown }> {
+    return this.request('GET', `/tags/${encodeURIComponent(id)}`);
+  }
+
+  createTag(body: unknown): Promise<{ data: unknown }> {
+    return this.request('POST', '/tags', { body });
+  }
+
+  updateTag(id: string, body: unknown): Promise<{ data: unknown }> {
+    return this.request('PATCH', `/tags/${encodeURIComponent(id)}`, { body });
+  }
+
+  deleteTag(id: string): Promise<{ data: unknown }> {
+    return this.request('DELETE', `/tags/${encodeURIComponent(id)}`);
+  }
 }

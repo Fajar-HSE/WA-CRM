@@ -79,12 +79,33 @@ when their guard is set.
 | `get_broadcast`      | read      | `broadcasts:send`    | Poll a broadcast's delivery status              |
 | `list_knowledge_documents` | read | `knowledge:read`    | List AI knowledge-base documents                |
 | `get_knowledge_document` | read   | `knowledge:read`     | Read one knowledge-base document                |
+| `list_templates`         | read   | `templates:read`     | List message templates (paginated)              |
+| `get_template`           | read   | `templates:read`     | Read one message template                      |
+| `list_pipelines`         | read   | `deals:read`         | List pipelines with stages                     |
+| `get_pipeline`           | read   | `deals:read`         | Read one pipeline with stages                  |
+| `list_deals`             | read   | `deals:read`         | List deals (filterable)                        |
+| `get_deal`               | read   | `deals:read`         | Read one deal                                  |
+| `list_tags`              | read   | `tags:read`          | List tags                                      |
+| `get_tag`                | read   | `tags:read`          | Read one tag                                   |
 | `send_message`       | write     | `messages:send`      | Send a WhatsApp message (text/template/media)   |
 | `create_contact`     | write     | `contacts:write`     | Create (find-or-create) a contact               |
 | `update_contact`     | write     | `contacts:write`     | Update a contact / replace its tags             |
 | `add_knowledge_document` | write | `knowledge:write`    | Add (or replace by title) a knowledge-base document |
 | `update_knowledge_document` | write | `knowledge:write` | Change a document's title or text               |
 | `delete_knowledge_document` | write | `knowledge:write` | Delete a document (destructive)                 |
+| `create_template`        | write  | `templates:write`    | Create a message template                       |
+| `update_template`        | write  | `templates:write`    | Update a message template                       |
+| `delete_template`        | write  | `templates:write`    | Delete a message template (destructive)         |
+| `create_pipeline`        | write  | `deals:write`        | Create a pipeline (+ optional stages)          |
+| `update_pipeline`        | write  | `deals:write`        | Rename pipeline / upsert stages                |
+| `delete_pipeline`        | write  | `deals:write`        | Delete a pipeline (destructive)                |
+| `create_deal`            | write  | `deals:write`        | Create a deal                                  |
+| `update_deal`            | write  | `deals:write`        | Update/move a deal                             |
+| `delete_deal`            | write  | `deals:write`        | Delete a deal (destructive)                    |
+| `update_conversation`    | write  | `conversations:write` | Update status/assignment/unread                |
+| `create_tag`             | write  | `tags:write`         | Create a tag                                   |
+| `update_tag`             | write  | `tags:write`         | Update a tag                                   |
+| `delete_tag`             | write  | `tags:write`         | Delete a tag (destructive)                     |
 | `send_broadcast`     | broadcast | `broadcasts:send`    | Launch a template broadcast (requires `confirm`)|
 
 ## Safety model

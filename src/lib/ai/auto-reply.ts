@@ -6,7 +6,7 @@ import { generateReply } from './generate'
 import { buildSystemPrompt } from './defaults'
 import { buildHandoffSummary } from './handoff'
 import { logAiUsage } from './usage'
-import { latestUserMessage } from './query'
+import { knowledgeQuery } from './query'
 import {
   engineSendText,
   loadAccountMetaCredentials,
@@ -127,7 +127,7 @@ export async function dispatchInboundToAiReply(
       db,
       accountId,
       config,
-      latestUserMessage(messages),
+      knowledgeQuery(messages),
     )
 
     const systemPrompt = buildSystemPrompt({

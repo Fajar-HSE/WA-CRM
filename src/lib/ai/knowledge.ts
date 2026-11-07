@@ -16,6 +16,9 @@ export interface IngestResult {
 
 const CHUNK_DELETE_BATCH = 100
 
+/** How many KB excerpts go into each draft / auto-reply prompt. */
+export const DEFAULT_KNOWLEDGE_EXCERPTS = 8
+
 interface MatchRow {
   id: string
   content: string
@@ -92,7 +95,7 @@ export async function retrieveKnowledge(
   accountId: string,
   config: Pick<AiConfig, 'embeddingsApiKey'>,
   queryText: string,
-  k = 5,
+  k = DEFAULT_KNOWLEDGE_EXCERPTS,
 ): Promise<string[]> {
   const query = queryText.trim()
   if (!query || k <= 0) return []

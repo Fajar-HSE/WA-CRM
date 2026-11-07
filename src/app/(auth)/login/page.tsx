@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -136,9 +137,9 @@ function LoginPageInner() {
               <Label htmlFor="password" className="text-muted-foreground">
                 {t('passwordLabel')}
               </Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
+                autoComplete="current-password"
                 placeholder={t('passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -164,17 +165,19 @@ function LoginPageInner() {
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            {t('noAccount')}{" "}
-            <Link
-              href={
-                inviteToken
-                  ? `/signup?invite=${encodeURIComponent(inviteToken)}`
-                  : "/signup"
-              }
-              className="text-primary hover:text-primary/80"
-            >
-              {t('createAccount')}
-            </Link>
+            {inviteToken ? (
+              <>
+                {t('noAccount')}{" "}
+                <Link
+                  href={`/signup?invite=${encodeURIComponent(inviteToken)}`}
+                  className="text-primary hover:text-primary/80"
+                >
+                  {t('createAccount')}
+                </Link>
+              </>
+            ) : (
+              t('inviteOnlyHint')
+            )}
           </p>
         </CardContent>
       </Card>

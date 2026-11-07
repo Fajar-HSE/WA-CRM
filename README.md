@@ -1,4 +1,4 @@
-# WA-CRM — CRM for WhatsApp
+# Kompeten CRM — WhatsApp CRM with AI for sales and service teams
 
 > Self-hostable CRM for WhatsApp® — shared inbox, contacts, sales pipelines, broadcasts, and no-code automations.
 

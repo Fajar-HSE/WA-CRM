@@ -13,11 +13,12 @@
     "signIn": "Masuk",
     "noAccount": "Belum punya akun?",
     "createAccount": "Buat akun",
+    "inviteOnlyHint": "Pendaftaran hanya lewat undangan. Minta tautan undangan ke administrator Anda.",
     "linkExpired": "Tautan itu sudah kedaluwarsa. Untuk atur ulang kata sandi, pakai “Lupa kata sandi?” untuk meminta tautan baru. Jika Anda sedang mengonfirmasi email, daftar lagi.",
     "linkInvalid": "Tautan itu tidak dapat dipakai untuk masuk. Jika Anda sedang mengonfirmasi email, mungkin sudah terverifikasi, silakan masuk di bawah. Untuk atur ulang kata sandi, minta tautan baru dan buka di peramban yang sama dengan yang Anda pakai saat memintanya."
   },
   "Sidebar": {
-    "title": "CRM untuk WhatsApp",
+    "title": "Kompeten CRM",
     "primaryNav": "Utama",
     "dashboard": "Dasbor",
     "inbox": "Kotak Masuk",
@@ -1674,7 +1675,7 @@
       "done": "Selesai",
       "dialogTitle": "Undang rekan tim",
       "networkError": "Tidak dapat menghubungi server. Coba lagi?",
-      "fallbackAccountName": "akun WA-CRM kami",
+      "fallbackAccountName": "akun Kompeten CRM kami",
       "dialogDesc": "Buat tautan undangan sekali pakai. Bagikan lewat WhatsApp, Slack, atau saluran apa pun, tanpa layanan email.",
       "roleLabel": "Peran",
       "validForLabel": "Tautan berlaku selama",
@@ -1691,7 +1692,7 @@
       "labelTooLong": "Label maksimal {max} karakter",
       "copied": "Tautan undangan disalin",
       "clipboardBlocked": "Papan klip diblokir, salin tautan secara manual",
-      "whatsappMessage": "Bergabunglah ke {accountName} di WA-CRM lewat tautan ini (berlaku {expiresInDays} hari): {url}",
+      "whatsappMessage": "Bergabunglah ke {accountName} di Kompeten CRM lewat tautan ini (berlaku {expiresInDays} hari): {url}",
       "createFailed": "Gagal membuat undangan",
       "kindLabel": "Jenis undangan",
       "kindWorkspace": "Akun sendiri (nomor WhatsApp sendiri)",
@@ -1699,7 +1700,7 @@
       "kindWorkspaceHint": "Orang itu mendaftar akun CRM terpisah dan menghubungkan nomor WhatsApp-nya sendiri. Percakapannya tetap pribadi. Tautan hanya berlaku sekali.",
       "kindMemberHint": "Orang itu bergabung ke akun ini dan berbagi satu kotak masuk dan satu nomor WhatsApp.",
       "inviteCreatedDescWorkspace": "Bagikan tautan ini ke orang tersebut. Mereka dapat mendaftar akun sendiri dan menghubungkan nomor WhatsApp-nya. Tautan hanya berlaku <bold>sekali</bold> dan aktif selama <bold>{days} hari</bold>.",
-      "whatsappMessageWorkspace": "Anda diundang membuat akun sendiri di WA-CRM. Tautan hanya berlaku sekali dan aktif {expiresInDays} hari: {url}",
+      "whatsappMessageWorkspace": "Anda diundang membuat akun sendiri di Kompeten CRM. Tautan hanya berlaku sekali dan aktif {expiresInDays} hari: {url}",
       "kindRestricted": "Anda dapat mengundang rekan tim ke akun Anda (mereka berbagi kotak masuk dan nomor WhatsApp Anda). Akun terpisah yang baru hanya dapat dibuat oleh pengelola."
     },
     "tagsAndFields": {
@@ -2013,7 +2014,7 @@
     },
     "aiConfig": {
       "title": "Pengaturan agen",
-      "description": "Gunakan kunci API OpenAI, Anthropic, atau yang kompatibel dengan OpenAI milik Anda sendiri. WA-CRM memanggil penyedia langsung dengan kunci Anda, tanpa biaya AI per pengguna, dan data tetap milik Anda. Ini menjalankan draf balasan AI di kotak masuk, bot balas otomatis, dan Playground.",
+      "description": "Gunakan kunci API OpenAI, Anthropic, atau yang kompatibel dengan OpenAI milik Anda sendiri. Kompeten CRM memanggil penyedia langsung dengan kunci Anda, tanpa biaya AI per pengguna, dan data tetap milik Anda. Ini menjalankan draf balasan AI di kotak masuk, bot balas otomatis, dan Playground.",
       "adminOnlyConfig": "Hanya admin dan pemilik yang dapat mengubah konfigurasi AI.",
       "loadFailed": "Gagal memuat konfigurasi AI",
       "providerAndKey": "Penyedia & kunci",
@@ -2116,7 +2117,7 @@
     "titleJoin": "Buat akun & bergabung",
     "title": "Buat akun",
     "descJoin": "Verifikasi email Anda, lalu terima undangan untuk bergabung dengan tim.",
-    "desc": "Mulai dengan CRM untuk WhatsApp",
+    "desc": "Mulai dengan Kompeten CRM",
     "fullNameLabel": "Nama lengkap",
     "fullNamePlaceholder": "Budi Santoso",
     "emailLabel": "Email",
@@ -2310,8 +2311,12 @@
       "sendMessages": "mengirim pesan"
     }
   },
+  "PasswordInput": {
+    "show": "Tampilkan kata sandi",
+    "hide": "Sembunyikan kata sandi"
+  },
   "Metadata": {
-    "description": "Template CRM untuk WhatsApp yang bisa dihosting sendiri."
+    "description": "CRM WhatsApp dengan AI untuk tim penjualan dan layanan."
   },
   "Currency": {
     "USD": "Dolar Amerika Serikat",
@@ -2786,7 +2791,7 @@
       "wabaIdDigits": "ID WhatsApp Business Account hanya boleh berisi angka. Salin dari Meta → WhatsApp → API Setup.",
       "pinDigits": "PIN harus tepat 6 digit.",
       "validateFailed": "Gagal memvalidasi konfigurasi",
-      "numberLinkedElsewhere": "Nomor WhatsApp ini sudah terhubung ke akun lain di instans ini. Setiap nomor hanya dapat dihubungkan ke satu pengguna WA-CRM.",
+      "numberLinkedElsewhere": "Nomor WhatsApp ini sudah terhubung ke akun lain di instans ini. Setiap nomor hanya dapat dihubungkan ke satu pengguna Kompeten CRM.",
       "encryptFailed": "Gagal mengenkripsi token. Pastikan ENCRYPTION_KEY adalah string heksadesimal 64 karakter yang valid di variabel lingkungan Anda.",
       "updateFailed": "Gagal memperbarui konfigurasi",
       "saveFailed": "Gagal menyimpan konfigurasi",

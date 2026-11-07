@@ -146,4 +146,69 @@ export function registerWriteTools(server: McpServer, client: WaCrmClient): void
     },
     handle(async ({ id }) => jsonResult(await client.deleteKnowledgeDocument(id))),
   );
+
+  server.registerTool(
+    'create_template',
+    {
+      title: 'Create message template',
+      description:
+        'Create a WhatsApp message template. For WAHA accounts the template is saved locally and usable immediately (status APPROVED). For Meta accounts it is submitted for approval. Body supports {{1}}, {{2}} positional variables (must be contiguous) and named variables. Confirm content with the user before calling.',
+      inputSchema: {
+        name: z.string().min(1).describe('Template name (lowercase letters, digits, underscores).'),
+        category: z.enum(['Marketing', 'Utility', 'Authentication']).default('Utility').describe('Template category.'),
+        language: z.string().default('id').describe('Language code, e.g. "id" or "en_US".'),
+        body_text: z.string().min(1).max(1024).describe('Template body text. Use {{1}}, {{2}} for variables.'),
+        footer_text: z.string().max(60).optional().describe('Optional footer text (no variables).'),
+        header_type: z.enum(['text', 'image', 'video', 'document']).optional().describe('Optional header type.'),
+        header_content: z.string().max(60).optional().describe('Header text (required if header_type is text).'),
+        sample_values: z
+          .object({ body: z.array(z.string()).optional(), header: z.array(z.string()).optional() })
+          .optional()
+          .describe('Sample values for variables, 1:1 with placeholders.'),
+      },
+      annotations: { title: 'Create message template', readOnlyHint: false, openWorldHint: true },
+    },
+    handle(async (args) => jsonResult(await client.createTemplate(args))),
+  );
+
+  server.registerTool(
+    'update_template',
+    {
+      title: 'Update message template',
+      description:
+        'Update an existing message template. For local (WAHA) templates the body/footer/samples change and it stays usable. For Meta templates the edited version is re-submitted for approval. Only the fields you pass are changed.',
+      inputSchema: {
+        id: z.string().describe('Template id.'),
+        body_text: z.string().min(1).max(1024).optional(),
+        footer_text: z.string().max(60).optional(),
+        header_type: z.enum(['text', 'image', 'video', 'document']).optional(),
+        header_content: z.string().max(60).optional(),
+        sample_values: z
+          .object({ body: z.array(z.string()).optional(), header: z.array(z.string()).optional() })
+          .optional(),
+        category: z.enum(['Marketing', 'Utility', 'Authentication']).optional(),
+      },
+      annotations: { title: 'Update message template', readOnlyHint: false, openWorldHint: true },
+    },
+    handle(async ({ id, ...body }) => jsonResult(await client.updateTemplate(id, body))),
+  );
+
+  server.registerTool(
+    'delete_template',
+    {
+      title: 'Delete message template',
+      description:
+        'Permanently delete a message template. For Meta templates the template is also removed from Meta. Confirm with the user before calling.',
+      inputSchema: {
+        id: z.string().describe('Template id.'),
+      },
+      annotations: {
+        title: 'Delete message template',
+        readOnlyHint: false,
+        destructiveHint: true,
+        openWorldHint: true,
+      },
+    },
+    handle(async ({ id }) => jsonResult(await client.deleteTemplate(id))),
+  );
 }

@@ -198,4 +198,29 @@ export class WaCrmClient {
   getBroadcast(id: string): Promise<{ data: unknown }> {
     return this.request('GET', `/broadcasts/${encodeURIComponent(id)}`);
   }
+
+  // --- Templates ----------------------------------------------------
+
+  listTemplates(query: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Paginated<unknown>> {
+    return this.list('/templates', query);
+  }
+
+  getTemplate(id: string): Promise<{ data: unknown }> {
+    return this.request('GET', `/templates/${encodeURIComponent(id)}`);
+  }
+
+  createTemplate(body: unknown): Promise<{ data: unknown }> {
+    return this.request('POST', '/templates', { body });
+  }
+
+  updateTemplate(id: string, body: unknown): Promise<{ data: unknown }> {
+    return this.request('PATCH', `/templates/${encodeURIComponent(id)}`, { body });
+  }
+
+  deleteTemplate(id: string): Promise<{ data: unknown }> {
+    return this.request('DELETE', `/templates/${encodeURIComponent(id)}`);
+  }
 }

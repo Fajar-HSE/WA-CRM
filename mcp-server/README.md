@@ -79,12 +79,17 @@ when their guard is set.
 | `get_broadcast`      | read      | `broadcasts:send`    | Poll a broadcast's delivery status              |
 | `list_knowledge_documents` | read | `knowledge:read`    | List AI knowledge-base documents                |
 | `get_knowledge_document` | read   | `knowledge:read`     | Read one knowledge-base document                |
+| `list_templates`         | read   | `templates:read`     | List message templates (paginated)              |
+| `get_template`           | read   | `templates:read`     | Read one message template                      |
 | `send_message`       | write     | `messages:send`      | Send a WhatsApp message (text/template/media)   |
 | `create_contact`     | write     | `contacts:write`     | Create (find-or-create) a contact               |
 | `update_contact`     | write     | `contacts:write`     | Update a contact / replace its tags             |
 | `add_knowledge_document` | write | `knowledge:write`    | Add (or replace by title) a knowledge-base document |
 | `update_knowledge_document` | write | `knowledge:write` | Change a document's title or text               |
 | `delete_knowledge_document` | write | `knowledge:write` | Delete a document (destructive)                 |
+| `create_template`        | write  | `templates:write`    | Create a message template                       |
+| `update_template`        | write  | `templates:write`    | Update a message template                       |
+| `delete_template`        | write  | `templates:write`    | Delete a message template (destructive)         |
 | `send_broadcast`     | broadcast | `broadcasts:send`    | Launch a template broadcast (requires `confirm`)|
 
 ## Safety model

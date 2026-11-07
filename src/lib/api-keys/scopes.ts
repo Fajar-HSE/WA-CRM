@@ -23,6 +23,8 @@ export const API_SCOPES = [
   'webhooks:manage',
   'knowledge:read',
   'knowledge:write',
+  'templates:read',
+  'templates:write',
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];
@@ -39,6 +41,9 @@ export const SCOPE_DESCRIPTIONS: Record<ApiScope, string> = {
   'knowledge:read': 'List and read AI knowledge-base documents',
   'knowledge:write':
     'Create, update and delete AI knowledge-base documents (changes what the AI assistant says)',
+  'templates:read': 'List and read WhatsApp message templates',
+  'templates:write':
+    'Create, update and delete WhatsApp message templates (local and Meta-approved)',
 };
 
 /** Type-narrow an unknown value into a valid `ApiScope`. */

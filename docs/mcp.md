@@ -67,8 +67,11 @@ data or send messages, add `"WA_CRM_ENABLE_WRITES": "true"` (and
 ## What it exposes
 
 - **Reads (always on):** `whoami`, contacts (list/get), conversations
-  (list/get), messages (list), broadcast status.
-- **Writes (opt-in):** send a message, create/update a contact, add/update/delete AI knowledge-base documents (key needs `knowledge:write`).
+  (list/get), messages (list), broadcast status, templates (list/get).
+- **Writes (opt-in):** send a message, create/update a contact,
+  add/update/delete AI knowledge-base documents (key needs
+  `knowledge:write`), create/update/delete message templates (key needs
+  `templates:write`).
 - **Broadcasts (opt-in):** launch a template broadcast — requires an
   explicit `confirm` and is marked destructive.
 

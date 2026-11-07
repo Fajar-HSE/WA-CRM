@@ -52,6 +52,8 @@ it. Grant the minimum.
 | `webhooks:manage`    | Register and manage outbound webhooks    |
 | `knowledge:read`     | List and read AI knowledge-base documents |
 | `knowledge:write`    | Create, update and delete knowledge-base documents |
+| `templates:read`     | List and read WhatsApp message templates |
+| `templates:write`    | Create, update and delete WhatsApp message templates |
 
 A key with **no scopes** still authenticates and can call
 `GET /api/v1/me` — useful for verifying a key works.
@@ -434,10 +436,36 @@ curl -X POST https://your-crm.example.com/api/v1/knowledge \
   -d '{ "title": "Jam layanan", "content": "Admin membalas Senin-Jumat 08.00-17.00 WIB.", "replace_existing": true }'
 ```
 
+### Message templates
+
+Reusable WhatsApp message templates (Settings → Templates). For WAHA
+accounts they are saved locally and usable immediately (status
+`APPROVED`); for Meta accounts they are submitted to Meta for approval.
+Scopes: `templates:read` to list/read, `templates:write` to
+create/update/delete.
+
+- `GET /api/v1/templates`: list templates, newest first, paginated.
+- `GET /api/v1/templates/{id}`: one template including body text,
+  footer, buttons and sample values.
+- `POST /api/v1/templates`: create. Body fields: `name` (lowercase
+  letters, digits, underscores), `category` (`Marketing`/`Utility`/
+  `Authentication`), `language` (e.g. `id`, `en_US`), `body_text`
+  (with `{{1}}`, `{{2}}` placeholders, contiguous), optional
+  `footer_text`, `header_type`/`header_content`/`header_media_url`,
+  `buttons`, `sample_values` (`{ "body": [...], "header": [...] }`
+  matching the variable counts).
+- `PATCH /api/v1/templates/{id}`: update body/footer/samples (local
+  templates stay usable; Meta templates are re-submitted).
+- `DELETE /api/v1/templates/{id}`: delete (and remove from Meta when
+  applicable).
+
+A template in another account returns `404`.
+
 ## Roadmap
 
 The public API now covers messaging, contacts, conversations,
-broadcasts, and outbound webhooks — the full scope of
+broadcasts, outbound webhooks, knowledge base, and message templates —
+the full scope of
 [#245](https://github.com/Fajar-HSE/WA-CRM/issues/245). Future ideas
-(deals/pipelines, templates, flows, a delivery queue for webhooks) are
-not yet scheduled.
+(deals/pipelines, flows, a delivery queue for webhooks) are not yet
+scheduled.

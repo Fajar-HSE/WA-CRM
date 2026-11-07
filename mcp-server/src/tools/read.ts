@@ -152,4 +152,32 @@ export function registerReadTools(server: McpServer, client: WaCrmClient): void 
     },
     handle(async ({ id }) => jsonResult(await client.getKnowledgeDocument(id))),
   );
+
+  server.registerTool(
+    'list_templates',
+    {
+      title: 'List message templates',
+      description:
+        'List WhatsApp message templates (local WAHA + Meta-approved), newest first. Each includes name, category, language, body text, status, and variable placeholders. Paginated.',
+      inputSchema: {
+        limit: z.number().int().min(1).max(100).optional().describe('Page size, 1–100 (default 50).'),
+        cursor: z.string().optional().describe('Opaque pagination cursor from a previous response.'),
+      },
+      annotations: { ...READ_ONLY, title: 'List message templates' },
+    },
+    handle(async (args) => jsonResult(await client.listTemplates(args))),
+  );
+
+  server.registerTool(
+    'get_template',
+    {
+      title: 'Get message template',
+      description: 'Read one message template by id, including its full body text, footer, buttons and sample values.',
+      inputSchema: {
+        id: z.string().describe('Template id.'),
+      },
+      annotations: { ...READ_ONLY, title: 'Get message template' },
+    },
+    handle(async ({ id }) => jsonResult(await client.getTemplate(id))),
+  );
 }

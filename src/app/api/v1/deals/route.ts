@@ -74,6 +74,19 @@ export async function POST(request: Request) {
     if (!contactId) return fail('bad_request', "'contact_id' is required (UUID)", 400);
     const conversationId = typeof body.conversation_id === 'string' && isUuid(body.conversation_id) ? body.conversation_id : null;
 
+    // Resolve the account's default currency so new deals stay consistent
+    // with the dashboard (which aggregates in the account default currency).
+    // The fork is Rupiah-only, so an unknown/provided currency falls back
+    // to the account default instead of silently mixing currencies.
+    const { data: acct } = await ctx.supabase
+      .from('accounts')
+      .select('default_currency')
+      .eq('id', ctx.accountId)
+      .maybeSingle();
+    const accountCurrency = (acct?.default_currency as string | null) ?? 'IDR';
+    const providedCurrency = typeof body.currency === 'string' ? body.currency.trim().toUpperCase() : '';
+    const currency = providedCurrency && providedCurrency === accountCurrency ? providedCurrency : accountCurrency;
+
     const { data, error } = await ctx.supabase
       .from('deals')
       .insert({
@@ -85,7 +98,7 @@ export async function POST(request: Request) {
         conversation_id: conversationId,
         title,
         value: typeof body.value === 'number' ? body.value : 0,
-        currency: typeof body.currency === 'string' ? body.currency : 'USD',
+        currency,
         notes: typeof body.notes === 'string' ? body.notes : null,
         expected_close_date: typeof body.expected_close_date === 'string' ? body.expected_close_date : null,
         status: typeof body.status === 'string' ? body.status : 'open',

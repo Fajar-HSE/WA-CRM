@@ -19,6 +19,17 @@ export interface GroupMember {
   isAdmin: boolean
 }
 
+export interface MemberDiagnostics {
+  /** Property names in the members' records (names only). */
+  fields: string[]
+  /** Members by kind of id WAHA reported. */
+  ids: { phone: number; hidden: number; other: number }
+  /** Numbers that were already in the members' own records. */
+  inRecord: number
+  groupFallback: 'not_needed' | 'used' | 'failed' | 'unknown'
+  lidLookup: { tried: number; found: number; empty: number; errors: number; firstError: string | null }
+}
+
 export interface ResolvedMembers {
   members: GroupMember[]
   total: number
@@ -26,11 +37,23 @@ export interface ResolvedMembers {
   unresolved: number
   /** True when some LIDs were not looked up because the limit was reached. */
   truncated: boolean
+  /** Counts and field names only: never a phone number. */
+  diagnostics: MemberDiagnostics
 }
 
+type SourceParticipant = Pick<WahaGroupParticipant, 'id' | 'role'> & { phone?: string | null }
+
 export interface MemberSource {
-  listGroupParticipants(groupId: string): Promise<WahaGroupParticipant[]>
+  listGroupParticipants(groupId: string): Promise<SourceParticipant[]>
+  /** Preferred when present: also reports field names and the group fallback. */
+  listGroupParticipantsDetailed?(groupId: string): Promise<{
+    participants: SourceParticipant[]
+    fields: string[]
+    groupFallback: 'not_needed' | 'used' | 'failed'
+  }>
   getPhoneForLid(lid: string): Promise<string | null>
+  /** Preferred when present: says why a lookup came back empty. */
+  getLidMapping?(lid: string): Promise<{ phone: string | null; error: string | null }>
 }
 
 const MAX_LID_LOOKUPS = 300
@@ -40,33 +63,72 @@ const LOOKUP_CONCURRENCY = 8
  * The members of a group with their phone numbers.
  *
  * WhatsApp increasingly shows a member as an opaque `@lid` id instead of a
- * number. Those are looked up one by one (WAHA keeps the mapping for people
- * it has seen); some stay unknown, and the result says how many.
+ * number. The number is taken from the member's own record when WAHA put it
+ * there, otherwise looked up one by one (WAHA keeps the mapping only for
+ * people it has seen); some stay unknown, and the result says how many.
  */
 export async function resolveGroupMembers(
   source: MemberSource,
   groupId: string,
   opts: { maxLidLookups?: number } = {},
 ): Promise<ResolvedMembers> {
-  const participants = await source.listGroupParticipants(groupId)
+  let participants: SourceParticipant[]
+  let fields: string[] = []
+  let groupFallback: MemberDiagnostics['groupFallback'] = 'unknown'
+  if (source.listGroupParticipantsDetailed) {
+    const d = await source.listGroupParticipantsDetailed(groupId)
+    participants = d.participants
+    fields = d.fields
+    groupFallback = d.groupFallback
+  } else {
+    participants = await source.listGroupParticipants(groupId)
+  }
   const maxLookups = opts.maxLidLookups ?? MAX_LID_LOOKUPS
 
   const members: GroupMember[] = participants.map((p) => {
     const role = p.role
     return {
       id: p.id,
-      phone: phoneFromJid(p.id),
+      phone: p.phone || phoneFromJid(p.id),
       role,
       isAdmin: role === 'admin' || role === 'superadmin',
     }
   })
 
+  const diagnostics: MemberDiagnostics = {
+    fields,
+    ids: {
+      phone: participants.filter((p) => phoneFromJid(p.id)).length,
+      hidden: participants.filter((p) => p.id.endsWith('@lid')).length,
+      other: participants.filter((p) => !phoneFromJid(p.id) && !p.id.endsWith('@lid')).length,
+    },
+    inRecord: participants.filter((p) => p.phone && !phoneFromJid(p.id)).length,
+    groupFallback,
+    lidLookup: { tried: 0, found: 0, empty: 0, errors: 0, firstError: null },
+  }
+
   const pending = members.filter((m) => m.phone === null && m.id.endsWith('@lid'))
   const toLookUp = pending.slice(0, maxLookups)
+  const lookup = async (id: string) => {
+    if (source.getLidMapping) return source.getLidMapping(id)
+    return { phone: await source.getPhoneForLid(id), error: null }
+  }
   for (let i = 0; i < toLookUp.length; i += LOOKUP_CONCURRENCY) {
     await Promise.all(
       toLookUp.slice(i, i + LOOKUP_CONCURRENCY).map(async (m) => {
-        m.phone = await source.getPhoneForLid(m.id).catch(() => null)
+        diagnostics.lidLookup.tried += 1
+        try {
+          const r = await lookup(m.id)
+          m.phone = r.phone
+          if (r.phone) diagnostics.lidLookup.found += 1
+          else if (r.error) {
+            diagnostics.lidLookup.errors += 1
+            diagnostics.lidLookup.firstError ??= r.error
+          } else diagnostics.lidLookup.empty += 1
+        } catch {
+          diagnostics.lidLookup.errors += 1
+          diagnostics.lidLookup.firstError ??= 'error'
+        }
       }),
     )
   }
@@ -76,6 +138,7 @@ export async function resolveGroupMembers(
     total: members.length,
     unresolved: members.filter((m) => m.phone === null).length,
     truncated: pending.length > toLookUp.length,
+    diagnostics,
   }
 }
 

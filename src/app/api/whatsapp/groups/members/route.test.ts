@@ -48,6 +48,13 @@ describe('GET /api/whatsapp/groups/members', () => {
       total: 2,
       unresolved: 1,
       truncated: false,
+      debug: {
+        fields: [],
+        ids: { phone: 1, hidden: 1, other: 0 },
+        inRecord: 0,
+        groupFallback: 'unknown',
+        lidLookup: { tried: 1, found: 0, empty: 1, errors: 0, firstError: null },
+      },
     })
   })
 

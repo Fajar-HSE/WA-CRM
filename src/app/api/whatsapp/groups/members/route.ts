@@ -42,6 +42,9 @@ export async function GET(request: Request) {
         total: res.total,
         unresolved: res.unresolved,
         truncated: res.truncated,
+        // Counts and field names only, never numbers: shown in the dialog's
+        // "technical details" so a failure can be explained.
+        debug: res.diagnostics,
       })
     } catch (err) {
       if (err instanceof WahaHttpError) {

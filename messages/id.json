@@ -2264,7 +2264,9 @@
     "saveContacts": "Simpan ke Kontak",
     "saving": "Menyimpan…",
     "grabDone": "{created} kontak baru, {existing} sudah ada, {tagged} diberi tag",
-    "grabFailed": "Kontak tidak dapat disimpan"
+    "grabFailed": "Kontak tidak dapat disimpan",
+    "hiddenHint": "WhatsApp menyembunyikan sebagian nomor anggota. Nomor hanya bisa dibaca bila kamu admin grup dan WhatsApp menyertakannya, atau nomor itu ada di kontak HP yang tertaut.",
+    "technicalDetails": "Detail teknis"
   },
   "Notifications": {
     "title": "Notifikasi",

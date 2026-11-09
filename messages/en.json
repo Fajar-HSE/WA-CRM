@@ -2264,7 +2264,9 @@
     "saveContacts": "Save to Contacts",
     "saving": "Saving…",
     "grabDone": "{created} new contacts, {existing} already there, {tagged} tagged",
-    "grabFailed": "Could not save the contacts"
+    "grabFailed": "Could not save the contacts",
+    "hiddenHint": "WhatsApp hides some members' numbers. They can only be read when you are a group admin and WhatsApp includes them, or the number is in the linked phone's contacts.",
+    "technicalDetails": "Technical details"
   },
   "Notifications": {
     "title": "Notifications",

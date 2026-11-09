@@ -89,6 +89,21 @@ export interface WahaGroupParticipant {
   /** `<digits>@c.us`, or an opaque `<digits>@lid`. */
   id: string
   role: string | null
+  /**
+   * Phone number (digits) when WAHA already put it in the member's own
+   * record next to a hidden id (field names differ by engine and version),
+   * else null.
+   */
+  phone: string | null
+}
+
+/** Participants plus what was learnt on the way, for the "technical details" box. */
+export interface WahaParticipantsDetail {
+  participants: WahaGroupParticipant[]
+  /** Property names seen in the members' records (names only, never values). */
+  fields: string[]
+  /** Whether the group's own record was read to fill in missing numbers. */
+  groupFallback: 'not_needed' | 'used' | 'failed'
 }
 
 /**
@@ -281,14 +296,19 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
 
   /** Real phone number behind a LID, or null when WAHA does not know it. */
   async getPhoneForLid(lid: string): Promise<string | null> {
+    return (await this.getLidMapping(lid)).phone
+  }
+
+  /** Same lookup, but says why it came back empty (no mapping vs. an error). */
+  async getLidMapping(lid: string): Promise<{ phone: string | null; error: string | null }> {
     const full = lid.includes('@') ? lid : `${lid}@lid`
     try {
       const res = await this.request<{ pn?: unknown } | null>(
         `/api/${encodeURIComponent(this.sessionName)}/lids/${encodeURIComponent(full)}`,
       )
-      return phoneFromJid(res?.pn)
-    } catch {
-      return null
+      return { phone: phoneFromJid(res?.pn), error: null }
+    } catch (err) {
+      return { phone: null, error: err instanceof WahaHttpError ? `HTTP ${err.status}` : 'network' }
     }
   }
 
@@ -492,7 +512,17 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
    * LIDs consistently) and falls back to the original one.
    */
   async listGroupParticipants(groupId: string): Promise<WahaGroupParticipant[]> {
-    const base = `/api/${encodeURIComponent(this.sessionName)}/groups/${encodeURIComponent(groupId)}/participants`
+    return (await this.listGroupParticipantsDetailed(groupId)).participants
+  }
+
+  /**
+   * Same list, plus diagnostics. A member shown only as a hidden id may still
+   * carry the real number in a side field, or in the group's own record, so
+   * both are read before giving up.
+   */
+  async listGroupParticipantsDetailed(groupId: string): Promise<WahaParticipantsDetail> {
+    const groupPath = `/api/${encodeURIComponent(this.sessionName)}/groups/${encodeURIComponent(groupId)}`
+    const base = `${groupPath}/participants`
     let res: unknown
     try {
       res = await this.request<unknown>(`${base}/v2`)
@@ -500,7 +530,29 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
       if (!(err instanceof WahaHttpError && (err.status === 404 || err.status === 501))) throw err
       res = await this.request<unknown>(base)
     }
-    return parseWahaParticipants(res)
+
+    const participants = parseWahaParticipants(res)
+    const fields = new Set(participantFieldNames(res))
+    let groupFallback: WahaParticipantsDetail['groupFallback'] = 'not_needed'
+
+    if (participants.some((p) => !p.phone && !phoneFromJid(p.id))) {
+      try {
+        const group = await this.request<unknown>(groupPath)
+        for (const f of participantFieldNames(group)) fields.add(`group.${f}`)
+        const byId = new Map(
+          parseWahaParticipants(group)
+            .filter((p) => p.phone)
+            .map((p) => [p.id, p.phone as string]),
+        )
+        for (const p of participants) {
+          if (!p.phone && byId.has(p.id)) p.phone = byId.get(p.id) as string
+        }
+        groupFallback = 'used'
+      } catch {
+        groupFallback = 'failed'
+      }
+    }
+    return { participants, fields: [...fields].sort(), groupFallback }
   }
 
   async startSession(sessionName: string): Promise<void> {
@@ -579,21 +631,49 @@ export function parseWahaGroups(raw: unknown): WahaGroup[] {
   return out
 }
 
+/** A phone number (digits) found anywhere in one participant record, or null. */
+function phoneInRecord(o: Record<string, unknown>): string | null {
+  for (const [key, value] of Object.entries(o)) {
+    if (key === 'id') continue
+    const jid = jidOf(value)
+    const fromJid = jid ? phoneFromJid(jid) : null
+    if (fromJid) return fromJid
+    // A bare number in a field that is named like one ("phoneNumber", "pn").
+    if (typeof value === 'string' && /(^pn$|phone|number)/i.test(key)) {
+      const digits = value.replace(/\D/g, '')
+      if (digits.length >= 8 && digits.length <= 15) return digits
+    }
+  }
+  return null
+}
+
+function participantList(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw
+  if (raw && typeof raw === 'object') {
+    const o = raw as { participants?: unknown; Participants?: unknown }
+    if (Array.isArray(o.participants)) return o.participants
+    if (Array.isArray(o.Participants)) return o.Participants
+  }
+  return []
+}
+
+/** Property names present in a members list (names only, so it is safe to show). */
+export function participantFieldNames(raw: unknown): string[] {
+  const names = new Set<string>()
+  for (const item of participantList(raw)) {
+    if (item && typeof item === 'object') for (const k of Object.keys(item)) names.add(k)
+  }
+  return [...names].sort()
+}
+
 export function parseWahaParticipants(raw: unknown): WahaGroupParticipant[] {
-  const list: unknown[] = Array.isArray(raw)
-    ? raw
-    : raw && typeof raw === 'object' && Array.isArray((raw as { participants?: unknown }).participants)
-      ? ((raw as { participants: unknown[] }).participants)
-      : []
   const out: WahaGroupParticipant[] = []
-  for (const item of list) {
+  for (const item of participantList(raw)) {
     const id = jidOf(item)
     if (!id) continue
-    const role =
-      item && typeof item === 'object' && typeof (item as { role?: unknown }).role === 'string'
-        ? ((item as { role: string }).role)
-        : null
-    out.push({ id, role })
+    const rec = item && typeof item === 'object' ? (item as Record<string, unknown>) : null
+    const role = rec && typeof rec.role === 'string' ? rec.role : null
+    out.push({ id, role, phone: rec ? phoneInRecord(rec) : null })
   }
   return out
 }

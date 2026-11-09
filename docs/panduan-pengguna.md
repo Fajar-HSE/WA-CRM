@@ -1,6 +1,6 @@
 # Panduan Pengguna Kompeten CRM
 
-Panduan ini untuk anggota baru, dari saat menerima undangan sampai memakai aplikasi sehari-hari. Nama menu di sini sama dengan yang tampil di layar (bahasa Indonesia).
+Panduan ini untuk anggota baru, dari saat menerima undangan sampai memakai aplikasi sehari-hari. Nama menu di sini sama dengan yang tampil di layar (bahasa Indonesia). Gambar memakai **data contoh**, bukan data pelanggan sungguhan.
 
 **Daftar isi**
 
@@ -8,6 +8,7 @@ Panduan ini untuk anggota baru, dari saat menerima undangan sampai memakai aplik
 2. [Menerima undangan](#2-menerima-undangan)
 3. [Hubungkan nomor WhatsApp (undangan akun sendiri)](#3-hubungkan-nomor-whatsapp-undangan-akun-sendiri)
 4. [Mengenal layar utama](#4-mengenal-layar-utama)
+   - [Membaca Dasbor](#41-membaca-dasbor)
 5. [Kotak Masuk: membalas pelanggan](#5-kotak-masuk-membalas-pelanggan)
    - [Grup WhatsApp dan Grab Nomor](#5b-grup-whatsapp-dan-grab-nomor)
 6. [Kontak, tag, dan catatan](#6-kontak-tag-dan-catatan)
@@ -56,6 +57,10 @@ Ada dua jenis undangan. Admin yang memilihnya, dan halaman undangan akan menunju
 | **Gabung ke tim** | Masuk ke akun yang sudah ada dan berbagi satu Kotak Masuk dan satu nomor WhatsApp dengan tim. |
 
 ### 2.1 Undangan akun sendiri
+
+![Halaman masuk dengan ikon mata di kolom kata sandi](panduan-img/01-masuk.png)
+
+*Halaman masuk. Klik ikon mata untuk melihat kata sandi yang kamu ketik. Tidak ada tombol daftar: akun hanya dibuat lewat undangan.*
 
 1. Buka tautan undangan di peramban (Chrome, Edge, atau Safari).
 2. Halaman menampilkan "Anda diundang membuat akun sendiri" dan tanggal tautan berakhir.
@@ -131,7 +136,7 @@ Menu di sisi kiri:
 
 | Menu | Fungsi |
 |---|---|
-| **Dasbor** | Ringkasan: berapa pelanggan menunggu balasan, percakapan belum ditugaskan, rekan tim yang online, aktivitas terbaru. Rentang: Hari ini, 7, 30, 90 hari. |
+| **Dasbor** | Ringkasan dua bagian: **Sekarang** (siapa menunggu balasan) dan **Periode** (kinerja dalam 1, 7, 30, atau 90 hari). Lihat [4.1](#41-membaca-dasbor). |
 | **Kotak Masuk** | Semua percakapan WhatsApp. Di sini pekerjaan harian dilakukan. |
 | **Notifikasi** | Pemberitahuan saat rekan menugaskan percakapan kepadamu. |
 | **Kontak** | Daftar pelanggan dan prospek. |
@@ -144,6 +149,32 @@ Menu di sisi kiri:
 | **Pengaturan** | Profil, WhatsApp, template, tag, anggota tim, kunci API. |
 
 Di pojok kiri bawah ada nama dan peranmu. Menu **Ciutkan menu** mengecilkan sidebar. Ikon matahari atau bulan di kanan atas mengganti mode terang dan gelap. Kamu keluar lewat menu akun (klik foto atau namamu) → **Keluar**.
+
+### 4.1 Membaca Dasbor
+
+![Dasbor dengan bagian Sekarang dan Periode](panduan-img/02-dasbor.png)
+
+*Dasbor (data contoh).*
+
+Dasbor dibagi dua supaya jelas angka mana yang mengikuti pilihan rentang waktu.
+
+**Sekarang** (tidak terpengaruh pilihan rentang):
+
+- **Menunggu balasan**: percakapan yang pesan terakhirnya dari pelanggan dan belum kamu jawab. Merah bila sudah melewati target waktu balasan.
+- **Belum ditugaskan**: percakapan terbuka yang belum dipegang siapa pun.
+- **Pesan gagal**: pesan yang tidak terkirim dalam 24 jam terakhir. Klik untuk melihat sebabnya.
+- **Antrean balasan**: daftar yang menunggu paling lama, lengkap dengan peringatan bila kolom balasan hampir terkunci (batas 24 jam).
+
+**Periode** (mengikuti pilihan **Hari ini / 7 hari / 30 hari / 90 hari** di kanan atas):
+
+- **Percakapan baru**, **Median balasan pertama** (dibanding target waktu), dan **Selesai**. Perbandingannya selalu dengan periode sebelumnya yang sama panjang.
+- Kotak **Deal berhasil** dan **Tingkat baca broadcast** hanya muncul bila fitur itu sudah dipakai.
+- **Volume pesan** per hari atau per jam, dan satu kartu bertab: **Tim**, **Pipeline**, **Kampanye dan otomasi**.
+
+Hal yang membuat angka tampak keliru:
+
+- Balasan yang kamu ketik langsung di HP ikut tercatat, tetapi hanya untuk percakapan yang sudah ada di CRM.
+- Kontak tanpa nama profil tampil sebagai nomor. Ganti namanya di halaman Kontak.
 
 ---
 
@@ -208,12 +239,17 @@ Bot tidak membalas percakapan yang sudah ditugaskan ke seorang agen. AI juga men
 
 ## 5b. Grup WhatsApp dan Grab Nomor
 
+![Halaman Grup: daftar grup yang dipantau dan pesan hanya-baca](panduan-img/03-grup.png)
+
+*Halaman Grup (data contoh). Tidak ada kolom balasan: halaman ini hanya untuk dibaca.*
+
 Menu **Grup** menampilkan pesan grup WhatsApp, **hanya untuk dibaca**. Grup tidak masuk Kotak Masuk, dan bot AI, otomasi, Dasbor tidak ikut memakainya.
 
 - **Admin memilih grup yang dipantau:** Grup → **Kelola grup** → nyalakan **Pantau**. Pesan grup yang tidak dipilih tidak disimpan sama sekali.
 - Yang tersimpan hanya pesan **sejak grup dipantau**. Lampiran tampil sebagai `[Lampiran]`.
 - **Grab Nomor** (admin): klik **Grab Nomor** di sebuah grup, centang anggota, lalu **Simpan ke Kontak**. Anggota disimpan sebagai kontak dengan tag nama grup. Kontak yang sudah ada hanya diberi tag. Ada juga **Unduh CSV**. Tidak ada pesan yang dikirim.
-- Sebagian nomor tersembunyi oleh WhatsApp dan tidak bisa dibaca. Dialog menyebut jumlahnya.
+- Sebagian nomor **tersembunyi oleh WhatsApp** dan tidak bisa dibaca. WhatsApp hanya mengungkapnya bila kamu admin grup dan nomor itu ikut dikirim, atau nomor itu tersimpan di kontak HP yang tertaut. Dialog menyebut berapa nomor yang terbaca dan berapa yang tersembunyi. Kotak **Detail teknis** (bisa dibuka) membantu admin menelusuri penyebabnya, tanpa menampilkan nomor.
+- **Cara yang paling bersih** untuk mendapat nomor: umumkan di grup agar anggota **mengirim pesan "DAFTAR"** ke nomor ICC. Orang yang menulis sendiri masuk ke Kotak Masuk dan Kontak dengan nomornya, dan mereka memang setuju dihubungi.
 - Pakai hanya untuk grup yang kamu kelola. Menghubungi anggota yang tidak meminta (terutama massal) bisa membuat nomor diblokir, dan nomor telepon termasuk data pribadi.
 
 ---
@@ -280,6 +316,18 @@ Menu **Broadcast** mengirim satu pesan ke banyak kontak.
 - Pemicu contoh: Pesan Baru Diterima, Pesan Pertama dari Kontak, Kata Kunci Cocok, Kontak Baru Dibuat, Percakapan Ditugaskan, Tag Ditambahkan, Berbasis Waktu.
 - Aksi contoh: Kirim Pesan, Kirim Template, Tambah Tag, Tugaskan Percakapan, Buat Deal, Tunggu, Kondisi (Jika/Maka), Tutup Percakapan.
 - Mulai dari **Template cepat** di halaman Otomasi, atau **Buat Otomasi** dari awal. Pakai **Aktifkan** atau **Nonaktifkan**, dan **Lihat Log** untuk memeriksa hasilnya.
+
+**Aksi Kirim Template dan variabelnya**
+
+![Aksi Kirim Template dengan pilihan isi variabel](panduan-img/04-otomasi-template.png)
+
+*Setelah memilih template, tiap variabel `{{1}}`, `{{2}}`, dan seterusnya punya pilihan isi.*
+
+Template yang berisi variabel, misalnya "Halo {{1}}, terima kasih telah menghubungi kami", harus diberi isi untuk tiap variabel. Pilih salah satu: **Nama depan kontak**, **Nama lengkap kontak**, **Nomor telepon**, **Email**, **Perusahaan**, atau **Teks tetap**.
+
+- Variabel pertama otomatis terisi **Nama depan kontak**.
+- Kontak yang belum punya nama (hanya nomor) disapa **"Kak"**, jadi pesan tetap wajar: "Halo Kak, ...".
+- Template yang masih punya variabel kosong **tidak dikirim**. Otomasinya tercatat gagal di **Lihat Log** dengan pesan "Variabel template belum diisi". Pelanggan tidak akan menerima tulisan `{{1}}`.
 
 **Alur** (Beta) membuat percakapan bercabang berbasis tombol, cocok untuk menu sambutan atau FAQ sebelum petugas turun tangan. Status: Draf, Aktif, Diarsipkan.
 
@@ -352,6 +400,8 @@ Koneksi ini memakai WhatsApp Web, bukan API Bisnis resmi, jadi nomor bisa diblok
 | Percakapan lama kosong atau pendek | CRM hanya menyimpan pesan sejak nomor dihubungkan | Klik **Muat riwayat dari WhatsApp** di atas percakapan |
 | Pesan chat biasa tidak muncul | Status bukan **Terhubung**, atau webhook belum sinkron | Cek **Pengaturan → WhatsApp**. Klik **Segarkan** dan **Sinkronkan ulang webhook**. Kalau status Terputus, hubungkan lagi dengan QR |
 | Kolom ketik terkunci | Sudah lewat 24 jam sejak pesan terakhir pelanggan | Pakai **Kirim template** |
+| Pesan otomatis gagal dengan "Variabel template belum diisi" | Template punya variabel yang belum diisi di Otomasi | Buka Otomasi, langkah **Kirim Template**, isi tiap variabel, simpan |
+| Grab Nomor menunjukkan 0 nomor terbaca | WhatsApp menyembunyikan nomor anggota | Coba grup yang kamu admin, buka **Detail teknis**, atau minta anggota mengirim "DAFTAR" ke nomor ICC |
 | Kontak hanya menampilkan nomor | Pelanggan tidak punya nama profil, atau akun bisnis tidak mengirim nama | Ganti nama di halaman Kontak |
 | Tombol **Buat draf dengan AI** tidak berfungsi | AI belum disiapkan atau belum diaktifkan | Admin: Agen AI → Pengaturan |
 | Tidak bisa menambah tag | Tag belum dibuat, atau kamu mencoba dari panel Kotak Masuk | Admin buat tag di Pengaturan → Kolom & tag. Pasang tag dari halaman Kontak |

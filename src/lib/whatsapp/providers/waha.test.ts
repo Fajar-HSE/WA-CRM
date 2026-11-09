@@ -3,6 +3,7 @@ import {
   WahaHttpError,
   WahaNumberNotFoundError,
   WahaStoreDisabledError,
+  WahaTemplateVariableError,
   WahaWhatsAppProvider,
   messageIdOf,
 } from './waha'
@@ -184,6 +185,45 @@ describe('WahaWhatsAppProvider', () => {
         messageParams: { body: ['Budi'] },
       })
       expect(text).toBe('Halo Budi')
+    })
+
+    it('refuses to send a template whose placeholders were not all filled in', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ id: 'm1' }))
+      const err = await makeProvider()
+        .sendTemplate({
+          to: '628123456789@c.us',
+          templateName: 'order',
+          language: 'id',
+          template: row,
+          params: ['Sari'],
+        })
+        .catch((e) => e)
+      expect(err).toBeInstanceOf(WahaTemplateVariableError)
+      expect(err.missing).toEqual(['2'])
+      expect(err.message).toContain('{{2}}')
+      expect(fetchMock.mock.calls.some(([u]) => String(u).endsWith('/api/sendText'))).toBe(false)
+    })
+
+    it('refuses a template sent with no values at all', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ id: 'm1' }))
+      await expect(
+        makeProvider().sendTemplate({
+          to: '628123456789@c.us',
+          templateName: 'hello',
+          language: 'id',
+          template: { body_text: 'Halo {{1}}, terima kasih telah menghubungi kami.' },
+        }),
+      ).rejects.toBeInstanceOf(WahaTemplateVariableError)
+    })
+
+    it('still sends a template that has no placeholders without any values', async () => {
+      const text = await sentText({
+        to: '628123456789@c.us',
+        templateName: 'hello',
+        language: 'id',
+        template: { body_text: 'Terima kasih telah menghubungi kami.' },
+      })
+      expect(text).toBe('Terima kasih telah menghubungi kami.')
     })
 
     it('falls back to the name and values when no template row is given', async () => {

@@ -37,6 +37,20 @@ export class WahaHttpError extends Error {
   }
 }
 
+/**
+ * Thrown instead of sending a template whose `{{...}}` placeholders were not
+ * all filled in. WAHA would deliver the literal "{{1}}" to the customer.
+ */
+export class WahaTemplateVariableError extends Error {
+  constructor(public missing: string[]) {
+    super(
+      `Variabel template belum diisi: ${missing.map((m) => `{{${m}}}`).join(', ')}. ` +
+        'Isi nilainya (atau pilih kolom kontak) sebelum template dikirim.',
+    )
+    this.name = 'WahaTemplateVariableError'
+  }
+}
+
 /** Thrown when WAHA confirms a number is not registered on WhatsApp. */
 export class WahaNumberNotFoundError extends Error {
   constructor(public digits: string) {
@@ -362,6 +376,8 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     let text: string
     if (row && typeof row.body_text === 'string' && row.body_text) {
       text = renderTemplateBody(row.body_text, templateBodyParams(args.params, args.messageParams))
+      const unfilled = [...text.matchAll(/\{\{([A-Za-z0-9_]+)\}\}/g)].map((m) => m[1])
+      if (unfilled.length > 0) throw new WahaTemplateVariableError([...new Set(unfilled)])
       if (row.footer_text) text += `\n\n${row.footer_text}`
     } else {
       // No template row to read (it was deleted, or the caller gave none):

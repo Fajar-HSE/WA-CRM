@@ -179,7 +179,7 @@ import {
   runAutomationsForTrigger,
   triggerMatches,
 } from "./engine";
-import { engineSendInteractive, engineSendText } from "./meta-send";
+import { engineSendInteractive, engineSendTemplate, engineSendText } from "./meta-send";
 import type { Automation, KeywordMatchTriggerConfig } from "@/types";
 
 const ACCOUNT = "acct-1";
@@ -1222,5 +1222,69 @@ describe("wait_for_reply", () => {
         vi.useRealTimers();
       }
     });
+  });
+});
+
+describe("send_template — variables", () => {
+  function runTemplateStep(
+    variables: Record<string, string> | undefined,
+    contact: Record<string, unknown>,
+  ) {
+    h.state.owned = { id: "c1", ...contact };
+    h.state.ownedConversation = { id: "cv1" };
+    h.state.automations = [{
+      id: "a1",
+      account_id: ACCOUNT,
+      user_id: "u1",
+      name: "welcome",
+      trigger_type: "new_message_received",
+      trigger_config: {},
+      is_active: true,
+    }];
+    h.state.steps = [{
+      id: "s1",
+      automation_id: "a1",
+      step_type: "send_template",
+      position: 0,
+      parent_step_id: null,
+      step_config: { template_name: "hello", language: "id", variables },
+    }];
+    return runAutomationsForTrigger({
+      accountId: ACCOUNT,
+      triggerType: "new_message_received",
+      contactId: "c1",
+      context: { message_text: "halo", conversation_id: "cv1" },
+    });
+  }
+
+  it("fills a contact-field variable with the contact's first name", async () => {
+    vi.mocked(engineSendTemplate).mockClear();
+    await runTemplateStep({ "1": "{{contact.first_name}}" }, { name: "Budi Santoso" });
+    expect(engineSendTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ templateName: "hello", params: ["Budi"] }),
+    );
+  });
+
+  it("greets a contact with no real name as \"Kak\"", async () => {
+    vi.mocked(engineSendTemplate).mockClear();
+    await runTemplateStep({ "1": "{{contact.first_name}}" }, { name: "6281117047678" });
+    expect(engineSendTemplate).toHaveBeenCalledWith(expect.objectContaining({ params: ["Kak"] }));
+  });
+
+  it("keeps fixed text and orders the values numerically", async () => {
+    vi.mocked(engineSendTemplate).mockClear();
+    await runTemplateStep(
+      { "10": "J", "2": "{{contact.phone}}", "1": "Pak {{contact.first_name}}" },
+      { name: "Budi", phone: "628111" },
+    );
+    expect(engineSendTemplate).toHaveBeenCalledWith(
+      expect.objectContaining({ params: ["Pak Budi", "628111", "J"] }),
+    );
+  });
+
+  it("sends no values when none are configured", async () => {
+    vi.mocked(engineSendTemplate).mockClear();
+    await runTemplateStep(undefined, { name: "Budi" });
+    expect(engineSendTemplate).toHaveBeenCalledWith(expect.objectContaining({ params: [] }));
   });
 });

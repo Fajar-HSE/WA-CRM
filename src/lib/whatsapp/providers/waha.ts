@@ -77,6 +77,20 @@ export interface WahaHistoryMessage {
   media?: { mimetype?: string | null } | null
 }
 
+/** A WhatsApp group as WAHA reports it. */
+export interface WahaGroup {
+  id: string
+  subject: string | null
+  /** Member count when WAHA says so, else null. */
+  size: number | null
+}
+
+export interface WahaGroupParticipant {
+  /** `<digits>@c.us`, or an opaque `<digits>@lid`. */
+  id: string
+  role: string | null
+}
+
 /**
  * Thrown when WAHA cannot list a chat's messages because its message store
  * is off. The NOWEB engine keeps no history unless `config.noweb.store` is
@@ -453,6 +467,42 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     }
   }
 
+  /** Groups the linked number belongs to. Shapes differ per engine, so parse loosely. */
+  async listGroups(): Promise<WahaGroup[]> {
+    const res = await this.request<unknown>(
+      `/api/${encodeURIComponent(this.sessionName)}/groups?limit=500&sortBy=subject&sortOrder=asc`,
+    )
+    return parseWahaGroups(res)
+  }
+
+  /** One group's name, or null when WAHA cannot say. */
+  async getGroup(groupId: string): Promise<WahaGroup | null> {
+    try {
+      const res = await this.request<unknown>(
+        `/api/${encodeURIComponent(this.sessionName)}/groups/${encodeURIComponent(groupId)}`,
+      )
+      return parseWahaGroups([res])[0] ?? null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Members of a group. Tries the v2 endpoint (the one that reports roles and
+   * LIDs consistently) and falls back to the original one.
+   */
+  async listGroupParticipants(groupId: string): Promise<WahaGroupParticipant[]> {
+    const base = `/api/${encodeURIComponent(this.sessionName)}/groups/${encodeURIComponent(groupId)}/participants`
+    let res: unknown
+    try {
+      res = await this.request<unknown>(`${base}/v2`)
+    } catch (err) {
+      if (!(err instanceof WahaHttpError && (err.status === 404 || err.status === 501))) throw err
+      res = await this.request<unknown>(base)
+    }
+    return parseWahaParticipants(res)
+  }
+
   async startSession(sessionName: string): Promise<void> {
     await this.request(`${this.sessionPath(sessionName)}/start`, { method: 'POST' })
   }
@@ -486,6 +536,66 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
   async logoutSession(sessionName: string): Promise<void> {
     await this.request(`${this.sessionPath(sessionName)}/logout`, { method: 'POST' })
   }
+}
+
+function jidOf(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') {
+    const o = value as Record<string, unknown>
+    if (typeof o._serialized === 'string') return o._serialized
+    if (typeof o.id === 'string') return o.id
+    if (typeof o.user === 'string' && typeof o.server === 'string') return `${o.user}@${o.server}`
+  }
+  return ''
+}
+
+/** Group list as WAHA returns it (an array, or an object keyed by group id). */
+export function parseWahaGroups(raw: unknown): WahaGroup[] {
+  const list: unknown[] = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object'
+      ? Object.values(raw as Record<string, unknown>)
+      : []
+  const out: WahaGroup[] = []
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue
+    const o = item as Record<string, unknown>
+    const id = jidOf(o.id) || jidOf(o.JID) || jidOf(o.jid)
+    if (!id.endsWith('@g.us')) continue
+    const subject =
+      typeof o.subject === 'string' ? o.subject
+      : typeof o.Name === 'string' ? o.Name
+      : typeof o.name === 'string' ? o.name
+      : null
+    const participants = Array.isArray(o.participants)
+      ? o.participants
+      : Array.isArray(o.Participants)
+        ? o.Participants
+        : null
+    const size =
+      typeof o.size === 'number' ? o.size : participants ? participants.length : null
+    out.push({ id, subject: subject?.trim() || null, size })
+  }
+  return out
+}
+
+export function parseWahaParticipants(raw: unknown): WahaGroupParticipant[] {
+  const list: unknown[] = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object' && Array.isArray((raw as { participants?: unknown }).participants)
+      ? ((raw as { participants: unknown[] }).participants)
+      : []
+  const out: WahaGroupParticipant[] = []
+  for (const item of list) {
+    const id = jidOf(item)
+    if (!id) continue
+    const role =
+      item && typeof item === 'object' && typeof (item as { role?: unknown }).role === 'string'
+        ? ((item as { role: string }).role)
+        : null
+    out.push({ id, role })
+  }
+  return out
 }
 
 function storeEnabled(session: WahaSessionInfo): boolean {

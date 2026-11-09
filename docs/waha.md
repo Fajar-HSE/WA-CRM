@@ -112,6 +112,36 @@ from WAHA into the conversation. It can be pressed repeatedly to go further
 back and is safe to repeat: messages already saved are skipped. Attachments
 from history appear as `[Attachment]` because media is not downloaded.
 
+## WhatsApp groups (read-only) and "Grab Nomor"
+
+Group chats are **not** inbox conversations. The inbox, dashboard, broadcasts,
+automations, flows and the AI auto-reply all assume one contact = one phone
+number, so a group would turn into a fake customer. Groups have their own
+tables (`whatsapp_groups`, `whatsapp_group_messages`, migration 066) and their
+own page, **Grup**, in the sidebar.
+
+- **Opt-in per group.** An admin turns on **Pantau** (Kelola grup) for a group.
+  The webhook drops the messages of every other group before anything is
+  written, so a phone that sits in many private groups stores nothing it was
+  not asked to. Turning a group off stops saving; saved messages stay.
+- **Read-only.** There is no reply box. Messages show the sender's profile name
+  and number when WhatsApp reveals it (a member can appear as a hidden `@lid`
+  id). Media is not downloaded; a file shows as `[Lampiran]`.
+- **Only messages since monitoring began** are stored. WAHA's history is not
+  imported for groups.
+- **Grab Nomor** (admin): lists a group's members (`GET
+  /api/{session}/groups/{id}/participants/v2`, falling back to the original
+  endpoint), looks up hidden `@lid` ids one by one (some stay unknown; the
+  dialog says how many), and saves the numbers you tick as contacts tagged with
+  the group's name. Numbers that are already contacts are only tagged. New
+  contacts get their number as the name; the real profile name replaces it when
+  the person writes in. A CSV download is available too. Nothing is sent.
+
+Grabbing numbers is a privacy and ban risk: contacting group members who did
+not ask for it is what gets WhatsApp numbers blocked, and phone numbers are
+personal data. Use it for groups you run, and message people individually and
+relevantly rather than broadcasting.
+
 ## Message templates
 
 Settings → Template holds reusable messages with blanks (`{{1}}`, `{{2}}`).
@@ -124,4 +154,4 @@ headers or images: write the message as plain text.
 
 - Interactive buttons and lists are sent as numbered text.
 - Reactions are not handled yet.
-- Group chats, channels and Status updates are ignored by the webhook.
+- Channels and Status updates are ignored by the webhook. Group chats go to the separate, read-only Grup page, and only for groups an admin monitors.

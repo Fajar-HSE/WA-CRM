@@ -381,4 +381,48 @@ describe('WahaWhatsAppProvider', () => {
       expect(await makeProvider().listChatMessages('628123456789@c.us')).toEqual([])
     })
   })
+
+  describe('groups', () => {
+    it('lists the groups the number belongs to', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse([{ id: '1@g.us', subject: 'Peserta K3', participants: [{}, {}] }, { id: '628@c.us' }]),
+      )
+      const res = await makeProvider().listGroups()
+      expect(res).toEqual([{ id: '1@g.us', subject: 'Peserta K3', size: 2 }])
+      expect(callAt(0).url).toContain('/api/sess-1/groups?')
+    })
+
+    it('reads one group by id and answers null when WAHA cannot', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ id: '1@g.us', subject: 'Alumni' }))
+      expect(await makeProvider().getGroup('1@g.us')).toMatchObject({ subject: 'Alumni' })
+      fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'nope' }, 500))
+      expect(await makeProvider().getGroup('1@g.us')).toBeNull()
+    })
+
+    it('reads members from the v2 endpoint', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse([{ id: '628111@c.us', role: 'admin' }, { id: '99@lid', role: 'participant' }]),
+      )
+      const res = await makeProvider().listGroupParticipants('1@g.us')
+      expect(res).toEqual([
+        { id: '628111@c.us', role: 'admin' },
+        { id: '99@lid', role: 'participant' },
+      ])
+      expect(callAt(0).url).toContain('/groups/1%40g.us/participants/v2')
+    })
+
+    it('falls back to the original members endpoint when v2 does not exist', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse({ message: 'not found' }, 404))
+        .mockResolvedValueOnce(jsonResponse([{ id: '628111@c.us' }]))
+      const res = await makeProvider().listGroupParticipants('1@g.us')
+      expect(res).toHaveLength(1)
+      expect(callAt(1).url).toMatch(/participants$/)
+    })
+
+    it('does not hide other member-list errors', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500))
+      await expect(makeProvider().listGroupParticipants('1@g.us')).rejects.toBeInstanceOf(WahaHttpError)
+    })
+  })
 })

@@ -9,6 +9,7 @@ Panduan ini untuk anggota baru, dari saat menerima undangan sampai memakai aplik
 3. [Hubungkan nomor WhatsApp (undangan akun sendiri)](#3-hubungkan-nomor-whatsapp-undangan-akun-sendiri)
 4. [Mengenal layar utama](#4-mengenal-layar-utama)
 5. [Kotak Masuk: membalas pelanggan](#5-kotak-masuk-membalas-pelanggan)
+   - [Grup WhatsApp dan Grab Nomor](#5b-grup-whatsapp-dan-grab-nomor)
 6. [Kontak, tag, dan catatan](#6-kontak-tag-dan-catatan)
 7. [Pipeline dan deal](#7-pipeline-dan-deal)
 8. [Broadcast](#8-broadcast)
@@ -138,6 +139,7 @@ Menu di sisi kiri:
 | **Broadcast** | Kirim pesan ke banyak kontak. |
 | **Otomasi** | Aturan otomatis (kalau X terjadi, lakukan Y). |
 | **Alur** | Percakapan bercabang berbasis tombol (menu, FAQ). Berlabel Beta. |
+| **Grup** | Pesan grup WhatsApp yang dipantau admin, hanya untuk dibaca, plus Grab Nomor. |
 | **Agen AI** | Asisten AI untuk draf dan balasan otomatis. |
 | **Pengaturan** | Profil, WhatsApp, template, tag, anggota tim, kunci API. |
 
@@ -199,8 +201,20 @@ Bot tidak membalas percakapan yang sudah ditugaskan ke seorang agen. AI juga men
 
 ### 5.7 Hal yang perlu diketahui
 
-- Pesan dari **grup**, **saluran**, dan **Status WhatsApp** tidak masuk ke Kotak Masuk. Itu disengaja.
+- Pesan dari **grup**, **saluran**, dan **Status WhatsApp** tidak masuk ke Kotak Masuk. Itu disengaja. Pesan grup bisa dibaca di menu **Grup** ([bagian 5b](#5b-grup-whatsapp-dan-grab-nomor)).
 - Nama kontak berasal dari nama profil WhatsApp pelanggan. Kalau pelanggan tidak mengisi nama (atau akun bisnis tidak mengirimnya), yang tampil adalah nomor. Kamu bisa mengganti nama di halaman Kontak. Nama yang kamu ketik sendiri tidak akan ditimpa otomatis.
+
+---
+
+## 5b. Grup WhatsApp dan Grab Nomor
+
+Menu **Grup** menampilkan pesan grup WhatsApp, **hanya untuk dibaca**. Grup tidak masuk Kotak Masuk, dan bot AI, otomasi, Dasbor tidak ikut memakainya.
+
+- **Admin memilih grup yang dipantau:** Grup → **Kelola grup** → nyalakan **Pantau**. Pesan grup yang tidak dipilih tidak disimpan sama sekali.
+- Yang tersimpan hanya pesan **sejak grup dipantau**. Lampiran tampil sebagai `[Lampiran]`.
+- **Grab Nomor** (admin): klik **Grab Nomor** di sebuah grup, centang anggota, lalu **Simpan ke Kontak**. Anggota disimpan sebagai kontak dengan tag nama grup. Kontak yang sudah ada hanya diberi tag. Ada juga **Unduh CSV**. Tidak ada pesan yang dikirim.
+- Sebagian nomor tersembunyi oleh WhatsApp dan tidak bisa dibaca. Dialog menyebut jumlahnya.
+- Pakai hanya untuk grup yang kamu kelola. Menghubungi anggota yang tidak meminta (terutama massal) bisa membuat nomor diblokir, dan nomor telepon termasuk data pribadi.
 
 ---
 
@@ -334,7 +348,7 @@ Koneksi ini memakai WhatsApp Web, bukan API Bisnis resmi, jadi nomor bisa diblok
 | Masalah | Penyebab umum | Yang dilakukan |
 |---|---|---|
 | Tidak bisa mendaftar dari halaman Masuk | Pendaftaran hanya lewat undangan | Minta tautan undangan ke admin |
-| Pesan WhatsApp tidak muncul di Kotak Masuk | Pesan dari grup, saluran, atau Status (memang disaring) | Tidak ada yang perlu diperbaiki |
+| Pesan WhatsApp tidak muncul di Kotak Masuk | Pesan dari saluran atau Status (memang disaring). Pesan grup ada di menu **Grup**, dan hanya untuk grup yang dipantau | Cek menu Grup |
 | Percakapan lama kosong atau pendek | CRM hanya menyimpan pesan sejak nomor dihubungkan | Klik **Muat riwayat dari WhatsApp** di atas percakapan |
 | Pesan chat biasa tidak muncul | Status bukan **Terhubung**, atau webhook belum sinkron | Cek **Pengaturan → WhatsApp**. Klik **Segarkan** dan **Sinkronkan ulang webhook**. Kalau status Terputus, hubungkan lagi dengan QR |
 | Kolom ketik terkunci | Sudah lewat 24 jam sejak pesan terakhir pelanggan | Pakai **Kirim template** |

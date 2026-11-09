@@ -101,6 +101,7 @@ const navItems: NavItem[] = [
   { href: "/broadcasts", labelKey: "broadcasts", icon: Radio },
   { href: "/automations", labelKey: "automations", icon: Zap },
   { href: "/flows", labelKey: "flows", icon: Workflow, beta: true },
+  { href: "/groups", labelKey: "groups", icon: UsersRound },
   { href: "/agents", labelKey: "aiAgents", icon: Bot },
 ];
 

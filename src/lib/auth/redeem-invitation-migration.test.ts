@@ -14,6 +14,11 @@ const tablesWithoutDomainData = new Set([
   "account_invitations",
   "member_presence",
   "pending_message_statuses",
+  // Group messages exist only for an account that has a WAHA connection, and
+  // redeem_invitation already refuses an old account that has a
+  // whatsapp_config row, so these cannot hold data it would delete.
+  "whatsapp_groups",
+  "whatsapp_group_messages",
 ]);
 
 function accountScopedTables(): Set<string> {

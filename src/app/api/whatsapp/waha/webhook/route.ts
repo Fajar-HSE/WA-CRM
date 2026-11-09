@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
-import { processWahaInbound } from '@/lib/whatsapp/waha-inbound'
+import { processWahaInbound, processWahaOutgoing } from '@/lib/whatsapp/waha-inbound'
 import { processWahaAck } from '@/lib/whatsapp/waha-ack'
 import { isNonCustomerChat } from '@/lib/whatsapp/waha-ids'
+import { isGroupChatId } from '@/lib/whatsapp/waha-groups'
+import { processWahaGroupMessage } from '@/lib/whatsapp/waha-group-inbound'
 import {
   WAHA_WEBHOOK_SECRET_HEADER,
   wahaSecretMatches,
@@ -12,7 +14,7 @@ export const maxDuration = 60
 interface WahaWebhookBody {
   event?: string
   session?: string
-  payload?: { fromMe?: boolean; from?: string | null } & Record<string, unknown>
+  payload?: { fromMe?: boolean; from?: string | null; to?: string | null } & Record<string, unknown>
 }
 
 export async function POST(request: Request) {
@@ -63,11 +65,36 @@ export async function POST(request: Request) {
   }
 
   const payload = body.payload
-  if (!payload || payload.fromMe) {
+  if (!payload) {
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }
 
-  // WhatsApp Status updates, channels and groups are not customer chats.
+  // A group chat. Kept apart from conversations: it is saved only if an
+  // admin chose to monitor that group, and nothing else ever sees it.
+  if (isGroupChatId(payload.fromMe ? payload.to : payload.from)) {
+    try {
+      await processWahaGroupMessage({ sessionName, payload })
+    } catch (err) {
+      console.error('[waha-webhook] group processing failed:', err)
+    }
+    return NextResponse.json({ status: 'received' }, { status: 200 })
+  }
+
+  // Typed on the phone itself (or echoed back after a CRM send). Only
+  // `message.any` carries these; record them so the chat counts as answered.
+  if (payload.fromMe) {
+    if (event === 'message.any') {
+      try {
+        await processWahaOutgoing({ sessionName, payload })
+      } catch (err) {
+        console.error('[waha-webhook] outgoing processing failed:', err)
+      }
+      return NextResponse.json({ status: 'received' }, { status: 200 })
+    }
+    return NextResponse.json({ status: 'ignored' }, { status: 200 })
+  }
+
+  // WhatsApp Status updates and channels are not customer chats.
   if (isNonCustomerChat(payload.from)) {
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }

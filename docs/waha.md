@@ -84,6 +84,64 @@ WAHA side:
 - `WAHA_BASE_URL` and `WAHA_API_KEY` must be set on the app: the download
   goes from the app server to WAHA, not from the browser.
 
+## Messages typed on the phone, and chat history
+
+Two things need the session configured a certain way. The app sets both when
+it creates or re-syncs a session (Settings → WhatsApp → **Re-sync webhook**),
+so an existing session only has to be re-synced once after an upgrade.
+
+- **Webhook event `message.any`.** The plain `message` event only carries
+  messages the customer sends. A reply typed in WhatsApp on the phone (or in
+  WhatsApp Web) arrives only on `message.any` with `fromMe: true`. The app
+  saves it as an agent message in the conversation, so the chat counts as
+  answered (dashboard "waiting for a reply" and reply times). Only chats that
+  already exist in the CRM are recorded: a reply to a number that never wrote
+  in is a personal chat and is ignored. Messages the CRM sent itself also
+  come back on this event; they are recognised by their WhatsApp id and not
+  saved twice.
+- **NOWEB message store.** `config.noweb.store.enabled = true` (with
+  `fullSync: false`). WAHA keeps no history without it. The store only holds
+  what WAHA receives after it is enabled, plus what WhatsApp syncs when the
+  number is linked (about three months with `fullSync: false`, about a year
+  with `true`). To get history from before the store was enabled, disconnect
+  the number and link it again with the QR code.
+
+In the inbox, **Load history from WhatsApp** (at the top of a conversation,
+once every saved message is visible) copies one page (100) of older messages
+from WAHA into the conversation. It can be pressed repeatedly to go further
+back and is safe to repeat: messages already saved are skipped. Attachments
+from history appear as `[Attachment]` because media is not downloaded.
+
+## WhatsApp groups (read-only) and "Grab Nomor"
+
+Group chats are **not** inbox conversations. The inbox, dashboard, broadcasts,
+automations, flows and the AI auto-reply all assume one contact = one phone
+number, so a group would turn into a fake customer. Groups have their own
+tables (`whatsapp_groups`, `whatsapp_group_messages`, migration 066) and their
+own page, **Grup**, in the sidebar.
+
+- **Opt-in per group.** An admin turns on **Pantau** (Kelola grup) for a group.
+  The webhook drops the messages of every other group before anything is
+  written, so a phone that sits in many private groups stores nothing it was
+  not asked to. Turning a group off stops saving; saved messages stay.
+- **Read-only.** There is no reply box. Messages show the sender's profile name
+  and number when WhatsApp reveals it (a member can appear as a hidden `@lid`
+  id). Media is not downloaded; a file shows as `[Lampiran]`.
+- **Only messages since monitoring began** are stored. WAHA's history is not
+  imported for groups.
+- **Grab Nomor** (admin): lists a group's members (`GET
+  /api/{session}/groups/{id}/participants/v2`, falling back to the original
+  endpoint), looks up hidden `@lid` ids one by one (some stay unknown; the
+  dialog says how many), and saves the numbers you tick as contacts tagged with
+  the group's name. Numbers that are already contacts are only tagged. New
+  contacts get their number as the name; the real profile name replaces it when
+  the person writes in. A CSV download is available too. Nothing is sent.
+
+Grabbing numbers is a privacy and ban risk: contacting group members who did
+not ask for it is what gets WhatsApp numbers blocked, and phone numbers are
+personal data. Use it for groups you run, and message people individually and
+relevantly rather than broadcasting.
+
 ## Message templates
 
 Settings → Template holds reusable messages with blanks (`{{1}}`, `{{2}}`).
@@ -96,4 +154,4 @@ headers or images: write the message as plain text.
 
 - Interactive buttons and lists are sent as numbered text.
 - Reactions are not handled yet.
-- Group chats are not filtered out of the inbound webhook.
+- Channels and Status updates are ignored by the webhook. Group chats go to the separate, read-only Grup page, and only for groups an admin monitors.

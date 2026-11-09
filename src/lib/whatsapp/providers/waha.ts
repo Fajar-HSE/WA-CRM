@@ -61,11 +61,62 @@ interface WahaWebhookConfig {
 interface WahaSessionInfo {
   name?: string
   status?: string
-  config?: { webhooks?: WahaWebhookConfig[] | null } | null
+  config?: {
+    webhooks?: WahaWebhookConfig[] | null
+    noweb?: { store?: { enabled?: boolean; fullSync?: boolean } | null } | null
+  } | null
 }
 
-/** Events the CRM consumes: inbound messages and delivery/read receipts. */
-export const WEBHOOK_EVENTS = ['message', 'message.ack']
+/** One message as WAHA returns it from the chat history endpoint. */
+export interface WahaHistoryMessage {
+  id?: string | null
+  timestamp?: number | null
+  fromMe?: boolean
+  body?: string | null
+  hasMedia?: boolean
+  media?: { mimetype?: string | null } | null
+}
+
+/** A WhatsApp group as WAHA reports it. */
+export interface WahaGroup {
+  id: string
+  subject: string | null
+  /** Member count when WAHA says so, else null. */
+  size: number | null
+}
+
+export interface WahaGroupParticipant {
+  /** `<digits>@c.us`, or an opaque `<digits>@lid`. */
+  id: string
+  role: string | null
+}
+
+/**
+ * Thrown when WAHA cannot list a chat's messages because its message store
+ * is off. The NOWEB engine keeps no history unless `config.noweb.store` is
+ * enabled (and then only for what it receives after that, plus whatever
+ * WhatsApp syncs when the number is linked).
+ */
+export class WahaStoreDisabledError extends Error {
+  constructor() {
+    super('WAHA message store is not enabled for this session.')
+    this.name = 'WahaStoreDisabledError'
+  }
+}
+
+/**
+ * Events the CRM consumes: inbound messages, `message.any` (the only event
+ * that also carries messages typed on the phone itself), and delivery/read
+ * receipts.
+ */
+export const WEBHOOK_EVENTS = ['message', 'message.any', 'message.ack']
+
+/**
+ * NOWEB message store. Off by default in WAHA, and without it no chat
+ * history can be read back. `fullSync: false` keeps roughly the last three
+ * months that WhatsApp sends when a number is linked.
+ */
+export const NOWEB_STORE_CONFIG = { enabled: true, fullSync: false }
 
 function toChatId(to: string): string {
   const v = to.trim()
@@ -348,6 +399,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
    */
   async ensureSession(opts: EnsureSessionOptions): Promise<void> {
     const config = {
+      noweb: { store: NOWEB_STORE_CONFIG },
       webhooks: [
         {
           url: opts.webhookUrl,
@@ -374,7 +426,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
       return
     }
 
-    if (!webhookMatches(existing, opts)) {
+    if (!webhookMatches(existing, opts) || !storeEnabled(existing)) {
       await this.request(this.sessionPath(), {
         method: 'PUT',
         body: JSON.stringify({ name: this.sessionName, config }),
@@ -383,6 +435,72 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     if (existing.status === 'STOPPED' || existing.status === 'FAILED') {
       await this.request(`${this.sessionPath()}/start`, { method: 'POST' })
     }
+  }
+
+  /**
+   * Recent messages of one chat, newest first, as WAHA stores them. Media
+   * is not downloaded. Throws WahaStoreDisabledError when the engine has no
+   * message store.
+   */
+  async listChatMessages(
+    to: string,
+    opts: { limit?: number; offset?: number } = {},
+  ): Promise<WahaHistoryMessage[]> {
+    const chatId = await this.resolveChatId(to)
+    const qs = new URLSearchParams({
+      limit: String(Math.min(Math.max(opts.limit ?? 100, 1), 200)),
+      offset: String(Math.max(opts.offset ?? 0, 0)),
+      downloadMedia: 'false',
+      sortBy: 'timestamp',
+      sortOrder: 'desc',
+    })
+    try {
+      const res = await this.request<unknown>(
+        `/api/${encodeURIComponent(this.sessionName)}/chats/${encodeURIComponent(chatId)}/messages?${qs}`,
+      )
+      return Array.isArray(res) ? (res as WahaHistoryMessage[]) : []
+    } catch (err) {
+      if (err instanceof WahaHttpError && /store/i.test(JSON.stringify(err.body ?? ''))) {
+        throw new WahaStoreDisabledError()
+      }
+      throw err
+    }
+  }
+
+  /** Groups the linked number belongs to. Shapes differ per engine, so parse loosely. */
+  async listGroups(): Promise<WahaGroup[]> {
+    const res = await this.request<unknown>(
+      `/api/${encodeURIComponent(this.sessionName)}/groups?limit=500&sortBy=subject&sortOrder=asc`,
+    )
+    return parseWahaGroups(res)
+  }
+
+  /** One group's name, or null when WAHA cannot say. */
+  async getGroup(groupId: string): Promise<WahaGroup | null> {
+    try {
+      const res = await this.request<unknown>(
+        `/api/${encodeURIComponent(this.sessionName)}/groups/${encodeURIComponent(groupId)}`,
+      )
+      return parseWahaGroups([res])[0] ?? null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Members of a group. Tries the v2 endpoint (the one that reports roles and
+   * LIDs consistently) and falls back to the original one.
+   */
+  async listGroupParticipants(groupId: string): Promise<WahaGroupParticipant[]> {
+    const base = `/api/${encodeURIComponent(this.sessionName)}/groups/${encodeURIComponent(groupId)}/participants`
+    let res: unknown
+    try {
+      res = await this.request<unknown>(`${base}/v2`)
+    } catch (err) {
+      if (!(err instanceof WahaHttpError && (err.status === 404 || err.status === 501))) throw err
+      res = await this.request<unknown>(base)
+    }
+    return parseWahaParticipants(res)
   }
 
   async startSession(sessionName: string): Promise<void> {
@@ -418,6 +536,70 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
   async logoutSession(sessionName: string): Promise<void> {
     await this.request(`${this.sessionPath(sessionName)}/logout`, { method: 'POST' })
   }
+}
+
+function jidOf(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') {
+    const o = value as Record<string, unknown>
+    if (typeof o._serialized === 'string') return o._serialized
+    if (typeof o.id === 'string') return o.id
+    if (typeof o.user === 'string' && typeof o.server === 'string') return `${o.user}@${o.server}`
+  }
+  return ''
+}
+
+/** Group list as WAHA returns it (an array, or an object keyed by group id). */
+export function parseWahaGroups(raw: unknown): WahaGroup[] {
+  const list: unknown[] = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object'
+      ? Object.values(raw as Record<string, unknown>)
+      : []
+  const out: WahaGroup[] = []
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue
+    const o = item as Record<string, unknown>
+    const id = jidOf(o.id) || jidOf(o.JID) || jidOf(o.jid)
+    if (!id.endsWith('@g.us')) continue
+    const subject =
+      typeof o.subject === 'string' ? o.subject
+      : typeof o.Name === 'string' ? o.Name
+      : typeof o.name === 'string' ? o.name
+      : null
+    const participants = Array.isArray(o.participants)
+      ? o.participants
+      : Array.isArray(o.Participants)
+        ? o.Participants
+        : null
+    const size =
+      typeof o.size === 'number' ? o.size : participants ? participants.length : null
+    out.push({ id, subject: subject?.trim() || null, size })
+  }
+  return out
+}
+
+export function parseWahaParticipants(raw: unknown): WahaGroupParticipant[] {
+  const list: unknown[] = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === 'object' && Array.isArray((raw as { participants?: unknown }).participants)
+      ? ((raw as { participants: unknown[] }).participants)
+      : []
+  const out: WahaGroupParticipant[] = []
+  for (const item of list) {
+    const id = jidOf(item)
+    if (!id) continue
+    const role =
+      item && typeof item === 'object' && typeof (item as { role?: unknown }).role === 'string'
+        ? ((item as { role: string }).role)
+        : null
+    out.push({ id, role })
+  }
+  return out
+}
+
+function storeEnabled(session: WahaSessionInfo): boolean {
+  return session.config?.noweb?.store?.enabled === true
 }
 
 function webhookMatches(session: WahaSessionInfo, opts: EnsureSessionOptions): boolean {

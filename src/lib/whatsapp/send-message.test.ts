@@ -200,6 +200,7 @@ vi.mock('@/lib/whatsapp/message-status-sync', () => ({
 
 interface CapturedWrites {
   message?: Record<string, unknown>;
+  messageFill?: Record<string, unknown>;
   conversation?: Record<string, unknown>;
 }
 
@@ -212,7 +213,9 @@ interface CapturedWrites {
 function sendPathDb(
   templateRows: unknown[],
   captured: CapturedWrites,
-  contact: Record<string, unknown> = { id: 'ct-1', phone: '+15551234567' }
+  contact: Record<string, unknown> = { id: 'ct-1', phone: '+15551234567' },
+  // Queued answers for `messages` `.single()` calls, oldest first.
+  messageSingles: Array<{ data: unknown; error: unknown }> = []
 ): SupabaseClient {
   const conversation = {
     id: 'cv-1',
@@ -235,6 +238,7 @@ function sendPathDb(
         },
         update: (row: Record<string, unknown>) => {
           if (table === 'conversations') captured.conversation = row;
+          if (table === 'messages') captured.messageFill = row;
           return builder;
         },
         maybeSingle: async () => ({ data: null, error: null }),
@@ -244,6 +248,8 @@ function sendPathDb(
           }
           if (table === 'whatsapp_config') return { data: config, error: null };
           if (table === 'messages') {
+            const queued = messageSingles.shift();
+            if (queued) return queued;
             return { data: { id: 'msg-1' }, error: null };
           }
           return { data: null, error: null };
@@ -528,5 +534,53 @@ describe('sendMessageToConversation — statuses that beat the insert', () => {
       'acct-1',
       'wamid.text'
     );
+  });
+});
+
+describe('sendMessageToConversation — echo of a CRM send saved first', () => {
+  it('fills in the existing row instead of failing the send', async () => {
+    const captured: CapturedWrites = {};
+    const db = sendPathDb(
+      [TEMPLATE_ROW],
+      captured,
+      { id: 'ct-1', phone: '+15551234567' },
+      [
+        // insert loses the race: the phone-side echo already saved this id
+        { data: null, error: { code: '23505', message: 'duplicate key' } },
+        // the fill-in update returns the existing row
+        { data: { id: 'msg-echo' }, error: null },
+      ]
+    );
+
+    const result = await sendMessageToConversation(db, 'acct-1', {
+      conversationId: 'cv-1',
+      messageType: 'template',
+      templateName: 'order_update',
+      templateParams: ['A123', 'Friday'],
+    });
+
+    expect(result.whatsappMessageId).toBe('wamid.1');
+    expect(captured.messageFill).toMatchObject({
+      content_text: 'Your order A123 ships on Friday',
+      template_name: 'order_update',
+    });
+  });
+
+  it('still reports other database errors', async () => {
+    const captured: CapturedWrites = {};
+    const db = sendPathDb(
+      [TEMPLATE_ROW],
+      captured,
+      { id: 'ct-1', phone: '+15551234567' },
+      [{ data: null, error: { code: '42501', message: 'permission denied' } }]
+    );
+    await expect(
+      sendMessageToConversation(db, 'acct-1', {
+        conversationId: 'cv-1',
+        messageType: 'template',
+        templateName: 'order_update',
+        templateParams: ['A123', 'Friday'],
+      })
+    ).rejects.toBeInstanceOf(SendMessageError);
   });
 });

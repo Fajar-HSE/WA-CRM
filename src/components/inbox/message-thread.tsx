@@ -67,6 +67,7 @@ import {
   withBusinessReaction,
 } from "@/lib/inbox/business-reaction";
 import { toast } from "sonner";
+import { LoadHistoryButton } from "./load-history-button";
 import { Button } from "@/components/ui/button";
 import {
   confirmedSendUpdate,
@@ -1206,6 +1207,15 @@ export function MessageThread({
             <p className="text-xs text-muted-foreground">
               {t("sendTemplateHint")}
             </p>
+            {conversationId ? (
+              <div className="mt-4">
+                <LoadHistoryButton
+                  key={conversationId}
+                  conversationId={conversationId}
+                  onLoaded={onRefresh}
+                />
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="space-y-4">
@@ -1221,6 +1231,17 @@ export function MessageThread({
                 </Button>
               </div>
             )}
+            {/* Once every saved message is on screen, the only older ones are
+                those still in WhatsApp itself. */}
+            {!hasOlderMessages && conversationId ? (
+              <div className="flex justify-center">
+                <LoadHistoryButton
+                  key={conversationId}
+                  conversationId={conversationId}
+                  onLoaded={onRefresh}
+                />
+              </div>
+            ) : null}
             {messageGroups.map((group) => (
               <div key={group.date}>
                 {/* Date separator */}

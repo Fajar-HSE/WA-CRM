@@ -30,6 +30,8 @@ export interface WahaInboundPayload {
   hasMedia?: boolean
   fromMe?: boolean
   notifyName?: string | null
+  /** Chat the message was sent to; set on messages typed on the phone itself. */
+  to?: string | null
   media?: { url?: string | null; mimetype?: string | null } | null
   _data?: {
     notifyName?: string | null
@@ -56,6 +58,15 @@ interface InboundConversation {
   id: string
   status?: string | null
   first_inbound_at?: string | null
+}
+
+/** Message kind from WAHA's hasMedia flag and the media mimetype. */
+function contentKindOf(hasMedia: boolean, mediaType: string | null): string {
+  if (!hasMedia) return 'text'
+  if (mediaType?.startsWith('image')) return 'image'
+  if (mediaType?.startsWith('video')) return 'video'
+  if (mediaType?.startsWith('audio')) return 'audio'
+  return 'document'
 }
 
 function extractPhone(from: string): string {
@@ -238,15 +249,7 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
   const contentText = payload?.body || null
   const hasMedia = !!payload?.hasMedia
   const mediaType = hasMedia ? payload?.media?.mimetype || null : null
-  const contentKind = !hasMedia
-    ? 'text'
-    : mediaType?.startsWith('image')
-      ? 'image'
-      : mediaType?.startsWith('video')
-        ? 'video'
-        : mediaType?.startsWith('audio')
-          ? 'audio'
-          : 'document'
+  const contentKind = contentKindOf(hasMedia, mediaType)
   const messageId = payload?.id || null
 
   // WAHA's own file URL is unusable in a browser (needs the API key, often a
@@ -346,4 +349,136 @@ export async function processWahaInbound({ sessionName, payload }: WahaInboundIn
     content_type: contentKind,
     text: contentText,
   })
+}
+
+/** How long to wait before saving a phone-side message, see processWahaOutgoing. */
+const OUTGOING_SETTLE_MS = 3000
+
+export interface WahaOutgoingOptions {
+  /** Test hook: skip the settle delay. */
+  settleMs?: number
+}
+
+/**
+ * A message sent from the phone itself (WhatsApp / WhatsApp Web), not from
+ * the CRM. WAHA reports it on `message.any` with `fromMe: true`.
+ *
+ * Without this the CRM never learns the customer was answered: the chat
+ * stays "waiting for a reply" forever and the reply-time numbers are wrong.
+ *
+ * Only chats already known to the CRM are recorded (an existing contact with
+ * a conversation). A reply to a number that never wrote in is a personal
+ * chat on the same phone and does not belong here.
+ *
+ * Messages the CRM sent itself come back through this same event. They are
+ * already saved under the same WhatsApp message id, so the insert below is
+ * a no-op for them. The short wait lets the CRM's own save land first; the
+ * send path also tolerates losing that race (see send-message.ts).
+ */
+export async function processWahaOutgoing(
+  { sessionName, payload }: WahaInboundInput,
+  opts: WahaOutgoingOptions = {},
+): Promise<void> {
+  const to = String(payload?.to || '')
+  const messageId = payload?.id || null
+  if (!to || !messageId || isNonCustomerChat(to)) return
+
+  const db = supabaseAdmin()
+  const { data: config, error: cfgErr } = await db
+    .from('whatsapp_config')
+    .select('*')
+    .eq('waha_session_name', sessionName)
+    .maybeSingle()
+  if (cfgErr || !config) return
+
+  const accountId = config.account_id as string
+
+  const { data: acct } = await db
+    .from('accounts')
+    .select('disabled_at')
+    .eq('id', accountId)
+    .maybeSingle()
+  if (acct?.disabled_at) return
+
+  let phone = extractPhone(to)
+  if (to.endsWith('@lid')) {
+    const real =
+      altPhoneFromPayload(payload as Record<string, unknown>) ??
+      (await lookupPhoneForLid(config as WhatsAppConfig, to))
+    if (real) phone = real
+  }
+  if (!phone) return
+
+  let contact: InboundContact | null = await findExistingContact(db, accountId, phone)
+  if (!contact && to.endsWith('@lid')) {
+    contact = await findExistingContact(db, accountId, extractPhone(to))
+  }
+  if (!contact) return
+
+  const { data: convs } = await db
+    .from('conversations')
+    .select('*')
+    .eq('account_id', accountId)
+    .eq('contact_id', contact.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
+  const conversation = convs && convs.length > 0 ? (convs[0] as InboundConversation) : null
+  if (!conversation) return
+
+  await new Promise((resolve) => setTimeout(resolve, opts.settleMs ?? OUTGOING_SETTLE_MS))
+
+  const sentAt = new Date((payload?.timestamp || Date.now() / 1000) * 1000).toISOString()
+  const contentText = payload?.body || null
+  const hasMedia = !!payload?.hasMedia
+  const mediaType = hasMedia ? payload?.media?.mimetype || null : null
+  const contentKind = contentKindOf(hasMedia, mediaType)
+
+  const mediaUrl = hasMedia
+    ? await mirrorWahaMedia({
+        storage: db.storage as unknown as MirrorStorage,
+        accountId,
+        messageId,
+        media: payload?.media,
+        timestamp: typeof payload?.timestamp === 'number' ? payload.timestamp : null,
+      })
+    : null
+
+  const { data: insertedRows, error: msgErr } = await db
+    .from('messages')
+    .upsert(
+      {
+        conversation_id: conversation.id,
+        sender_type: 'agent',
+        content_type: contentKind,
+        content_text: contentText,
+        media_url: mediaUrl,
+        media_type: mediaType,
+        message_id: messageId,
+        status: 'sent',
+        created_at: sentAt,
+      },
+      { onConflict: 'conversation_id,message_id', ignoreDuplicates: true },
+    )
+    .select('id')
+
+  if (msgErr) {
+    console.error('[waha-outgoing] message insert failed:', msgErr.message)
+    return
+  }
+  // Already saved (sent from the CRM, or a replay): nothing more to do.
+  if (!insertedRows || insertedRows.length === 0) return
+
+  // Keep the inbox preview current. The reply timestamp used by the
+  // dashboard is stamped by the database trigger on the insert above.
+  const { error: convErr } = await db
+    .from('conversations')
+    .update({
+      last_message_text: contentText || (hasMedia ? `[${contentKind}]` : '[message]'),
+      last_message_at: sentAt,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', conversation.id)
+  if (convErr) {
+    console.error('[waha-outgoing] conversation update failed:', convErr.message)
+  }
 }

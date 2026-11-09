@@ -1282,7 +1282,11 @@
         "languageLabel": "Language",
         "select": "Select a template…",
         "unknown": "{name} ({lang}) — not in approved list",
-        "unknownLang": "unknown"
+        "unknownLang": "unknown",
+        "variablesLabel": "Template variables",
+        "customPlaceholder": "Fixed text",
+        "variablesHint": "Pick contact data for each variable, or type fixed text. The first name falls back to “Kak” when the contact has no name yet. A template with an empty variable is not sent.",
+        "sources": {"first_name": "Contact first name", "name": "Contact full name", "phone": "Phone number", "email": "Email", "company": "Company", "custom": "Fixed text"}
       },
       "branches": {
         "yes": "Yes",
@@ -2264,7 +2268,9 @@
     "saveContacts": "Save to Contacts",
     "saving": "Saving…",
     "grabDone": "{created} new contacts, {existing} already there, {tagged} tagged",
-    "grabFailed": "Could not save the contacts"
+    "grabFailed": "Could not save the contacts",
+    "hiddenHint": "WhatsApp hides some members' numbers. They can only be read when you are a group admin and WhatsApp includes them, or the number is in the linked phone's contacts.",
+    "technicalDetails": "Technical details"
   },
   "Notifications": {
     "title": "Notifications",

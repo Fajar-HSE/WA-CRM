@@ -18,6 +18,7 @@ import type {
   CreateDealStepConfig,
   AssignConversationStepConfig,
 } from '@/types'
+import { fillContactTokens } from '@/lib/automations/template-variables'
 import { supabaseAdmin } from './admin-client'
 import { addContactTagIfAbsent } from '@/lib/contacts/tag-write'
 import { MAX_TAG_CHAIN_DEPTH, getTagChainDepth } from '@/lib/contacts/tag-chain'
@@ -782,6 +783,13 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
       // we MUST emit params in strict numeric order. Lexicographic sort
       // of "1", "2", …, "10" yields "1", "10", "2", … which silently
       // scrambles every template with ≥10 variables.
+      // A variable may name a contact field ({{contact.first_name}} ...) or
+      // the message that triggered the run; both are filled in here.
+      const { data: variableContact } = await db
+        .from('contacts')
+        .select('name, phone, email, company')
+        .eq('id', args.contactId)
+        .maybeSingle()
       const params = cfg.variables
         ? Object.keys(cfg.variables)
             .sort((a, b) => {
@@ -794,7 +802,9 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
               if (bNum) return 1
               return a.localeCompare(b)
             })
-            .map((k) => String(cfg.variables![k]))
+            .map((k) =>
+              interpolate(fillContactTokens(String(cfg.variables![k]), variableContact ?? null), args),
+            )
         : []
       const { whatsapp_message_id } = await engineSendTemplate({
         accountId: args.automation.account_id,

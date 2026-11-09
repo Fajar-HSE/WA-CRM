@@ -1282,7 +1282,11 @@
         "languageLabel": "Bahasa",
         "select": "Pilih template…",
         "unknown": "{name} ({lang}) — tidak ada di daftar yang disetujui",
-        "unknownLang": "tidak diketahui"
+        "unknownLang": "tidak diketahui",
+        "variablesLabel": "Isi variabel template",
+        "customPlaceholder": "Teks tetap",
+        "variablesHint": "Pilih data kontak untuk tiap variabel, atau ketik teks tetap. Nama depan diisi “Kak” bila kontak belum punya nama. Template yang masih punya variabel kosong tidak akan dikirim.",
+        "sources": {"first_name": "Nama depan kontak", "name": "Nama lengkap kontak", "phone": "Nomor telepon", "email": "Email", "company": "Perusahaan", "custom": "Teks tetap"}
       },
       "branches": {
         "yes": "Ya",
@@ -2264,7 +2268,9 @@
     "saveContacts": "Simpan ke Kontak",
     "saving": "Menyimpan…",
     "grabDone": "{created} kontak baru, {existing} sudah ada, {tagged} diberi tag",
-    "grabFailed": "Kontak tidak dapat disimpan"
+    "grabFailed": "Kontak tidak dapat disimpan",
+    "hiddenHint": "WhatsApp menyembunyikan sebagian nomor anggota. Nomor hanya bisa dibaca bila kamu admin grup dan WhatsApp menyertakannya, atau nomor itu ada di kontak HP yang tertaut.",
+    "technicalDetails": "Detail teknis"
   },
   "Notifications": {
     "title": "Notifikasi",

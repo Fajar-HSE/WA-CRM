@@ -1,5 +1,11 @@
 "use client"
 
+import { extractTemplateVariables } from "@/lib/whatsapp/template-validators"
+import {
+  CONTACT_VARIABLE_SOURCES,
+  contactToken,
+  type ContactVariableSource,
+} from "@/lib/automations/template-variables"
 import {
   createContext,
   useContext,
@@ -573,15 +579,30 @@ function DealPipelineFields({
 /** Template dropdown showing approved templates by name + language,
  *  storing both template_name and language. Falls back to manual name +
  *  language inputs when no approved templates are synced yet. */
+/** Value a variable starts with: the first one greets the contact by name. */
+function defaultVariables(body: string): Record<string, string> {
+  const out: Record<string, string> = {}
+  extractTemplateVariables(body).forEach((key, i) => {
+    out[key] = i === 0 ? contactToken("first_name") : ""
+  })
+  return out
+}
+
 function SendTemplateFields({
   templateName,
   language,
+  variables,
   onChange,
   t,
 }: {
   templateName: string
   language: string
-  onChange: (patch: { template_name: string; language: string }) => void
+  variables: Record<string, string>
+  onChange: (patch: {
+    template_name: string
+    language: string
+    variables?: Record<string, string>
+  }) => void
   t: ReturnType<typeof useTranslations>
 }) {
   const { templates } = useResources()
@@ -618,14 +639,26 @@ function SendTemplateFields({
   const hasMatch = templates.some(
     (t) => toValue(t.name, t.language ?? "en_US") === current,
   )
+  const chosen = templates.find(
+    (tmpl) => toValue(tmpl.name, tmpl.language ?? "en_US") === current,
+  )
+  const variableKeys = chosen ? extractTemplateVariables(chosen.body_text ?? "") : []
 
   return (
+    <>
     <FieldBlock label={t("templates.templateLabel")}>
       <select
         value={current}
         onChange={(e) => {
           const [name, lang] = e.target.value.split("::")
-          onChange({ template_name: name ?? "", language: lang ?? "" })
+          const picked = templates.find(
+            (tmpl) => tmpl.name === name && (tmpl.language ?? "en_US") === lang,
+          )
+          onChange({
+            template_name: name ?? "",
+            language: lang ?? "",
+            variables: picked ? defaultVariables(picked.body_text ?? "") : {},
+          })
         }}
         className={SELECT_CLASS}
       >
@@ -645,6 +678,56 @@ function SendTemplateFields({
         )}
       </select>
     </FieldBlock>
+    {variableKeys.length > 0 ? (
+      <FieldBlock label={t("templates.variablesLabel")}>
+        <div className="space-y-2">
+          {variableKeys.map((key) => {
+            const value = variables[key] ?? ""
+            const source =
+              CONTACT_VARIABLE_SOURCES.find((s) => contactToken(s) === value) ?? "custom"
+            const setValue = (next: string) =>
+              onChange({
+                template_name: templateName,
+                language,
+                variables: { ...variables, [key]: next },
+              })
+            return (
+              <div key={key} className="flex items-center gap-2">
+                <span className="w-14 shrink-0 font-mono text-xs text-muted-foreground">{`{{${key}}}`}</span>
+                <select
+                  value={source}
+                  onChange={(e) =>
+                    setValue(
+                      e.target.value === "custom"
+                        ? ""
+                        : contactToken(e.target.value as ContactVariableSource),
+                    )
+                  }
+                  className={SELECT_CLASS}
+                >
+                  {CONTACT_VARIABLE_SOURCES.map((s) => (
+                    <option key={s} value={s}>
+                      {t(`templates.sources.${s}`)}
+                    </option>
+                  ))}
+                  <option value="custom">{t("templates.sources.custom")}</option>
+                </select>
+                {source === "custom" ? (
+                  <Input
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder={t("templates.customPlaceholder")}
+                    className="bg-muted text-foreground"
+                  />
+                ) : null}
+              </div>
+            )
+          })}
+          <p className="text-xs text-muted-foreground">{t("templates.variablesHint")}</p>
+        </div>
+      </FieldBlock>
+    ) : null}
+    </>
   )
 }
 
@@ -1453,6 +1536,7 @@ function StepEditor({
         <SendTemplateFields
           templateName={(cfg.template_name as string) ?? ""}
           language={(cfg.language as string) ?? ""}
+          variables={(cfg.variables as Record<string, string> | undefined) ?? {}}
           onChange={(patch) => set(patch)}
           t={t}
         />

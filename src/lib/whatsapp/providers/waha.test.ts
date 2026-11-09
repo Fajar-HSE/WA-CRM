@@ -3,6 +3,7 @@ import {
   WahaHttpError,
   WahaNumberNotFoundError,
   WahaStoreDisabledError,
+  WahaTemplateVariableError,
   WahaWhatsAppProvider,
   messageIdOf,
 } from './waha'
@@ -184,6 +185,45 @@ describe('WahaWhatsAppProvider', () => {
         messageParams: { body: ['Budi'] },
       })
       expect(text).toBe('Halo Budi')
+    })
+
+    it('refuses to send a template whose placeholders were not all filled in', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ id: 'm1' }))
+      const err = await makeProvider()
+        .sendTemplate({
+          to: '628123456789@c.us',
+          templateName: 'order',
+          language: 'id',
+          template: row,
+          params: ['Sari'],
+        })
+        .catch((e) => e)
+      expect(err).toBeInstanceOf(WahaTemplateVariableError)
+      expect(err.missing).toEqual(['2'])
+      expect(err.message).toContain('{{2}}')
+      expect(fetchMock.mock.calls.some(([u]) => String(u).endsWith('/api/sendText'))).toBe(false)
+    })
+
+    it('refuses a template sent with no values at all', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ id: 'm1' }))
+      await expect(
+        makeProvider().sendTemplate({
+          to: '628123456789@c.us',
+          templateName: 'hello',
+          language: 'id',
+          template: { body_text: 'Halo {{1}}, terima kasih telah menghubungi kami.' },
+        }),
+      ).rejects.toBeInstanceOf(WahaTemplateVariableError)
+    })
+
+    it('still sends a template that has no placeholders without any values', async () => {
+      const text = await sentText({
+        to: '628123456789@c.us',
+        templateName: 'hello',
+        language: 'id',
+        template: { body_text: 'Terima kasih telah menghubungi kami.' },
+      })
+      expect(text).toBe('Terima kasih telah menghubungi kami.')
     })
 
     it('falls back to the name and values when no template row is given', async () => {
@@ -405,8 +445,8 @@ describe('WahaWhatsAppProvider', () => {
       )
       const res = await makeProvider().listGroupParticipants('1@g.us')
       expect(res).toEqual([
-        { id: '628111@c.us', role: 'admin' },
-        { id: '99@lid', role: 'participant' },
+        { id: '628111@c.us', role: 'admin', phone: null },
+        { id: '99@lid', role: 'participant', phone: null },
       ])
       expect(callAt(0).url).toContain('/groups/1%40g.us/participants/v2')
     })
@@ -423,6 +463,47 @@ describe('WahaWhatsAppProvider', () => {
     it('does not hide other member-list errors', async () => {
       fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500))
       await expect(makeProvider().listGroupParticipants('1@g.us')).rejects.toBeInstanceOf(WahaHttpError)
+    })
+
+    it('fills in a hidden member\'s number from the group record', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse([{ id: '99@lid', role: 'participant' }]))
+        .mockResolvedValueOnce(
+          jsonResponse({
+            id: '1@g.us',
+            participants: [{ id: '99@lid', phoneNumber: '6281234567890@s.whatsapp.net', admin: null }],
+          }),
+        )
+      const d = await makeProvider().listGroupParticipantsDetailed('1@g.us')
+      expect(d.participants[0].phone).toBe('6281234567890')
+      expect(d.groupFallback).toBe('used')
+      expect(d.fields).toEqual(expect.arrayContaining(['id', 'role', 'group.phoneNumber']))
+      expect(callAt(1).url).toMatch(/\/groups\/1%40g\.us$/)
+    })
+
+    it('does not read the group record when every number is already known', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse([{ id: '628111@c.us', role: 'admin' }]))
+      const d = await makeProvider().listGroupParticipantsDetailed('1@g.us')
+      expect(d.groupFallback).toBe('not_needed')
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the members when the group record cannot be read', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse([{ id: '99@lid', role: null }]))
+        .mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500))
+      const d = await makeProvider().listGroupParticipantsDetailed('1@g.us')
+      expect(d.participants).toHaveLength(1)
+      expect(d.groupFallback).toBe('failed')
+    })
+
+    it('reports why a LID lookup is empty', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ lid: '99@lid', pn: null }))
+      expect(await makeProvider().getLidMapping('99@lid')).toEqual({ phone: null, error: null })
+      fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'x' }, 422))
+      expect(await makeProvider().getLidMapping('99@lid')).toEqual({ phone: null, error: 'HTTP 422' })
+      fetchMock.mockResolvedValueOnce(jsonResponse({ lid: '99@lid', pn: '6281234567890@c.us' }))
+      expect((await makeProvider().getLidMapping('99@lid')).phone).toBe('6281234567890')
     })
   })
 })

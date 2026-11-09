@@ -29,6 +29,8 @@ interface MembersResponse {
   total?: number
   unresolved?: number
   truncated?: boolean
+  /** Counts and field names only (no numbers). */
+  debug?: unknown
   error?: string
 }
 
@@ -182,6 +184,20 @@ export function GrabNumbersDialog({
               })}
               {data.truncated ? ` ${t('truncatedNote')}` : ''}
             </p>
+
+            {(data.unresolved ?? 0) > 0 ? (
+              <div className="space-y-1 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                <p>{t('hiddenHint')}</p>
+                {data.debug ? (
+                  <details>
+                    <summary className="cursor-pointer select-none">{t('technicalDetails')}</summary>
+                    <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap break-all text-[11px]">
+                      {JSON.stringify(data.debug, null, 2)}
+                    </pre>
+                  </details>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="flex items-center gap-2">
               <Input

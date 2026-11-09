@@ -12,7 +12,7 @@ import {
   resolveGroupMembers,
   tagNameForGroup,
 } from './waha-groups'
-import { parseWahaGroups, parseWahaParticipants } from './providers/waha'
+import { parseWahaGroups, parseWahaParticipants, participantFieldNames } from './providers/waha'
 
 describe('isGroupChatId', () => {
   it('matches group ids only', () => {
@@ -50,11 +50,48 @@ describe('parseWahaGroups / parseWahaParticipants', () => {
       { id: '222@lid', role: 'superadmin' },
     ]
     expect(parseWahaParticipants(list)).toEqual([
-      { id: '111@c.us', role: 'participant' },
-      { id: '222@lid', role: 'superadmin' },
+      { id: '111@c.us', role: 'participant', phone: null },
+      { id: '222@lid', role: 'superadmin', phone: null },
     ])
     expect(parseWahaParticipants({ participants: list })).toHaveLength(2)
     expect(parseWahaParticipants(undefined)).toEqual([])
+  })
+})
+
+describe('parseWahaParticipants — numbers next to a hidden id', () => {
+  it('reads the number from a jid-valued side field', () => {
+    const out = parseWahaParticipants([
+      { id: '30601675599946@lid', phoneNumber: '6281234567890@s.whatsapp.net', admin: null },
+      { id: '2@lid', pn: '6282222222222@c.us' },
+      { id: '3@lid', jid: { user: '6283333333333', server: 's.whatsapp.net' } },
+    ])
+    expect(out.map((p) => p.phone)).toEqual(['6281234567890', '6282222222222', '6283333333333'])
+  })
+
+  it('reads a bare number from a field named like one, but not from other fields', () => {
+    const out = parseWahaParticipants([
+      { id: '1@lid', phone: '+62 812-3456-7890' },
+      { id: '2@lid', name: '6281234567890' },
+      { id: '3@lid', phoneNumber: '123' },
+    ])
+    expect(out.map((p) => p.phone)).toEqual(['6281234567890', null, null])
+  })
+
+  it('reads the Participants list of a group record', () => {
+    expect(
+      parseWahaParticipants({ Participants: [{ id: '1@lid', phoneNumber: '6281234567890@s.whatsapp.net' }] })[0]
+        .phone,
+    ).toBe('6281234567890')
+  })
+
+  it('lists field names only', () => {
+    expect(participantFieldNames([{ id: 'a', role: 'x', phoneNumber: 'y' }, { id: 'b', admin: null }])).toEqual([
+      'admin',
+      'id',
+      'phoneNumber',
+      'role',
+    ])
+    expect(participantFieldNames(null)).toEqual([])
   })
 })
 
@@ -211,5 +248,58 @@ describe('grabMembersToContacts', () => {
     }))
     const res = await grabMembersToContacts({ db, accountId: 'a', userId: 'u', groupName: 'G', members })
     expect(res.existing).toBe(GRAB_BATCH_LIMIT)
+  })
+})
+
+describe('resolveGroupMembers — diagnostics and record numbers', () => {
+  it('uses a number found in the member record without any lookup', async () => {
+    const source = {
+      listGroupParticipants: async () => [],
+      listGroupParticipantsDetailed: async () => ({
+        participants: [{ id: '1@lid', role: 'admin', phone: '6281234567890' }, { id: '2@lid', role: null, phone: null }],
+        fields: ['id', 'phoneNumber', 'role'],
+        groupFallback: 'used' as const,
+      }),
+      getPhoneForLid: vi.fn(async () => null),
+    }
+    const res = await resolveGroupMembers(source, '1@g.us')
+    expect(res.members.map((m) => m.phone)).toEqual(['6281234567890', null])
+    expect(source.getPhoneForLid).toHaveBeenCalledTimes(1)
+    expect(res.diagnostics).toMatchObject({
+      fields: ['id', 'phoneNumber', 'role'],
+      groupFallback: 'used',
+      inRecord: 1,
+      ids: { phone: 0, hidden: 2, other: 0 },
+      lidLookup: { tried: 1, found: 0, empty: 1, errors: 0, firstError: null },
+    })
+  })
+
+  it('tells "no mapping" apart from "WAHA error"', async () => {
+    const source = {
+      listGroupParticipants: async () => [
+        { id: '1@lid', role: null },
+        { id: '2@lid', role: null },
+        { id: '3@lid', role: null },
+      ],
+      getPhoneForLid: async () => null,
+      getLidMapping: async (lid: string) =>
+        lid === '1@lid'
+          ? { phone: '6281234567890', error: null }
+          : lid === '2@lid'
+            ? { phone: null, error: 'HTTP 422' }
+            : { phone: null, error: null },
+    }
+    const res = await resolveGroupMembers(source, '1@g.us')
+    expect(res.diagnostics.lidLookup).toEqual({ tried: 3, found: 1, empty: 1, errors: 1, firstError: 'HTTP 422' })
+    expect(res.diagnostics.groupFallback).toBe('unknown')
+  })
+
+  it('never puts a phone number in the diagnostics', async () => {
+    const source = {
+      listGroupParticipants: async () => [{ id: '6281234567890@c.us', role: 'admin' }],
+      getPhoneForLid: async () => null,
+    }
+    const res = await resolveGroupMembers(source, '1@g.us')
+    expect(JSON.stringify(res.diagnostics)).not.toMatch(/628\d{6,}/)
   })
 })

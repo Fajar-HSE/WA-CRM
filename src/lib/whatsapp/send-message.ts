@@ -471,7 +471,7 @@ export async function sendMessageToConversation(
           )
         : (contentText ?? null);
 
-  const { data: messageRecord, error: msgError } = await db
+  const insertResult = await db
     .from('messages')
     .insert({
       conversation_id: conversationId,
@@ -492,6 +492,35 @@ export async function sendMessageToConversation(
     })
     .select()
     .single();
+
+  let messageRecord = insertResult.data;
+  let msgError = insertResult.error;
+
+  // WAHA echoes every message we send back as a `message.any` event, and the
+  // webhook saves messages typed on the phone. If that echo won the race, the
+  // row already exists under this WhatsApp id (unique violation). Fill it in
+  // with what only this path knows instead of failing a send that worked.
+  if (msgError?.code === '23505' && waMessageId) {
+    const { data: existing, error: fillError } = await db
+      .from('messages')
+      .update({
+        sender_id: senderId ?? null,
+        content_type: messageType,
+        content_text: persistedText,
+        template_name: templateName || null,
+        interactive_payload:
+          messageType === 'interactive' ? interactivePayload : null,
+        reply_to_message_id: replyToMessageId || null,
+      })
+      .eq('conversation_id', conversationId)
+      .eq('message_id', waMessageId)
+      .select()
+      .single();
+    if (!fillError && existing) {
+      messageRecord = existing;
+      msgError = null;
+    }
+  }
 
   if (msgError) {
     console.error('[send-message] error inserting sent message:', msgError);

@@ -84,6 +84,34 @@ WAHA side:
 - `WAHA_BASE_URL` and `WAHA_API_KEY` must be set on the app: the download
   goes from the app server to WAHA, not from the browser.
 
+## Messages typed on the phone, and chat history
+
+Two things need the session configured a certain way. The app sets both when
+it creates or re-syncs a session (Settings → WhatsApp → **Re-sync webhook**),
+so an existing session only has to be re-synced once after an upgrade.
+
+- **Webhook event `message.any`.** The plain `message` event only carries
+  messages the customer sends. A reply typed in WhatsApp on the phone (or in
+  WhatsApp Web) arrives only on `message.any` with `fromMe: true`. The app
+  saves it as an agent message in the conversation, so the chat counts as
+  answered (dashboard "waiting for a reply" and reply times). Only chats that
+  already exist in the CRM are recorded: a reply to a number that never wrote
+  in is a personal chat and is ignored. Messages the CRM sent itself also
+  come back on this event; they are recognised by their WhatsApp id and not
+  saved twice.
+- **NOWEB message store.** `config.noweb.store.enabled = true` (with
+  `fullSync: false`). WAHA keeps no history without it. The store only holds
+  what WAHA receives after it is enabled, plus what WhatsApp syncs when the
+  number is linked (about three months with `fullSync: false`, about a year
+  with `true`). To get history from before the store was enabled, disconnect
+  the number and link it again with the QR code.
+
+In the inbox, **Load history from WhatsApp** (at the top of a conversation,
+once every saved message is visible) copies one page (100) of older messages
+from WAHA into the conversation. It can be pressed repeatedly to go further
+back and is safe to repeat: messages already saved are skipped. Attachments
+from history appear as `[Attachment]` because media is not downloaded.
+
 ## Message templates
 
 Settings → Template holds reusable messages with blanks (`{{1}}`, `{{2}}`).
@@ -96,4 +124,4 @@ headers or images: write the message as plain text.
 
 - Interactive buttons and lists are sent as numbered text.
 - Reactions are not handled yet.
-- Group chats are not filtered out of the inbound webhook.
+- Group chats, channels and Status updates are ignored by the webhook.

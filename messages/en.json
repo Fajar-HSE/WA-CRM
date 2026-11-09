@@ -363,6 +363,11 @@
       "loadOlder": "Load older messages",
       "loadingOlder": "Loading…",
       "loadOlderFailed": "Could not load older messages.",
+      "loadHistory": "Load history from WhatsApp",
+      "loadingHistory": "Loading history…",
+      "historyImported": "{count} older messages loaded",
+      "historyNone": "No older history on WhatsApp",
+      "historyFailed": "Could not load history",
       "refreshConversation": "Refresh conversation",
       "status": "Status",
       "statusOpen": "Open",
@@ -2409,6 +2414,7 @@
     }
   },
   "LibErrors": {
+    "waha": {"historyAttachment": "[Attachment]", "historyNoConversation": "Conversation not found.", "historyNoPhone": "This contact has no phone number."},
     "upload": {
       "notSignedIn": "Not signed in.",
       "accountUnresolved": "Could not resolve your account."
@@ -2644,6 +2650,7 @@
     }
   },
   "Api": {
+    "history": {"invalidConversation": "Invalid conversation.", "notWaha": "History can only be loaded for a number connected through WAHA.", "storeDisabled": "WAHA has not stored any history yet. Open Settings → WhatsApp and click “Re-sync webhook”. History from before today only appears after the number is linked again with the QR code.", "wahaFailed": "WAHA could not fetch the history right now. Try again later."},
     "common": {
       "notFound": "Not found",
       "invalidJson": "Invalid JSON",

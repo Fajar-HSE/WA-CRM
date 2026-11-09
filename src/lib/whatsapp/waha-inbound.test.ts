@@ -8,6 +8,8 @@ const contactUpdates: { values: Record<string, unknown>; id: string }[] = []
 const contactInserts: Record<string, unknown>[] = []
 const messageUpserts: Record<string, unknown>[] = []
 const webhookEvents: Record<string, unknown>[] = []
+const conversationUpdates: Record<string, unknown>[] = []
+let upsertEmpty = false
 
 function makeDb() {
   const from = (table: string) => {
@@ -38,6 +40,7 @@ function makeDb() {
         return chain
       },
       upsert: (values: Record<string, unknown>) => {
+        state.op = 'upsert'
         if (table === 'messages') messageUpserts.push(values)
         return chain
       },
@@ -45,6 +48,10 @@ function makeDb() {
         if (state.op === 'update' && table === 'contacts') {
           contactUpdates.push({ values: state.values!, id: state.id! })
         }
+        if (state.op === 'update' && table === 'conversations') {
+          conversationUpdates.push(state.values!)
+        }
+        if (state.op === 'upsert' && upsertEmpty) return resolve({ data: [], error: null })
         return resolve({ data: [{ id: 'msg-1' }], error: null })
       },
     }
@@ -88,7 +95,7 @@ vi.mock('@/lib/whatsapp/providers', async () => {
   return { createWhatsAppProvider: () => new Ctor() }
 })
 
-import { processWahaInbound } from './waha-inbound'
+import { processWahaInbound, processWahaOutgoing } from './waha-inbound'
 
 function byPhone(map: Record<string, unknown>) {
   findExistingContact.mockImplementation(async (_db, _acct, phone: string) => map[phone] ?? null)
@@ -270,5 +277,108 @@ describe('processWahaInbound with a lid sender', () => {
       })
       expect(contactUpdates).toEqual([])
     })
+  })
+})
+
+describe('processWahaOutgoing (messages typed on the phone)', () => {
+  beforeEach(() => {
+    contactUpdates.length = 0
+    contactInserts.length = 0
+    messageUpserts.length = 0
+    conversationUpdates.length = 0
+    upsertEmpty = false
+    mirrorWahaMedia.mockReset()
+    findExistingContact.mockReset()
+    getPhoneForLid.mockReset()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  const phoneReply = {
+    id: 'true_628123456789@c.us_AAA',
+    fromMe: true,
+    to: `${REAL}@c.us`,
+    body: 'Baik, kami proses ya',
+    timestamp: 1_700_000_000,
+  }
+
+  it('saves a reply typed on the phone as an agent message', async () => {
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    await processWahaOutgoing({ sessionName: 's', payload: phoneReply }, { settleMs: 0 })
+
+    expect(messageUpserts).toHaveLength(1)
+    expect(messageUpserts[0]).toMatchObject({
+      conversation_id: 'conv-1',
+      sender_type: 'agent',
+      content_type: 'text',
+      content_text: 'Baik, kami proses ya',
+      message_id: 'true_628123456789@c.us_AAA',
+      status: 'sent',
+      created_at: new Date(1_700_000_000 * 1000).toISOString(),
+    })
+    expect(conversationUpdates[0]).toMatchObject({ last_message_text: 'Baik, kami proses ya' })
+    // It must never create a contact or conversation.
+    expect(contactInserts).toEqual([])
+  })
+
+  it('does nothing when the chat is not a known contact', async () => {
+    byPhone({})
+    await processWahaOutgoing({ sessionName: 's', payload: phoneReply }, { settleMs: 0 })
+    expect(messageUpserts).toEqual([])
+    expect(contactInserts).toEqual([])
+  })
+
+  it('ignores groups, channels and status updates', async () => {
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    for (const to of ['1203630000000000@g.us', 'status@broadcast', '123@newsletter']) {
+      await processWahaOutgoing({ sessionName: 's', payload: { ...phoneReply, to } }, { settleMs: 0 })
+    }
+    expect(messageUpserts).toEqual([])
+  })
+
+  it('does nothing without a message id or recipient', async () => {
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    await processWahaOutgoing({ sessionName: 's', payload: { ...phoneReply, id: null } }, { settleMs: 0 })
+    await processWahaOutgoing({ sessionName: 's', payload: { ...phoneReply, to: null } }, { settleMs: 0 })
+    expect(messageUpserts).toEqual([])
+  })
+
+  it('does not touch the conversation when the message was already saved', async () => {
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    upsertEmpty = true
+    await processWahaOutgoing({ sessionName: 's', payload: phoneReply }, { settleMs: 0 })
+    expect(messageUpserts).toHaveLength(1)
+    expect(conversationUpdates).toEqual([])
+  })
+
+  it('resolves a lid chat to the real number before looking up the contact', async () => {
+    getPhoneForLid.mockResolvedValue(REAL)
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    await processWahaOutgoing(
+      { sessionName: 's', payload: { ...phoneReply, to: `${LID}@lid` } },
+      { settleMs: 0 },
+    )
+    expect(messageUpserts).toHaveLength(1)
+  })
+
+  it('stores a media message with its mirrored url and kind', async () => {
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    mirrorWahaMedia.mockResolvedValue('https://cdn.test/chat-media/x.jpg')
+    await processWahaOutgoing(
+      {
+        sessionName: 's',
+        payload: {
+          ...phoneReply,
+          body: null,
+          hasMedia: true,
+          media: { url: 'http://x/api/files/a.jpg', mimetype: 'image/jpeg' },
+        },
+      },
+      { settleMs: 0 },
+    )
+    expect(messageUpserts[0]).toMatchObject({
+      content_type: 'image',
+      media_url: 'https://cdn.test/chat-media/x.jpg',
+    })
+    expect(conversationUpdates[0]).toMatchObject({ last_message_text: '[image]' })
   })
 })

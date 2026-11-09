@@ -363,6 +363,11 @@
       "loadOlder": "Muat pesan lebih lama",
       "loadingOlder": "Memuat…",
       "loadOlderFailed": "Tidak dapat memuat pesan lebih lama.",
+      "loadHistory": "Muat riwayat dari WhatsApp",
+      "loadingHistory": "Memuat riwayat…",
+      "historyImported": "{count} pesan lama dimuat",
+      "historyNone": "Tidak ada riwayat yang lebih lama di WhatsApp",
+      "historyFailed": "Riwayat tidak dapat dimuat",
       "refreshConversation": "Segarkan percakapan",
       "status": "Status",
       "statusOpen": "Terbuka",
@@ -2409,6 +2414,7 @@
     }
   },
   "LibErrors": {
+    "waha": {"historyAttachment": "[Lampiran]", "historyNoConversation": "Percakapan tidak ditemukan.", "historyNoPhone": "Kontak ini tidak punya nomor telepon."},
     "upload": {
       "notSignedIn": "Belum masuk.",
       "accountUnresolved": "Akun Anda tidak dapat ditemukan."
@@ -2644,6 +2650,7 @@
     }
   },
   "Api": {
+    "history": {"invalidConversation": "Percakapan tidak valid.", "notWaha": "Riwayat hanya bisa dimuat untuk nomor yang tersambung lewat WAHA.", "storeDisabled": "Riwayat belum tersimpan di WAHA. Buka Pengaturan → WhatsApp dan klik “Sinkronkan ulang webhook”. Riwayat sebelum hari ini baru ikut setelah nomor dihubungkan ulang dengan kode QR.", "wahaFailed": "WAHA tidak dapat mengambil riwayat saat ini. Coba lagi nanti."},
     "common": {
       "notFound": "Tidak ditemukan",
       "invalidJson": "JSON tidak valid",

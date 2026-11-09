@@ -189,7 +189,15 @@ Kalau balas otomatis aktif, sebuah banner muncul: "Asisten AI membalas secara ot
 
 Bot tidak membalas percakapan yang sudah ditugaskan ke seorang agen. AI juga menyerahkan percakapan ke manusia kalau tidak bisa membantu. Percakapan itu masuk ke orang yang dipilih admin, atau ke antrean **Belum ditugaskan**.
 
-### 5.6 Hal yang perlu diketahui
+### 5.6 Riwayat chat dan balasan dari HP
+
+- Kotak Masuk menyimpan pesan yang masuk **sejak nomor dihubungkan**. Pesan yang lebih lama ada di WhatsApp, belum di CRM.
+- Klik **Muat riwayat dari WhatsApp** di bagian paling atas percakapan (muncul setelah semua pesan yang tersimpan terlihat). Satu klik memuat 100 pesan lama. Klik lagi untuk mundur lebih jauh. Aman diulang: pesan yang sudah ada dilewati.
+- Lampiran pada riwayat lama tampil sebagai `[Lampiran]`, bukan gambar atau file.
+- Balasan yang kamu ketik **langsung di WhatsApp HP** ikut tercatat di percakapan, sehingga percakapan itu tidak lagi dihitung "Menunggu balasan". Hanya percakapan yang sudah ada di CRM yang dicatat.
+- Kalau muncul pesan bahwa riwayat belum tersimpan di WAHA, minta admin membuka **Pengaturan → WhatsApp → Sinkronkan ulang webhook**. Riwayat dari sebelum hari itu baru ikut setelah nomor dihubungkan ulang dengan kode QR.
+
+### 5.7 Hal yang perlu diketahui
 
 - Pesan dari **grup**, **saluran**, dan **Status WhatsApp** tidak masuk ke Kotak Masuk. Itu disengaja.
 - Nama kontak berasal dari nama profil WhatsApp pelanggan. Kalau pelanggan tidak mengisi nama (atau akun bisnis tidak mengirimnya), yang tampil adalah nomor. Kamu bisa mengganti nama di halaman Kontak. Nama yang kamu ketik sendiri tidak akan ditimpa otomatis.
@@ -327,6 +335,7 @@ Koneksi ini memakai WhatsApp Web, bukan API Bisnis resmi, jadi nomor bisa diblok
 |---|---|---|
 | Tidak bisa mendaftar dari halaman Masuk | Pendaftaran hanya lewat undangan | Minta tautan undangan ke admin |
 | Pesan WhatsApp tidak muncul di Kotak Masuk | Pesan dari grup, saluran, atau Status (memang disaring) | Tidak ada yang perlu diperbaiki |
+| Percakapan lama kosong atau pendek | CRM hanya menyimpan pesan sejak nomor dihubungkan | Klik **Muat riwayat dari WhatsApp** di atas percakapan |
 | Pesan chat biasa tidak muncul | Status bukan **Terhubung**, atau webhook belum sinkron | Cek **Pengaturan → WhatsApp**. Klik **Segarkan** dan **Sinkronkan ulang webhook**. Kalau status Terputus, hubungkan lagi dengan QR |
 | Kolom ketik terkunci | Sudah lewat 24 jam sejak pesan terakhir pelanggan | Pakai **Kirim template** |
 | Kontak hanya menampilkan nomor | Pelanggan tidak punya nama profil, atau akun bisnis tidak mengirim nama | Ganti nama di halaman Kontak |

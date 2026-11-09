@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { processWahaInbound } from '@/lib/whatsapp/waha-inbound'
+import { processWahaInbound, processWahaOutgoing } from '@/lib/whatsapp/waha-inbound'
 import { processWahaAck } from '@/lib/whatsapp/waha-ack'
 import { isNonCustomerChat } from '@/lib/whatsapp/waha-ids'
 import {
@@ -63,7 +63,21 @@ export async function POST(request: Request) {
   }
 
   const payload = body.payload
-  if (!payload || payload.fromMe) {
+  if (!payload) {
+    return NextResponse.json({ status: 'ignored' }, { status: 200 })
+  }
+
+  // Typed on the phone itself (or echoed back after a CRM send). Only
+  // `message.any` carries these; record them so the chat counts as answered.
+  if (payload.fromMe) {
+    if (event === 'message.any') {
+      try {
+        await processWahaOutgoing({ sessionName, payload })
+      } catch (err) {
+        console.error('[waha-webhook] outgoing processing failed:', err)
+      }
+      return NextResponse.json({ status: 'received' }, { status: 200 })
+    }
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }
 

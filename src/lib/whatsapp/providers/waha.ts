@@ -61,11 +61,48 @@ interface WahaWebhookConfig {
 interface WahaSessionInfo {
   name?: string
   status?: string
-  config?: { webhooks?: WahaWebhookConfig[] | null } | null
+  config?: {
+    webhooks?: WahaWebhookConfig[] | null
+    noweb?: { store?: { enabled?: boolean; fullSync?: boolean } | null } | null
+  } | null
 }
 
-/** Events the CRM consumes: inbound messages and delivery/read receipts. */
-export const WEBHOOK_EVENTS = ['message', 'message.ack']
+/** One message as WAHA returns it from the chat history endpoint. */
+export interface WahaHistoryMessage {
+  id?: string | null
+  timestamp?: number | null
+  fromMe?: boolean
+  body?: string | null
+  hasMedia?: boolean
+  media?: { mimetype?: string | null } | null
+}
+
+/**
+ * Thrown when WAHA cannot list a chat's messages because its message store
+ * is off. The NOWEB engine keeps no history unless `config.noweb.store` is
+ * enabled (and then only for what it receives after that, plus whatever
+ * WhatsApp syncs when the number is linked).
+ */
+export class WahaStoreDisabledError extends Error {
+  constructor() {
+    super('WAHA message store is not enabled for this session.')
+    this.name = 'WahaStoreDisabledError'
+  }
+}
+
+/**
+ * Events the CRM consumes: inbound messages, `message.any` (the only event
+ * that also carries messages typed on the phone itself), and delivery/read
+ * receipts.
+ */
+export const WEBHOOK_EVENTS = ['message', 'message.any', 'message.ack']
+
+/**
+ * NOWEB message store. Off by default in WAHA, and without it no chat
+ * history can be read back. `fullSync: false` keeps roughly the last three
+ * months that WhatsApp sends when a number is linked.
+ */
+export const NOWEB_STORE_CONFIG = { enabled: true, fullSync: false }
 
 function toChatId(to: string): string {
   const v = to.trim()
@@ -348,6 +385,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
    */
   async ensureSession(opts: EnsureSessionOptions): Promise<void> {
     const config = {
+      noweb: { store: NOWEB_STORE_CONFIG },
       webhooks: [
         {
           url: opts.webhookUrl,
@@ -374,7 +412,7 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
       return
     }
 
-    if (!webhookMatches(existing, opts)) {
+    if (!webhookMatches(existing, opts) || !storeEnabled(existing)) {
       await this.request(this.sessionPath(), {
         method: 'PUT',
         body: JSON.stringify({ name: this.sessionName, config }),
@@ -382,6 +420,36 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
     }
     if (existing.status === 'STOPPED' || existing.status === 'FAILED') {
       await this.request(`${this.sessionPath()}/start`, { method: 'POST' })
+    }
+  }
+
+  /**
+   * Recent messages of one chat, newest first, as WAHA stores them. Media
+   * is not downloaded. Throws WahaStoreDisabledError when the engine has no
+   * message store.
+   */
+  async listChatMessages(
+    to: string,
+    opts: { limit?: number; offset?: number } = {},
+  ): Promise<WahaHistoryMessage[]> {
+    const chatId = await this.resolveChatId(to)
+    const qs = new URLSearchParams({
+      limit: String(Math.min(Math.max(opts.limit ?? 100, 1), 200)),
+      offset: String(Math.max(opts.offset ?? 0, 0)),
+      downloadMedia: 'false',
+      sortBy: 'timestamp',
+      sortOrder: 'desc',
+    })
+    try {
+      const res = await this.request<unknown>(
+        `/api/${encodeURIComponent(this.sessionName)}/chats/${encodeURIComponent(chatId)}/messages?${qs}`,
+      )
+      return Array.isArray(res) ? (res as WahaHistoryMessage[]) : []
+    } catch (err) {
+      if (err instanceof WahaHttpError && /store/i.test(JSON.stringify(err.body ?? ''))) {
+        throw new WahaStoreDisabledError()
+      }
+      throw err
     }
   }
 
@@ -418,6 +486,10 @@ export class WahaWhatsAppProvider implements WhatsAppProvider {
   async logoutSession(sessionName: string): Promise<void> {
     await this.request(`${this.sessionPath(sessionName)}/logout`, { method: 'POST' })
   }
+}
+
+function storeEnabled(session: WahaSessionInfo): boolean {
+  return session.config?.noweb?.store?.enabled === true
 }
 
 function webhookMatches(session: WahaSessionInfo, opts: EnsureSessionOptions): boolean {

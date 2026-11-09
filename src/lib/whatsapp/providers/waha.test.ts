@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { WahaNumberNotFoundError, WahaWhatsAppProvider, messageIdOf } from './waha'
+import {
+  WahaHttpError,
+  WahaNumberNotFoundError,
+  WahaStoreDisabledError,
+  WahaWhatsAppProvider,
+  messageIdOf,
+} from './waha'
 
 type FetchMock = ReturnType<typeof vi.fn>
 
@@ -226,9 +232,10 @@ describe('WahaWhatsAppProvider', () => {
       expect(create.body.start).toBe(true)
       expect(create.body.config.webhooks[0]).toEqual({
         url: opts.webhookUrl,
-        events: ['message', 'message.ack'],
+        events: ['message', 'message.any', 'message.ack'],
         customHeaders: [{ name: 'x-webhook-secret', value: 's3' }],
       })
+      expect(create.body.config.noweb).toEqual({ store: { enabled: true, fullSync: false } })
     })
 
     it('leaves a running session alone when its webhook is already correct', async () => {
@@ -237,10 +244,11 @@ describe('WahaWhatsAppProvider', () => {
           name: 'sess-1',
           status: 'WORKING',
           config: {
+            noweb: { store: { enabled: true, fullSync: false } },
             webhooks: [
               {
                 url: opts.webhookUrl,
-                events: ['message', 'message.ack'],
+                events: ['message', 'message.any', 'message.ack'],
                 customHeaders: [{ name: 'X-Webhook-Secret', value: 's3' }],
               },
             ],
@@ -249,6 +257,53 @@ describe('WahaWhatsAppProvider', () => {
       )
       await makeProvider().ensureSession(opts)
       expect(fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('updates a session that does not yet have the message.any event or the store', async () => {
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse({
+            name: 'sess-1',
+            status: 'WORKING',
+            config: {
+              webhooks: [
+                {
+                  url: opts.webhookUrl,
+                  events: ['message', 'message.ack'],
+                  customHeaders: [{ name: 'X-Webhook-Secret', value: 's3' }],
+                },
+              ],
+            },
+          }),
+        )
+        .mockResolvedValueOnce(jsonResponse({}))
+      await makeProvider().ensureSession(opts)
+      const put = callAt(1)
+      expect(put.init.method).toBe('PUT')
+      expect(put.body.config.webhooks[0].events).toContain('message.any')
+      expect(put.body.config.noweb.store.enabled).toBe(true)
+    })
+
+    it('updates a session whose webhook is right but whose store is off', async () => {
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse({
+            name: 'sess-1',
+            status: 'WORKING',
+            config: {
+              webhooks: [
+                {
+                  url: opts.webhookUrl,
+                  events: ['message', 'message.any', 'message.ack'],
+                  customHeaders: [{ name: 'X-Webhook-Secret', value: 's3' }],
+                },
+              ],
+            },
+          }),
+        )
+        .mockResolvedValueOnce(jsonResponse({}))
+      await makeProvider().ensureSession(opts)
+      expect(callAt(1).init.method).toBe('PUT')
     })
 
     it('updates a session whose webhook lacks the ack event', async () => {
@@ -283,6 +338,47 @@ describe('WahaWhatsAppProvider', () => {
       expect(fetchMock).toHaveBeenCalledTimes(3)
       expect(callAt(1).init.method).toBe('PUT')
       expect(callAt(2).url).toBe('http://waha:3000/api/sessions/sess-1/start')
+    })
+  })
+
+  describe('listChatMessages', () => {
+    it('asks WAHA for the chat messages without downloading media', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse([{ id: 'true_x@c.us_A', fromMe: true, body: 'hi', timestamp: 1 }]),
+      )
+      const res = await makeProvider().listChatMessages('628123456789@c.us', { limit: 50 })
+      expect(res).toHaveLength(1)
+      const c = callAt(0)
+      expect(c.url).toContain('/api/sess-1/chats/628123456789%40c.us/messages?')
+      expect(c.url).toContain('limit=50')
+      expect(c.url).toContain('downloadMedia=false')
+    })
+
+    it('caps the page size', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse([]))
+      await makeProvider().listChatMessages('628123456789@c.us', { limit: 9999 })
+      expect(callAt(0).url).toContain('limit=200')
+    })
+
+    it('reports a disabled store distinctly', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ message: 'Enable NOWEB store to use this method' }, 400),
+      )
+      await expect(
+        makeProvider().listChatMessages('628123456789@c.us'),
+      ).rejects.toBeInstanceOf(WahaStoreDisabledError)
+    })
+
+    it('passes other WAHA errors through', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500))
+      await expect(makeProvider().listChatMessages('628123456789@c.us')).rejects.toBeInstanceOf(
+        WahaHttpError,
+      )
+    })
+
+    it('returns an empty list for a non-array answer', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true }))
+      expect(await makeProvider().listChatMessages('628123456789@c.us')).toEqual([])
     })
   })
 })

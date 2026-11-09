@@ -14,13 +14,11 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   OVERVIEW_RANGES,
-  minutesBetween,
   needsSetup,
   type DashboardOverview,
   type OverviewRange,
 } from '@/lib/dashboard/overview'
 import { Skeleton } from './skeleton'
-import { useFormatDuration } from './use-format-duration'
 import { WhatsAppHealthChip } from './whatsapp-health-chip'
 
 const NEW_ITEMS = [
@@ -52,19 +50,13 @@ export function OverviewHeader({
 }) {
   const t = useTranslations('Dashboard.overview.header')
   const router = useRouter()
-  const formatDuration = useFormatDuration()
   const firstName = name?.trim().split(/\s+/)[0] || null
 
   let context: string | null = null
   if (data) {
     const a = data.attention
     if (needsSetup(data.setup)) context = t('contextSetup')
-    else if (a.waiting > 0 && a.oldestWaitingSince)
-      context = t('contextWaiting', {
-        count: a.waiting,
-        wait: formatDuration(minutesBetween(a.oldestWaitingSince, now)),
-      })
-    else context = t('contextClear')
+    else if (a.waiting === 0) context = t('contextClear')
   }
 
   return (
@@ -77,7 +69,7 @@ export function OverviewHeader({
                 ? t(`greeting.${partOfDay(new Date(now))}`, { name: firstName })
                 : t(`greetingNoName.${partOfDay(new Date(now))}`)}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{context}</p>
+            {context ? <p className="mt-1 text-sm text-muted-foreground">{context}</p> : null}
           </>
         ) : (
           <>

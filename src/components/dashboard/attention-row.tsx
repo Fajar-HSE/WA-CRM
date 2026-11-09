@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, type ComponentType, type ReactNode } from 'react'
-import { AlertTriangle, ChevronRight, Clock, MessageSquare, UserPlus } from 'lucide-react'
+import { AlertTriangle, ChevronRight, MessageSquare, UserPlus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import type { DashboardOverview } from '@/lib/dashboard/overview'
@@ -12,12 +12,10 @@ import { FailedMessagesDialog } from './failed-messages-dialog'
 import { Skeleton } from './skeleton'
 import { useFormatDuration } from './use-format-duration'
 
-type Tone = 'critical' | 'warning' | 'serious' | 'calm'
+type Tone = 'critical' | 'calm'
 
 const TONE_CLASS: Record<Tone, string> = {
   critical: 'bg-status-critical/12 text-status-critical',
-  warning: 'bg-status-warning/14 text-status-warning',
-  serious: 'bg-status-serious/12 text-status-serious',
   calm: 'bg-muted text-muted-foreground',
 }
 
@@ -69,8 +67,8 @@ export function AttentionRow({
 
   if (!data) {
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-[66px] rounded-xl" />
         ))}
       </div>
@@ -81,11 +79,11 @@ export function AttentionRow({
   const oldest = a.oldestWaitingSince ? formatDuration(minutesBetween(a.oldestWaitingSince, now)) : null
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <Link href="/inbox?filter=waiting" className={TILE_CLASS}>
         <TileBody
           icon={MessageSquare}
-          tone={a.waitingOverTarget > 0 ? 'critical' : a.waiting > 0 ? 'warning' : 'calm'}
+          tone={a.waitingOverTarget > 0 ? 'critical' : 'calm'}
           value={a.waiting}
           label={t('waiting')}
           meta={
@@ -98,19 +96,10 @@ export function AttentionRow({
       <Link href="/inbox?filter=unassigned" className={TILE_CLASS}>
         <TileBody
           icon={UserPlus}
-          tone={a.unassigned > 0 ? 'warning' : 'calm'}
+          tone="calm"
           value={a.unassigned}
           label={t('unassigned')}
           meta={t('onlineNow', { count: onlineCount })}
-        />
-      </Link>
-      <Link href="/inbox?filter=expiring" className={TILE_CLASS}>
-        <TileBody
-          icon={Clock}
-          tone={a.windowsClosing > 0 ? 'serious' : 'calm'}
-          value={a.windowsClosing}
-          label={t('closing')}
-          meta={t('closingMeta')}
         />
       </Link>
       <button type="button" className={TILE_CLASS} onClick={() => setFailedOpen(true)}>

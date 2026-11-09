@@ -124,7 +124,6 @@
           "afternoon": "Good afternoon",
           "evening": "Good evening"
         },
-        "contextWaiting": "{count, plural, =1 {1 customer is waiting for a reply,} other {# customers are waiting for a reply,}} the oldest for {wait}.",
         "contextClear": "Nobody is waiting for a reply right now.",
         "contextSetup": "Finish setup to start receiving WhatsApp messages here.",
         "rangeLabel": "Date range",
@@ -151,7 +150,13 @@
         "perDay": "{count}/day",
         "unlimited": "No daily limit",
         "disconnected": "WhatsApp not connected",
-        "unavailable": "Couldn't check your number"
+        "unavailable": "Couldn't check your number",
+        "connected": "WhatsApp connected"
+      },
+      "sections": {
+        "now": "Right now",
+        "period": "Period: {range}",
+        "summaryLabel": "Summary"
       },
       "attention": {
         "waiting": "Waiting for a reply",
@@ -159,8 +164,6 @@
         "waitingNone": "Everyone has a reply",
         "unassigned": "Unassigned",
         "onlineNow": "{count, plural, =0 {No teammates online} =1 {1 teammate online} other {# teammates online}}",
-        "closing": "Reply windows closing",
-        "closingMeta": "Free replies end within 2 hours",
         "failed": "Failed messages",
         "failedMeta": "Last 24 hours · see why"
       },
@@ -229,7 +232,7 @@
         "emptyHint": "No customer is waiting for a reply.",
         "unknownContact": "Unknown contact",
         "noPreview": "No preview",
-        "windowLeft": "{time} left to reply for free",
+        "windowLeft": "Reply box locks in {time}",
         "handedOff": "Handed over by AI",
         "assigned": "Assigned",
         "unassigned": "Unassigned"
@@ -285,9 +288,6 @@
         "flowsOk": "No failed runs",
         "aiReplies": "{count, plural, =1 {AI replies · 1} other {AI replies · #}}",
         "aiMedian": "Median {time}",
-        "templates": "{count, plural, =1 {Templates · 1 approved} other {Templates · # approved}}",
-        "templatesRejected": "{count, plural, =1 {1 rejected} other {# rejected}}",
-        "templatesOk": "None rejected",
         "none": "—"
       },
       "setup": {
@@ -307,8 +307,8 @@
             "action": "Add contacts"
           },
           "template": {
-            "title": "Get a message template approved",
-            "description": "You need one to message people who haven't written to you in the last 24 hours.",
+            "title": "Create a message template",
+            "description": "Used to restart a conversation after 24 hours without a customer message.",
             "action": "Create template"
           },
           "teammate": {

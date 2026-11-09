@@ -28,7 +28,7 @@ import { useFormatDuration } from './use-format-duration'
 
 const WAIT_CLASS = {
   critical: 'text-status-critical',
-  warning: 'text-status-warning',
+  warning: 'text-foreground',
   normal: 'text-muted-foreground',
 } as const
 
@@ -80,7 +80,7 @@ export function ReplyQueueCard({ data, now }: { data: DashboardOverview | null; 
                       <p className="truncate text-sm font-medium text-foreground">{name}</p>
                       <p className="truncate text-xs text-muted-foreground">{q.preview || t('noPreview')}</p>
                       {windowLeft > 0 && windowLeft <= WINDOW_WARNING_MINUTES ? (
-                        <Badge variant="outline" className="mt-1 border-status-serious/40 text-status-serious">
+                        <Badge variant="outline" className="mt-1 border-status-critical/40 text-status-critical">
                           {t('windowLeft', { time: formatDuration(windowLeft) })}
                         </Badge>
                       ) : q.handedOff ? (

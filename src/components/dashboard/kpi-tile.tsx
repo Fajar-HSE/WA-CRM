@@ -55,8 +55,8 @@ export function KpiTile({
   value: ReactNode
   unit?: ReactNode
   change: Change
-  comparisonLabel: string
-  footer: ReactNode
+  comparisonLabel?: string
+  footer?: ReactNode
 }) {
   return (
     <Card size="sm" className="gap-2 px-4">
@@ -78,7 +78,9 @@ export function KpiTile({
       </p>
       <div className="flex items-center justify-between gap-2">
         <DeltaBadge change={change} />
-        <span className="truncate text-xs text-muted-foreground">{comparisonLabel}</span>
+        {comparisonLabel ? (
+          <span className="truncate text-xs text-muted-foreground">{comparisonLabel}</span>
+        ) : null}
       </div>
       {footer}
     </Card>
@@ -105,7 +107,7 @@ export function TargetBar({ value, target }: { value: number | null; target: num
     <div className="pt-1.5" role="img" aria-label={t('target', { minutes: target })}>
       <div className="relative h-2 rounded-full bg-muted">
         <div
-          className={cn('absolute inset-y-0 left-0 rounded-full', onTarget ? 'bg-status-good' : 'bg-status-serious')}
+          className={cn('absolute inset-y-0 left-0 rounded-full', onTarget ? 'bg-status-good' : 'bg-status-critical')}
           style={{ width: `${fill}%` }}
         />
         <div className="absolute -inset-y-1 left-1/2 w-0.5 rounded-full bg-foreground/70" />

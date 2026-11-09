@@ -41,15 +41,28 @@ export function WhatsAppHealthChip() {
         ? t('perDay', { count: format.number(health.limit.perDay, { notation: 'compact' }) })
         : null
 
+  // WAHA has no Meta quality rating, daily limit or verified number, so a
+  // connected session carries nothing else to show: say "connected" plainly
+  // instead of "Quality: not rated".
+  const plainConnected =
+    health.state === 'connected' &&
+    health.quality === 'UNKNOWN' &&
+    !health.displayPhoneNumber &&
+    !health.limit
+
   const label =
-    health.state === 'disconnected'
+    plainConnected
+      ? t('connected')
+      : health.state === 'disconnected'
       ? t('disconnected')
       : health.state === 'unavailable'
         ? t('unavailable')
         : [health.displayPhoneNumber, t(`quality.${health.quality}`), limit].filter(Boolean).join(' · ')
 
   const dot =
-    health.state === 'connected' ? DOT_CLASS[health.quality] : health.state === 'disconnected' ? DOT_CLASS.RED : DOT_CLASS.UNKNOWN
+    plainConnected
+      ? DOT_CLASS.GREEN
+      : health.state === 'connected' ? DOT_CLASS[health.quality] : health.state === 'disconnected' ? DOT_CLASS.RED : DOT_CLASS.UNKNOWN
 
   return (
     <Link

@@ -110,12 +110,12 @@ export function CampaignsCard({ data }: { data: DashboardOverview | null }) {
               <HealthRow
                 label={t('automations', { count: c.automationRuns })}
                 status={c.automationRuns === 0 ? t('noRuns') : t('succeeded', { percent: percent(success) })}
-                tone={c.automationRuns === 0 ? 'muted' : c.automationFailed > 0 ? 'warning' : 'good'}
+                tone={c.automationRuns === 0 ? 'muted' : c.automationFailed > 0 ? 'critical' : 'good'}
               />
               <HealthRow
                 label={c.topFailingFlow ? t('flowNamed', { name: c.topFailingFlow.name }) : t('flows')}
                 status={c.flowFailed > 0 ? t('flowFailed', { count: c.flowFailed }) : t('flowsOk')}
-                tone={c.flowFailed > 0 ? 'warning' : 'good'}
+                tone={c.flowFailed > 0 ? 'critical' : 'good'}
               />
               <HealthRow
                 label={t('aiReplies', { count: data.replies.ai.replies })}
@@ -125,11 +125,6 @@ export function CampaignsCard({ data }: { data: DashboardOverview | null }) {
                     : t('aiMedian', { time: formatDuration(data.replies.ai.medianMinutes) })
                 }
                 tone={data.replies.ai.replies > 0 ? 'good' : 'muted'}
-              />
-              <HealthRow
-                label={t('templates', { count: c.templatesApproved })}
-                status={c.templatesRejected > 0 ? t('templatesRejected', { count: c.templatesRejected }) : t('templatesOk')}
-                tone={c.templatesRejected > 0 ? 'critical' : 'good'}
               />
             </ul>
           </>

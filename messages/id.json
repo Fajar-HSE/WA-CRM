@@ -124,7 +124,6 @@
           "afternoon": "Selamat siang",
           "evening": "Selamat malam"
         },
-        "contextWaiting": "{count, plural, other {# pelanggan menunggu balasan,}} yang terlama sudah {wait}.",
         "contextClear": "Saat ini tidak ada yang menunggu balasan.",
         "contextSetup": "Selesaikan pengaturan untuk mulai menerima pesan WhatsApp di sini.",
         "rangeLabel": "Rentang tanggal",
@@ -151,7 +150,13 @@
         "perDay": "{count}/hari",
         "unlimited": "Tanpa batas harian",
         "disconnected": "WhatsApp belum terhubung",
-        "unavailable": "Nomor Anda tidak dapat diperiksa"
+        "unavailable": "Nomor Anda tidak dapat diperiksa",
+        "connected": "WhatsApp terhubung"
+      },
+      "sections": {
+        "now": "Sekarang",
+        "period": "Periode: {range}",
+        "summaryLabel": "Ringkasan"
       },
       "attention": {
         "waiting": "Menunggu balasan",
@@ -159,8 +164,6 @@
         "waitingNone": "Semua sudah dibalas",
         "unassigned": "Belum ditugaskan",
         "onlineNow": "{count, plural, =0 {Tidak ada rekan tim online} other {# rekan tim online}}",
-        "closing": "Jendela balasan hampir habis",
-        "closingMeta": "Balasan gratis berakhir dalam 2 jam",
         "failed": "Pesan gagal",
         "failedMeta": "24 jam terakhir · lihat sebabnya"
       },
@@ -229,7 +232,7 @@
         "emptyHint": "Tidak ada pelanggan yang menunggu balasan.",
         "unknownContact": "Kontak tidak dikenal",
         "noPreview": "Tanpa pratinjau",
-        "windowLeft": "Sisa {time} untuk membalas gratis",
+        "windowLeft": "Kolom balasan terkunci dalam {time}",
         "handedOff": "Diserahkan oleh AI",
         "assigned": "Ditugaskan",
         "unassigned": "Belum ditugaskan"
@@ -285,9 +288,6 @@
         "flowsOk": "Tidak ada eksekusi gagal",
         "aiReplies": "{count, plural, other {Balasan AI · #}}",
         "aiMedian": "Median {time}",
-        "templates": "{count, plural, other {Template · # disetujui}}",
-        "templatesRejected": "{count, plural, other {# ditolak}}",
-        "templatesOk": "Tidak ada yang ditolak",
         "none": "—"
       },
       "setup": {
@@ -307,8 +307,8 @@
             "action": "Tambah kontak"
           },
           "template": {
-            "title": "Dapatkan template pesan yang disetujui",
-            "description": "Diperlukan untuk mengirim pesan ke orang yang tidak menulis kepada Anda dalam 24 jam terakhir.",
+            "title": "Buat template pesan",
+            "description": "Dipakai untuk memulai percakapan lagi setelah 24 jam tanpa pesan dari pelanggan.",
             "action": "Buat template"
           },
           "teammate": {

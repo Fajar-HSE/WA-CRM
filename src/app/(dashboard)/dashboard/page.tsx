@@ -22,14 +22,12 @@ import { derivePresence } from '@/lib/presence'
 
 import { ActivityFeed } from '@/components/dashboard/activity-feed'
 import { AttentionRow } from '@/components/dashboard/attention-row'
-import { CampaignsCard } from '@/components/dashboard/campaigns-card'
 import { KpiRow } from '@/components/dashboard/kpi-row'
 import { MessageVolumeCard } from '@/components/dashboard/message-volume-card'
 import { OverviewHeader } from '@/components/dashboard/overview-header'
-import { PipelineCard } from '@/components/dashboard/pipeline-card'
 import { ReplyQueueCard } from '@/components/dashboard/reply-queue-card'
 import { SetupChecklist } from '@/components/dashboard/setup-checklist'
-import { TeamCard } from '@/components/dashboard/team-card'
+import { SummaryTabs } from '@/components/dashboard/summary-tabs'
 
 const POLL_MS = 60_000
 const REALTIME_DEBOUNCE_MS = 2_000
@@ -44,6 +42,8 @@ export default function DashboardPage() {
 
 function DashboardPageInner() {
   const t = useTranslations('Dashboard.overview')
+  const tHeader = useTranslations('Dashboard.overview.header')
+  const tKpi = useTranslations('Dashboard.overview.kpi')
   const router = useRouter()
   const searchParams = useSearchParams()
   const range = parseOverviewRange(searchParams.get('range'))
@@ -77,7 +77,10 @@ function DashboardPageInner() {
     refresh(range)
   }, [range, refresh])
 
-  useEffect(() => {
+  // Same cadence as the overview: on mount, every poll, and (debounced)
+  // when a message or conversation changes. It used to load once, so the
+  // feed fell behind the cards above it.
+  const refreshActivity = useCallback(() => {
     loadActivity(createClient(), 50)
       .then(setActivity)
       .catch((err) => console.error('[dashboard] activity failed:', err))
@@ -85,12 +88,19 @@ function DashboardPageInner() {
   }, [])
 
   useEffect(() => {
+    refreshActivity()
+  }, [refreshActivity])
+
+  useEffect(() => {
     const tick = window.setInterval(() => {
       setNow(Date.now())
-      if (document.visibilityState === 'visible') refresh(range)
+      if (document.visibilityState === 'visible') {
+        refresh(range)
+        refreshActivity()
+      }
     }, POLL_MS)
     return () => window.clearInterval(tick)
-  }, [range, refresh])
+  }, [range, refresh, refreshActivity])
 
   useEffect(
     () => () => {
@@ -101,8 +111,11 @@ function DashboardPageInner() {
 
   const scheduleRefresh = useCallback(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current)
-    debounceRef.current = window.setTimeout(() => refresh(range), REALTIME_DEBOUNCE_MS)
-  }, [range, refresh])
+    debounceRef.current = window.setTimeout(() => {
+      refresh(range)
+      refreshActivity()
+    }, REALTIME_DEBOUNCE_MS)
+  }, [range, refresh, refreshActivity])
 
   useRealtime({
     channelName: 'dashboard-overview',
@@ -155,21 +168,28 @@ function DashboardPageInner() {
         <SetupChecklist setup={data.setup} />
       ) : (
         <>
-          <AttentionRow data={data} now={now} onlineCount={onlineCount} />
-          <KpiRow data={data} currency={defaultCurrency} />
-
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
-            <MessageVolumeCard data={data} />
+          <section className="space-y-3" aria-labelledby="dash-now">
+            <h3 id="dash-now" className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              {t('sections.now')}
+            </h3>
+            <AttentionRow data={data} now={now} onlineCount={onlineCount} />
             <ReplyQueueCard data={data} now={now} />
-          </div>
+          </section>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-            <PipelineCard data={data} currency={defaultCurrency} />
-            <TeamCard data={data} now={now} />
-            <div className="lg:col-span-2 2xl:col-span-1">
-              <CampaignsCard data={data} />
+          <section className="space-y-3" aria-labelledby="dash-period">
+            <h3 id="dash-period" className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              {t('sections.period', { range: tHeader(`range.${range}`) })}
+              <span className="font-normal tracking-normal normal-case">
+                {' · '}
+                {tKpi(`vsPrevious.${range}`)}
+              </span>
+            </h3>
+            <KpiRow data={data} currency={defaultCurrency} />
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+              <MessageVolumeCard data={data} />
+              <SummaryTabs data={data} now={now} currency={defaultCurrency} />
             </div>
-          </div>
+          </section>
 
           <ActivityFeed items={activity} loading={activityLoading} />
         </>

@@ -39,7 +39,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (typeof body.stage_id === 'string' && isUuid(body.stage_id)) patch.stage_id = body.stage_id;
     if (typeof body.pipeline_id === 'string' && isUuid(body.pipeline_id)) patch.pipeline_id = body.pipeline_id;
     if (typeof body.value === 'number') patch.value = body.value;
-    if (typeof body.currency === 'string') patch.currency = body.currency;
+    if (typeof body.currency === 'string' && body.currency.trim()) {
+      const { data: acct } = await ctx.supabase
+        .from('accounts')
+        .select('default_currency')
+        .eq('id', ctx.accountId)
+        .maybeSingle();
+      const accountCurrency = (acct?.default_currency as string | null) ?? 'IDR';
+      const provided = body.currency.trim().toUpperCase();
+      patch.currency = provided === accountCurrency ? provided : accountCurrency;
+    }
     if (typeof body.notes === 'string') patch.notes = body.notes;
     if (body.notes === null) patch.notes = null;
     if (typeof body.expected_close_date === 'string') patch.expected_close_date = body.expected_close_date;

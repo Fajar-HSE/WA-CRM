@@ -30,7 +30,7 @@ export interface WahaInboundPayload {
   hasMedia?: boolean
   fromMe?: boolean
   notifyName?: string | null
-  /** Chat the message was sent to; set on messages typed on the phone itself. */
+  /** Chat the message was sent to; NOWEB omits it on phone-typed messages. */
   to?: string | null
   media?: { url?: string | null; mimetype?: string | null } | null
   _data?: {
@@ -38,7 +38,12 @@ export interface WahaInboundPayload {
     /** NOWEB: the customer's WhatsApp profile name. */
     pushName?: string | null
     /** NOWEB: carries the real number next to a LID sender. */
-    key?: { remoteJidAlt?: string | null; participantAlt?: string | null } | null
+    key?: {
+      /** NOWEB: the chat the message belongs to when `to` is absent. */
+      remoteJid?: string | null
+      remoteJidAlt?: string | null
+      participantAlt?: string | null
+    } | null
     /** GOWS: same idea. */
     Info?: { SenderAlt?: string | null; RecipientAlt?: string | null; PushName?: string | null } | null
   } | null
@@ -379,7 +384,10 @@ export async function processWahaOutgoing(
   { sessionName, payload }: WahaInboundInput,
   opts: WahaOutgoingOptions = {},
 ): Promise<void> {
-  const to = String(payload?.to || '')
+  // `to` is absent on messages typed on the phone (WAHA NOWEB); the chat id
+  // then lives in `_data.key.remoteJid`, or in `from` for LID chats.
+  const chatId = payload?.to || payload?._data?.key?.remoteJid || payload?.from
+  const to = String(chatId || '')
   const messageId = payload?.id || null
   if (!to || !messageId || isNonCustomerChat(to)) return
 

@@ -335,11 +335,62 @@ describe('processWahaOutgoing (messages typed on the phone)', () => {
     expect(messageUpserts).toEqual([])
   })
 
-  it('does nothing without a message id or recipient', async () => {
+  it('does nothing without a message id or any chat id', async () => {
     byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
     await processWahaOutgoing({ sessionName: 's', payload: { ...phoneReply, id: null } }, { settleMs: 0 })
-    await processWahaOutgoing({ sessionName: 's', payload: { ...phoneReply, to: null } }, { settleMs: 0 })
+    await processWahaOutgoing(
+      { sessionName: 's', payload: { ...phoneReply, to: null, from: null } },
+      { settleMs: 0 },
+    )
     expect(messageUpserts).toEqual([])
+  })
+
+  // WAHA NOWEB omits `to` on messages typed on the phone: the chat id lives
+  // in `from` / `_data.key`. Before the fallback these replies were dropped
+  // before the contact lookup, so the inbox never learned the chat was
+  // answered.
+  it('saves a reply typed on the phone when WAHA omits "to" (LID chat)', async () => {
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    await processWahaOutgoing(
+      {
+        sessionName: 's',
+        payload: {
+          ...phoneReply,
+          to: null,
+          from: `${LID}@lid`,
+          _data: { key: { remoteJidAlt: `${REAL}@s.whatsapp.net` } },
+        },
+      },
+      { settleMs: 0 },
+    )
+
+    expect(messageUpserts).toHaveLength(1)
+    expect(messageUpserts[0]).toMatchObject({
+      conversation_id: 'conv-1',
+      sender_type: 'agent',
+      content_text: 'Baik, kami proses ya',
+      message_id: 'true_628123456789@c.us_AAA',
+    })
+    expect(conversationUpdates[0]).toMatchObject({ last_message_text: 'Baik, kami proses ya' })
+  })
+
+  it('falls back to the chat id in _data.key.remoteJid when "to" is missing', async () => {
+    byPhone({ [REAL]: { id: 'c-1', phone: REAL } })
+    await processWahaOutgoing(
+      {
+        sessionName: 's',
+        payload: {
+          ...phoneReply,
+          to: null,
+          from: `${LID}@lid`,
+          _data: { key: { remoteJid: `${REAL}@c.us` } },
+        },
+      },
+      { settleMs: 0 },
+    )
+
+    expect(messageUpserts).toHaveLength(1)
+    expect(getPhoneForLid).not.toHaveBeenCalled()
   })
 
   it('does not touch the conversation when the message was already saved', async () => {

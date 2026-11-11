@@ -2910,7 +2910,9 @@
       "notFound": "Akun tidak ditemukan.",
       "badRequest": "Kirim { \"disabled\": true } atau { \"disabled\": false }.",
       "ownAccount": "Anda tidak dapat menonaktifkan akun Anda sendiri.",
-      "isPlatform": "Ini akun platform. Hapus dulu tanda platformnya jika memang ingin menonaktifkan."
+      "isPlatform": "Ini akun platform. Hapus dulu tanda platformnya jika memang ingin menonaktifkan.",
+      "deleteOwnAccount": "Anda tidak dapat menghapus akun Anda sendiri.",
+      "deletePlatform": "Akun platform tidak dapat dihapus."
     }
   },
   "AccountDisabled": {
@@ -2943,6 +2945,13 @@
     "cancel": "Batal",
     "disabledToast": "Akun dinonaktifkan.",
     "enabledToast": "Akun diaktifkan.",
-    "updateFailed": "Akun gagal diperbarui."
+    "updateFailed": "Akun gagal diperbarui.",
+    "delete": "Hapus",
+    "confirmDeleteTitle": "Hapus {name} secara permanen?",
+    "confirmDeleteBody": "Tindakan ini menghapus akun, SEMUA datanya (kontak, percakapan, knowledge base, pengaturan), dan login semua penggunanya. Tidak bisa dibatalkan.",
+    "confirmDeletePrompt": "Ketik nama akun untuk mengonfirmasi:",
+    "deleteFailed": "Akun gagal dihapus.",
+    "deleteToast": "Akun dan penggunanya telah dihapus.",
+    "deletePartialToast": "Akun dihapus, tetapi {count} pengguna gagal dihapus."
   }
 }

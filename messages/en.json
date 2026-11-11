@@ -2910,7 +2910,9 @@
       "notFound": "Account not found.",
       "badRequest": "Send { \"disabled\": true } or { \"disabled\": false }.",
       "ownAccount": "You cannot disable your own account.",
-      "isPlatform": "This is the platform account. Remove its platform flag first if you really want to disable it."
+      "isPlatform": "This is the platform account. Remove its platform flag first if you really want to disable it.",
+      "deleteOwnAccount": "You cannot delete your own account.",
+      "deletePlatform": "The platform account cannot be deleted."
     }
   },
   "AccountDisabled": {
@@ -2943,6 +2945,13 @@
     "cancel": "Cancel",
     "disabledToast": "Account disabled.",
     "enabledToast": "Account enabled.",
-    "updateFailed": "Could not update the account."
+    "updateFailed": "Could not update the account.",
+    "delete": "Delete",
+    "confirmDeleteTitle": "Delete {name} permanently?",
+    "confirmDeleteBody": "This removes the account, ALL of its data (contacts, conversations, knowledge base, settings) and the login of every user in it. This cannot be undone.",
+    "confirmDeletePrompt": "Type the account name to confirm:",
+    "deleteFailed": "Could not delete the account.",
+    "deleteToast": "Account and its users were deleted.",
+    "deletePartialToast": "Account deleted, but {count} user(s) could not be deleted."
   }
 }

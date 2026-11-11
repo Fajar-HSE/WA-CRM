@@ -8,6 +8,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,11 @@ export function AccountsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [target, setTarget] = useState<PlatformAccountRow | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Permanent deletion has its own dialog: it needs a typed-name guard,
+  // so it is kept apart from the enable/disable confirm above.
+  const [deleteTarget, setDeleteTarget] = useState<PlatformAccountRow | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
 
   const [reloadTick, setReloadTick] = useState(0);
 
@@ -75,6 +82,31 @@ export function AccountsPanel() {
       setReloadTick((n) => n + 1);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('updateFailed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/platform/accounts/${deleteTarget.id}`, {
+        method: 'DELETE',
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || t('deleteFailed'));
+      const failed = Array.isArray(json.failed) ? json.failed.length : 0;
+      if (failed > 0) {
+        toast.warning(t('deletePartialToast', { count: failed }));
+      } else {
+        toast.success(t('deleteToast'));
+      }
+      setDeleteTarget(null);
+      setDeleteConfirmName('');
+      setReloadTick((n) => n + 1);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('deleteFailed'));
     } finally {
       setBusy(false);
     }
@@ -137,15 +169,30 @@ export function AccountsPanel() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {own || (r.isPlatform && !r.disabledAt) ? null : (
-                          <Button
-                            size="sm"
-                            variant={r.disabledAt ? 'outline' : 'destructive'}
-                            onClick={() => setTarget(r)}
-                          >
-                            {r.disabledAt ? t('enable') : t('disable')}
-                          </Button>
-                        )}
+                        <div className="flex justify-end gap-2">
+                          {own || (r.isPlatform && !r.disabledAt) ? null : (
+                            <Button
+                              size="sm"
+                              variant={r.disabledAt ? 'outline' : 'destructive'}
+                              onClick={() => setTarget(r)}
+                            >
+                              {r.disabledAt ? t('enable') : t('disable')}
+                            </Button>
+                          )}
+                          {own || r.isPlatform ? null : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => {
+                                setDeleteTarget(r);
+                                setDeleteConfirmName('');
+                              }}
+                            >
+                              {t('delete')}
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -179,6 +226,55 @@ export function AccountsPanel() {
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               {target?.disabledAt ? t('enable') : t('disable')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => {
+          if (!o && !busy) {
+            setDeleteTarget(null);
+            setDeleteConfirmName('');
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t('confirmDeleteTitle', { name: deleteTarget?.name ?? '' })}
+            </DialogTitle>
+            <DialogDescription>{t('confirmDeleteBody')}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Label htmlFor="confirm-delete-name">{t('confirmDeletePrompt')}</Label>
+            <Input
+              id="confirm-delete-name"
+              value={deleteConfirmName}
+              onChange={(e) => setDeleteConfirmName(e.target.value)}
+              placeholder={deleteTarget?.name ?? ''}
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteTarget(null);
+                setDeleteConfirmName('');
+              }}
+              disabled={busy}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={busy || deleteConfirmName !== deleteTarget?.name}
+            >
+              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+              {t('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -21,6 +21,7 @@
 import { NextResponse } from 'next/server'
 
 import { hashInviteToken } from '@/lib/auth/invitations'
+import { seedAiDefaults } from '@/lib/ai/seed-account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import {
   checkRateLimit,
@@ -189,6 +190,28 @@ export async function POST(
       console.error('[register] grant failed:', grantError?.message ?? stampError?.message)
       await rollback()
       return fail(t('invitations.registerFailed'), 500)
+    }
+  }
+
+  // Best-effort: pre-fill the new workspace's AI config (Instruksi) and
+  // knowledge base from the template account. A seed failure must never
+  // fail the registration — the account is already live at this point.
+  if (isWorkspace) {
+    try {
+      const seeded = await seedAiDefaults(db, accountId, userId)
+      if (seeded.seeded) {
+        console.log(
+          `[register] AI defaults seeded for account ${accountId}: ` +
+            `${seeded.documents} docs, ${seeded.chunks} chunks`,
+        )
+      } else {
+        console.log(`[register] AI seed skipped for ${accountId}: ${seeded.reason}`)
+      }
+    } catch (err) {
+      console.error(
+        '[register] AI defaults seed failed:',
+        err instanceof Error ? err.message : err,
+      )
     }
   }
 

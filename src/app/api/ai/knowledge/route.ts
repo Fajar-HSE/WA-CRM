@@ -5,7 +5,7 @@ import {
   toErrorResponse,
 } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
-import { loadEmbeddingsKey } from '@/lib/ai/config'
+import { loadEmbeddingsSettings } from '@/lib/ai/config'
 import { ingestDocument, type IngestResult } from '@/lib/ai/knowledge'
 import { AiError } from '@/lib/ai/types'
 import { getT } from '@/lib/i18n/translate'
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { key: embeddingsApiKey, corrupt } = await loadEmbeddingsKey(
+    const { settings: embeddings, corrupt } = await loadEmbeddingsSettings(
       supabase,
       accountId,
     )
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       ingest = await ingestDocument(
         supabase,
         accountId,
-        { embeddingsApiKey },
+        { embeddings },
         doc.id,
         content,
       )

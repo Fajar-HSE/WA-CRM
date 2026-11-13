@@ -5,7 +5,7 @@ import {
   toErrorResponse,
 } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
-import { loadEmbeddingsKey } from '@/lib/ai/config'
+import { loadEmbeddingsSettings } from '@/lib/ai/config'
 import { ingestDocument, type IngestResult } from '@/lib/ai/knowledge'
 import { AiError } from '@/lib/ai/types'
 import { getT } from '@/lib/i18n/translate'
@@ -80,13 +80,13 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!updated) return NextResponse.json({ error: t('common.notFound') }, { status: 404 })
 
     if (content !== undefined) {
-      const { key: embeddingsApiKey, corrupt } = await loadEmbeddingsKey(
+      const { settings: embeddings, corrupt } = await loadEmbeddingsSettings(
         supabase,
         accountId,
       )
       let ingest: IngestResult
       try {
-        ingest = await ingestDocument(supabase, accountId, { embeddingsApiKey }, id, content)
+        ingest = await ingestDocument(supabase, accountId, { embeddings }, id, content)
       } catch (err) {
         const message = err instanceof AiError ? err.message : t('ai.knowledge.indexingFailed')
         console.error('[ai/knowledge/[id] PATCH] ingest error:', err)

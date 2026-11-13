@@ -28,6 +28,11 @@ import { SettingsPanelHead } from './settings-panel-head';
 import { AiKnowledgeCard } from './ai-knowledge';
 import { AI_PROVIDER_DEFAULT_MODEL } from '@/lib/ai/defaults';
 import type { AiProvider } from '@/lib/ai/types';
+import {
+  EMBEDDING_PRESETS,
+  presetForBaseUrl,
+  type EmbeddingPresetId,
+} from '@/lib/ai/embedding-presets';
 import type { AccountMember } from '@/types';
 import { fetchAccountMembers, memberLabel } from '@/lib/account/members';
 import { useTranslations } from 'next-intl';
@@ -71,6 +76,13 @@ export function AiConfig() {
   const [embeddingsKey, setEmbeddingsKey] = useState('');
   const [embeddingsKeyEdited, setEmbeddingsKeyEdited] = useState(false);
   const [hasStoredEmbeddingsKey, setHasStoredEmbeddingsKey] = useState(false);
+  const [embPreset, setEmbPreset] = useState<EmbeddingPresetId>('openai');
+  const [embBaseUrl, setEmbBaseUrl] = useState('');
+  const [embModel, setEmbModel] = useState('');
+  const [embDims, setEmbDims] = useState('');
+  // The endpoint fields are only sent when touched, so saving anything
+  // else never rewrites them.
+  const [embSettingsEdited, setEmbSettingsEdited] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
@@ -110,6 +122,11 @@ export function AiConfig() {
         setHasStoredEmbeddingsKey(Boolean(data.has_embeddings_key));
         setEmbeddingsKey(data.has_embeddings_key ? MASKED_KEY : '');
         setEmbeddingsKeyEdited(false);
+        setEmbPreset(presetForBaseUrl(data.embeddings_base_url));
+        setEmbBaseUrl(data.embeddings_base_url ?? '');
+        setEmbModel(data.embeddings_model ?? '');
+        setEmbDims(data.embeddings_dimensions ? String(data.embeddings_dimensions) : '');
+        setEmbSettingsEdited(false);
       }
     } catch {
       toast.error(t('loadFailed'));
@@ -146,12 +163,29 @@ export function AiConfig() {
   const embeddingsKeyPayload = () =>
     embeddingsKeyEdited ? embeddingsKey.trim() || null : undefined;
 
+  const handleEmbPresetChange = (next: EmbeddingPresetId) => {
+    setEmbPreset(next);
+    setEmbSettingsEdited(true);
+    if (next !== 'custom') {
+      setEmbBaseUrl(EMBEDDING_PRESETS[next].baseUrl);
+      setEmbModel(EMBEDDING_PRESETS[next].model);
+      setEmbDims('');
+    }
+  };
+
   const buildBody = () => ({
     provider,
     model: model.trim(),
     base_url: provider === 'openai_compatible' ? baseUrl.trim() : null,
     api_key: keyPayload(),
     embeddings_api_key: embeddingsKeyPayload(),
+    ...(embSettingsEdited
+      ? {
+          embeddings_base_url: embBaseUrl.trim() || null,
+          embeddings_model: embModel.trim() || null,
+          embeddings_dimensions: embDims.trim() ? Number(embDims) : null,
+        }
+      : {}),
     system_prompt: systemPrompt.trim() || null,
     is_active: isActive,
     auto_reply_enabled: autoReplyEnabled,
@@ -206,6 +240,7 @@ export function AiConfig() {
       if (res.ok) {
         invalidateAiAccountStatus();
         toast.success(t('saveSuccess'));
+        if (data.embeddings_changed) toast.info(t('embeddingsReindexHint'));
         await fetchConfig();
       } else {
         toast.error(data.error ?? t('saveFailed'));
@@ -389,6 +424,78 @@ export function AiConfig() {
                   {t('optionalSemanticSearch')}
                 </span>
               </Label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="ai-embeddings-preset">{t('embeddingsProvider')}</Label>
+                  <Select
+                    value={embPreset}
+                    onValueChange={(v) => handleEmbPresetChange(v as EmbeddingPresetId)}
+                    disabled={disabled}
+                  >
+                    <SelectTrigger id="ai-embeddings-preset">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="openai">OpenAI</SelectItem>
+                      <SelectItem value="gemini">Google Gemini</SelectItem>
+                      <SelectItem value="jina">Jina AI</SelectItem>
+                      <SelectItem value="custom">{t('embeddingsProviderCustom')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {embPreset !== 'openai' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-embeddings-model">{t('embeddingsModel')}</Label>
+                    <Input
+                      id="ai-embeddings-model"
+                      value={embModel}
+                      onChange={(e) => {
+                        setEmbModel(e.target.value);
+                        setEmbSettingsEdited(true);
+                      }}
+                      placeholder="model-id"
+                      disabled={disabled}
+                      autoComplete="off"
+                    />
+                  </div>
+                )}
+                {embPreset === 'custom' && (
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="ai-embeddings-base-url">{t('embeddingsBaseUrl')}</Label>
+                    <Input
+                      id="ai-embeddings-base-url"
+                      value={embBaseUrl}
+                      onChange={(e) => {
+                        setEmbBaseUrl(e.target.value);
+                        setEmbSettingsEdited(true);
+                      }}
+                      placeholder="https://api.example.com/v1"
+                      disabled={disabled}
+                      autoComplete="off"
+                    />
+                  </div>
+                )}
+                {embPreset !== 'openai' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="ai-embeddings-dims">
+                      {t('embeddingsDimensions')}{' '}
+                      <span className="font-normal text-muted-foreground">{t('optional')}</span>
+                    </Label>
+                    <Input
+                      id="ai-embeddings-dims"
+                      value={embDims}
+                      onChange={(e) => {
+                        setEmbDims(e.target.value.replace(/\D/g, ''));
+                        setEmbSettingsEdited(true);
+                      }}
+                      inputMode="numeric"
+                      placeholder="1536"
+                      disabled={disabled}
+                      autoComplete="off"
+                    />
+                  </div>
+                )}
+              </div>
               <Input
                 id="ai-embeddings-key"
                 type="password"
@@ -403,7 +510,7 @@ export function AiConfig() {
                     setEmbeddingsKeyEdited(true);
                   }
                 }}
-                placeholder="sk-... (OpenAI)"
+                placeholder={embPreset === 'openai' ? 'sk-... (OpenAI)' : t('embeddingsKeyPlaceholder')}
                 disabled={disabled}
                 autoComplete="off"
               />

@@ -32,7 +32,7 @@ interface MatchRow {
 export async function ingestDocument(
   db: SupabaseClient,
   accountId: string,
-  config: Pick<AiConfig, 'embeddingsApiKey'>,
+  config: Pick<AiConfig, 'embeddings'>,
   documentId: string,
   content: string,
 ): Promise<IngestResult> {
@@ -43,9 +43,9 @@ export async function ingestDocument(
   // document searchable lexically.
   let embeddings: number[][] | null = null
   let embedError: unknown = null
-  if (config.embeddingsApiKey && chunks.length > 0) {
+  if (config.embeddings && chunks.length > 0) {
     try {
-      embeddings = await embedTexts(config.embeddingsApiKey, chunks)
+      embeddings = await embedTexts(config.embeddings, chunks)
     } catch (err) {
       embedError = err
     }
@@ -93,7 +93,7 @@ export async function ingestDocument(
 export async function retrieveKnowledge(
   db: SupabaseClient,
   accountId: string,
-  config: Pick<AiConfig, 'embeddingsApiKey'>,
+  config: Pick<AiConfig, 'embeddings'>,
   queryText: string,
   k = DEFAULT_KNOWLEDGE_EXCERPTS,
 ): Promise<string[]> {
@@ -117,9 +117,9 @@ export async function retrieveKnowledge(
   const picked = new Map<string, string>() // id → content, preserves order
 
   // Semantic path.
-  if (config.embeddingsApiKey) {
+  if (config.embeddings) {
     try {
-      const [queryEmbedding] = await embedTexts(config.embeddingsApiKey, [query])
+      const [queryEmbedding] = await embedTexts(config.embeddings, [query])
       if (queryEmbedding) {
         const { data, error } = await db.rpc('match_ai_knowledge_semantic', {
           p_account_id: accountId,

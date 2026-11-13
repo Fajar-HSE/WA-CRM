@@ -12,7 +12,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { loadEmbeddingsKey } from '@/lib/ai/config';
+import { loadEmbeddingsSettings } from '@/lib/ai/config';
 import { ingestDocument } from '@/lib/ai/knowledge';
 import { AiError } from '@/lib/ai/types';
 
@@ -108,12 +108,12 @@ export async function indexDocument(
   documentId: string,
   content: string
 ): Promise<IndexOutcome> {
-  const { key, corrupt } = await loadEmbeddingsKey(db, accountId);
+  const { settings, corrupt } = await loadEmbeddingsSettings(db, accountId);
   try {
     const result = await ingestDocument(
       db,
       accountId,
-      { embeddingsApiKey: key },
+      { embeddings: settings },
       documentId,
       content
     );

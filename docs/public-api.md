@@ -409,7 +409,8 @@ Knowledge base). Scopes: `knowledge:read` to list/read,
 to integrations you trust: it changes what the assistant tells
 customers. Read does not imply write.
 
-Writes chunk the text and, when the account has an embeddings key,
+Writes chunk the text and, when the account has an embeddings key
+(OpenAI by default, or the OpenAI-compatible provider set in Settings → AI),
 embed it, exactly as the dashboard does. A saved document whose
 indexing fails is **not** rolled back: the response carries
 `index_status` and a `warning` instead.

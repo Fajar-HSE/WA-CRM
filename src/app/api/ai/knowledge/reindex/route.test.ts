@@ -35,7 +35,10 @@ vi.mock('@/lib/auth/account', () => ({
 }))
 
 vi.mock('@/lib/ai/config', () => ({
-  loadEmbeddingsKey: async () => ({ key: 'sk-embed', corrupt: h.corrupt }),
+  loadEmbeddingsSettings: async () => ({
+    settings: { apiKey: 'sk-embed', baseUrl: null, model: null, dimensions: null },
+    corrupt: h.corrupt,
+  }),
 }))
 
 vi.mock('@/lib/ai/knowledge', () => ({ ingestDocument: h.ingest }))

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
-import { loadEmbeddingsKey } from '@/lib/ai/config'
+import { loadEmbeddingsSettings } from '@/lib/ai/config'
 import { ingestDocument } from '@/lib/ai/knowledge'
 import { AiError } from '@/lib/ai/types'
 import { getT } from '@/lib/i18n/translate'
@@ -34,7 +34,7 @@ export async function POST() {
       )
     }
 
-    const { key: embeddingsApiKey, corrupt } = await loadEmbeddingsKey(
+    const { settings: embeddings, corrupt } = await loadEmbeddingsSettings(
       supabase,
       accountId,
     )
@@ -59,7 +59,7 @@ export async function POST() {
     const keywordOnly: string[] = []
     for (const doc of docs ?? []) {
       try {
-        const result = await ingestDocument(supabase, accountId, { embeddingsApiKey }, doc.id, doc.content)
+        const result = await ingestDocument(supabase, accountId, { embeddings }, doc.id, doc.content)
         reindexed += 1
         if (result.keywordOnly) {
           keywordOnly.push(doc.id)

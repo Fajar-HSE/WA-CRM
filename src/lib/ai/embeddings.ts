@@ -39,6 +39,20 @@ export interface EmbeddingsSettings {
   dimensions: number | null
 }
 
+const RETRYABLE_STATUS = new Set([429, 503])
+const MAX_RETRIES = 3
+const MAX_RETRY_WAIT_MS = 10_000
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+/** Wait before retry: the provider's Retry-After (seconds) if it sent one,
+ *  otherwise 1s, 2s, 4s. Never longer than MAX_RETRY_WAIT_MS. */
+export function retryDelayMs(res: Response, attempt: number): number {
+  const header = Number(res.headers?.get?.('retry-after'))
+  const wanted = Number.isFinite(header) && header > 0 ? header * 1000 : 1000 * 2 ** attempt
+  return Math.min(wanted, MAX_RETRY_WAIT_MS)
+}
+
 // OpenAI accepts an array input; keep batches modest so a big re-index
 // stays under request-size limits and partial failures are cheap.
 const BATCH_SIZE = 96
@@ -115,20 +129,26 @@ export async function embedTexts(
     if (settings.dimensions) body.dimensions = settings.dimensions
 
     let res: Response
-    try {
-      res = await fetch(endpoint, {
-        method: 'POST',
-        // A redirect could carry the key to another host.
-        redirect: 'manual',
-        headers: {
-          Authorization: `Bearer ${settings.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(timeoutMs),
-      })
-    } catch (err) {
-      throw toNetworkError(err)
+    for (let attempt = 0; ; attempt++) {
+      try {
+        res = await fetch(endpoint, {
+          method: 'POST',
+          // A redirect could carry the key to another host.
+          redirect: 'manual',
+          headers: {
+            Authorization: `Bearer ${settings.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(timeoutMs),
+        })
+      } catch (err) {
+        throw toNetworkError(err)
+      }
+      // A provider's "too fast" / "busy" answer is temporary: wait and retry
+      // a few times instead of failing the whole batch.
+      if (!RETRYABLE_STATUS.has(res.status) || attempt >= MAX_RETRIES) break
+      await sleep(retryDelayMs(res, attempt))
     }
 
     if (!res.ok) {

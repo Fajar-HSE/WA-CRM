@@ -41,6 +41,9 @@ export function AiKnowledgeCard({
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [reindexing, setReindexing] = useState(false);
+  // Start time of an unfinished reindex: the next click continues it
+  // (only the documents still waiting) instead of starting over.
+  const [resumeSince, setResumeSince] = useState<string | null>(null);
   const loadedAccountIdRef = useRef<string | null>(null);
   const t = useTranslations('Settings.aiKnowledge');
 
@@ -143,10 +146,19 @@ export function AiKnowledgeCard({
   const reindex = async () => {
     setReindexing(true);
     try {
-      const res = await fetch('/api/ai/knowledge/reindex', { method: 'POST' });
+      const res = await fetch('/api/ai/knowledge/reindex', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resumeSince ? { since: resumeSince } : {}),
+      });
       const data = await res.json();
       const failed: string[] = Array.isArray(data.failed) ? data.failed : [];
       const keywordOnly: string[] = Array.isArray(data.keyword_only) ? data.keyword_only : [];
+      const unfinished =
+        failed.length > 0 ||
+        keywordOnly.length > 0 ||
+        (typeof data.skipped === 'number' && data.skipped > 0);
+      setResumeSince(res.ok && unfinished && typeof data.started_at === 'string' ? data.started_at : null);
       if (res.ok && failed.length > 0) {
         const titleById = new Map(docs.map((d) => [d.id, d.title]));
         toast.error(
@@ -167,6 +179,10 @@ export function AiKnowledgeCard({
           }),
           { duration: 15000 },
         );
+      } else if (res.ok && data.success && data.timed_out) {
+        toast.warning(t('reindexTimedOut', { count: data.reindexed, skipped: data.skipped }), {
+          duration: 15000,
+        });
       } else if (res.ok && data.success) {
         toast.success(t('reindexSuccess', { count: data.reindexed }));
       } else {

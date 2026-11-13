@@ -247,3 +247,65 @@ describe('embedTexts with a custom provider', () => {
     await expect(embedTexts(openai(), ['a', 'b'])).rejects.toBeInstanceOf(AiError)
   })
 })
+
+describe('embedTexts retries a busy provider', () => {
+  const rateLimited = (retryAfter?: string) =>
+    ({
+      ok: false,
+      status: 429,
+      headers: { get: (k: string) => (k.toLowerCase() === 'retry-after' ? (retryAfter ?? null) : null) },
+      json: async () => ({ error: { message: 'Embeddings provider rate limit reached' } }),
+    }) as unknown as Response
+
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('waits and tries again after a 429, then succeeds', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rateLimited())
+      .mockResolvedValueOnce(rateLimited())
+      .mockResolvedValueOnce(okEmbeddings(1))
+    vi.stubGlobal('fetch', fetchMock)
+    const pending = embedTexts(openai(), ['a'])
+    await vi.advanceTimersByTimeAsync(1000) // 1st wait
+    await vi.advanceTimersByTimeAsync(2000) // 2nd wait
+    await expect(pending).resolves.toHaveLength(1)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('honours Retry-After, capped at 10 seconds', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rateLimited('60'))
+      .mockResolvedValueOnce(okEmbeddings(1))
+    vi.stubGlobal('fetch', fetchMock)
+    const pending = embedTexts(openai(), ['a'])
+    await vi.advanceTimersByTimeAsync(9_999)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(2)
+    await expect(pending).resolves.toHaveLength(1)
+  })
+
+  it('gives up after 3 retries with a rate_limited error', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(rateLimited())
+    vi.stubGlobal('fetch', fetchMock)
+    const pending = embedTexts(openai(), ['a'])
+    const assertion = expect(pending).rejects.toMatchObject({ code: 'rate_limited' })
+    await vi.advanceTimersByTimeAsync(1000 + 2000 + 4000)
+    await assertion
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+  })
+
+  it('does not retry an invalid key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: { get: () => null },
+      json: async () => ({ error: { message: 'bad key' } }),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+    await expect(embedTexts(openai(), ['a'])).rejects.toMatchObject({ code: 'invalid_key' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+})

@@ -1856,6 +1856,7 @@
       "inbox": "Kotak masuk",
       "members": "Anggota tim",
       "api": "Kunci API",
+      "logs": "Log error",
       "accounts": "Akun"
     },
     "groups": {
@@ -2966,5 +2967,41 @@
     "deleteFailed": "Akun gagal dihapus.",
     "deleteToast": "Akun dan penggunanya telah dihapus.",
     "deletePartialToast": "Akun dihapus, tetapi {count} pengguna gagal dihapus."
+  },
+  "ErrorLogs": {
+    "title": "Log error",
+    "description": "Catatan masalah yang terjadi di aplikasi. Masalah yang sama dihitung satu kali. Kunci rahasia, nomor telepon, dan isi pesan pelanggan tidak disimpan.",
+    "filter": {
+      "open": "Belum selesai",
+      "resolved": "Selesai",
+      "all": "Semua"
+    },
+    "level": {
+      "error": "Error",
+      "warning": "Peringatan"
+    },
+    "loading": "Memuat…",
+    "empty": "Tidak ada masalah tercatat. Bagus.",
+    "times": "{count} kali",
+    "resolved": "Selesai",
+    "lastSeen": "Terakhir: {when}",
+    "firstSeen": "Pertama kali: {when}",
+    "details": "Keterangan",
+    "stack": "Jejak kode",
+    "markResolved": "Tandai selesai",
+    "reopen": "Buka lagi",
+    "delete": "Hapus",
+    "clearResolved": "Hapus yang selesai",
+    "clearedToast": "Catatan yang selesai sudah dihapus.",
+    "loadFailed": "Log error gagal dimuat.",
+    "actionFailed": "Aksi gagal. Coba lagi.",
+    "notFound": "Catatan tidak ditemukan.",
+    "invalidReport": "Permintaan tidak valid.",
+    "boundary": {
+      "title": "Terjadi masalah",
+      "body": "Halaman ini gagal ditampilkan. Masalahnya sudah dicatat. Coba lagi.",
+      "code": "Kode",
+      "retry": "Coba lagi"
+    }
   }
 }

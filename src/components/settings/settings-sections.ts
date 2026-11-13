@@ -1,5 +1,6 @@
 import {
   Building2,
+  Bug,
   Coins,
   FileText,
   Inbox,
@@ -36,6 +37,7 @@ export const SETTINGS_SECTIONS = [
   'deals',
   'members',
   'api',
+  'logs',
   'accounts',
 ] as const;
 
@@ -64,6 +66,7 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
   deals: { id: 'deals', label: 'Deals & currency', icon: Coins, group: 'workspace' },
   members: { id: 'members', label: 'Team members', icon: UsersRound, group: 'workspace' },
   api: { id: 'api', label: 'API keys', icon: KeyRound, group: 'workspace' },
+  logs: { id: 'logs', label: 'Error log', icon: Bug, group: 'workspace' },
   accounts: { id: 'accounts', label: 'Accounts', icon: Building2, group: 'platform' },
 };
 

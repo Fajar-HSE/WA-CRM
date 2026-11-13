@@ -19,6 +19,9 @@ const tablesWithoutDomainData = new Set([
   // whatsapp_config row, so these cannot hold data it would delete.
   "whatsapp_groups",
   "whatsapp_group_messages",
+  // Diagnostic notes about app problems, not customer or business data.
+  // They go away with the account (ON DELETE CASCADE).
+  "error_logs",
 ]);
 
 function accountScopedTables(): Set<string> {

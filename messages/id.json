@@ -2088,6 +2088,7 @@
       "reindexSuccess": "{count} dokumen diindeks ulang.",
       "reindexFailed": "Pengindeksan ulang gagal.",
       "reindexWithFailures": "{reindexed} dari {total} dokumen diindeks ulang. {failedCount} gagal: {titles}. Gunakan Indeks ulang untuk mencoba lagi.",
+      "reindexEmbedError": "Pengindeksan semantik gagal: {reason}. {skipped} dokumen dilewati. Periksa pengaturan Embeddings (kunci, alamat, model), simpan, lalu coba Indeks ulang lagi.",
       "reindexKeywordOnly": "{count} dokumen diindeks ulang, tetapi {keywordOnlyCount} hanya dapat dicari dengan kata kunci (pengindeksan semantik gagal). Gunakan Indeks ulang untuk mencoba lagi.",
       "title": "Basis pengetahuan",
       "description": "Tambahkan FAQ, kebijakan, atau detail produk. Asisten mengambil bagian yang relevan saat membuat draf dan membalas otomatis, sehingga bisa menjawab tanpa menyerahkan ke manusia.{searchType}",

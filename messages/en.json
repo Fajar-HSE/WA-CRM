@@ -2088,6 +2088,7 @@
       "reindexSuccess": "Reindexed {count} document(s).",
       "reindexFailed": "Reindex failed.",
       "reindexWithFailures": "Reindexed {reindexed} of {total} document(s). {failedCount} failed: {titles}. Use Reindex to retry.",
+      "reindexEmbedError": "Semantic indexing failed: {reason}. {skipped} document(s) skipped. Check the Embeddings settings (key, URL, model), save, then Reindex again.",
       "reindexKeywordOnly": "Reindexed {count} document(s), but {keywordOnlyCount} are searchable by keyword only (semantic indexing failed). Use Reindex to retry.",
       "title": "Knowledge base",
       "description": "Add FAQs, policies, or product details. The assistant retrieves the relevant pieces when drafting and auto-replying, so it can answer instead of handing off.{searchType}",

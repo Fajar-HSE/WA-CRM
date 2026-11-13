@@ -17,13 +17,37 @@ const t = getT('Api')
  * lexical-only, and this backfills their vectors so semantic search
  * turns on. Also recovers documents whose indexing failed earlier.
  */
-export async function POST() {
+export const maxDuration = 60
+
+/** Stop starting new documents after this long, so the request ends with a
+ *  clear answer before the platform's time limit cuts it off. */
+const TIME_BUDGET_MS = 48_000
+/** Small pause between documents: free-tier embeddings providers limit
+ *  how fast requests may arrive. */
+const PAUSE_BETWEEN_DOCS_MS = Number(process.env.AI_REINDEX_PAUSE_MS ?? 250)
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+export async function POST(request?: Request) {
   try {
     const { supabase, accountId, userId } = await requireRole('admin')
     const limit = checkRateLimit(`ai-kb-reindex:${userId}`, RATE_LIMITS.adminAction)
     if (!limit.success) return rateLimitResponse(limit)
 
-    const { data: docs, error } = await supabase
+    // Continue an unfinished run: only documents that are still waiting,
+    // i.e. whose chunks are older than the run's start or have no vector.
+    let since: string | null = null
+    try {
+      const body = request ? ((await request.json()) as { since?: unknown }) : null
+      if (typeof body?.since === 'string' && !Number.isNaN(Date.parse(body.since))) {
+        since = new Date(body.since).toISOString()
+      }
+    } catch {
+      // No body: a normal full run.
+    }
+    const startedAt = since ?? new Date().toISOString()
+
+    const { data: allDocs, error } = await supabase
       .from('ai_knowledge_documents')
       .select('id, content')
       .eq('account_id', accountId)
@@ -54,7 +78,25 @@ export async function POST() {
       )
     }
 
+    let docs = allDocs
+    if (since) {
+      const { data: waiting, error: waitErr } = await supabase
+        .from('ai_knowledge_chunks')
+        .select('document_id')
+        .eq('account_id', accountId)
+        .or(`embedding.is.null,created_at.lt.${since}`)
+        .limit(10000)
+      if (waitErr) {
+        console.error('[ai/knowledge/reindex] resume lookup error:', waitErr)
+        return NextResponse.json({ error: t('ai.knowledge.loadDocsFailed') }, { status: 500 })
+      }
+      const ids = new Set((waiting ?? []).map((r: { document_id: string }) => r.document_id))
+      docs = (allDocs ?? []).filter((d: { id: string }) => ids.has(d.id))
+    }
+
     const total = (docs ?? []).length
+    const startedMs = Date.now()
+    let timedOut = false
     let reindexed = 0
     const failed: string[] = []
     const keywordOnly: string[] = []
@@ -69,6 +111,12 @@ export async function POST() {
         skipped += 1
         continue
       }
+      if (Date.now() - startedMs > TIME_BUDGET_MS) {
+        timedOut = true
+        skipped += 1
+        continue
+      }
+      if (embeddings && reindexed + failed.length > 0) await sleep(PAUSE_BETWEEN_DOCS_MS)
       try {
         const result = await ingestDocument(supabase, accountId, { embeddings }, doc.id, doc.content)
         reindexed += 1
@@ -94,6 +142,8 @@ export async function POST() {
       keyword_only: keywordOnly,
       embed_error: embedError,
       skipped,
+      timed_out: timedOut,
+      started_at: startedAt,
     })
   } catch (err) {
     return toErrorResponse(err)

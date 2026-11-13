@@ -72,6 +72,8 @@ describe('POST /api/ai/knowledge/reindex', () => {
       total: 3,
       failed: [],
       keyword_only: [],
+      embed_error: null,
+      skipped: 0,
     })
   })
 
@@ -103,6 +105,31 @@ describe('POST /api/ai/knowledge/reindex', () => {
       failed: [],
       keyword_only: ['doc-2'],
     })
+  })
+
+  it('stops calling the provider after 3 failures in a row and says why', async () => {
+    h.docs = Array.from({ length: 6 }, (_, i) => ({ id: `doc-${i + 1}`, content: 'x' }))
+    h.ingest.mockResolvedValue({
+      keywordOnly: true,
+      embedError: new Error('Invalid API key sk-live-abcdefghijklmnop'),
+    })
+    const res = await reindex()
+    expect(h.ingest).toHaveBeenCalledTimes(3)
+    expect(res.body).toMatchObject({ success: true, reindexed: 3, total: 6, skipped: 3 })
+    expect(res.body.embed_error).toContain('Invalid API key')
+    expect(String(res.body.embed_error)).not.toContain('abcdefghijklmnop')
+  })
+
+  it('a good document in between resets the failure streak', async () => {
+    h.docs = Array.from({ length: 6 }, (_, i) => ({ id: `doc-${i + 1}`, content: 'x' }))
+    h.ingest.mockImplementation(async (_db, _acct, _cfg, id: string) =>
+      ['doc-1', 'doc-2', 'doc-4', 'doc-5'].includes(id)
+        ? { keywordOnly: true, embedError: new Error('slow') }
+        : { keywordOnly: false, embedError: null },
+    )
+    const res = await reindex()
+    expect(h.ingest).toHaveBeenCalledTimes(6)
+    expect(res.body).toMatchObject({ skipped: 0 })
   })
 
   it('stops before indexing when the embeddings key is corrupt', async () => {

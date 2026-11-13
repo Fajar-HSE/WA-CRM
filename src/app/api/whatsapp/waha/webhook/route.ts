@@ -1,3 +1,4 @@
+import { logError } from '@/lib/logging/error-log'
 import { NextResponse } from 'next/server'
 import { processWahaInbound, processWahaOutgoing } from '@/lib/whatsapp/waha-inbound'
 import { processWahaAck } from '@/lib/whatsapp/waha-ack'
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     try {
       await processWahaAck({ sessionName, payload: body.payload ?? {} })
     } catch (err) {
-      console.error('[waha-webhook] ack processing failed:', err)
+      await logError('waha.webhook', err, { context: { stage: 'ack', sessionName } })
     }
     return NextResponse.json({ status: 'received' }, { status: 200 })
   }
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
     try {
       await processWahaGroupMessage({ sessionName, payload })
     } catch (err) {
-      console.error('[waha-webhook] group processing failed:', err)
+      await logError('waha.webhook', err, { context: { stage: 'group', sessionName } })
     }
     return NextResponse.json({ status: 'received' }, { status: 200 })
   }
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
       try {
         await processWahaOutgoing({ sessionName, payload })
       } catch (err) {
-        console.error('[waha-webhook] outgoing processing failed:', err)
+        await logError('waha.webhook', err, { context: { stage: 'outgoing', sessionName } })
       }
       return NextResponse.json({ status: 'received' }, { status: 200 })
     }
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
   try {
     await processWahaInbound({ sessionName, payload })
   } catch (err) {
-    console.error('[waha-webhook] processing failed:', err)
+    await logError('waha.webhook', err, { context: { stage: 'inbound', sessionName } })
     // Ack 200 anyway to avoid a WAHA retry storm; the error is logged.
   }
 

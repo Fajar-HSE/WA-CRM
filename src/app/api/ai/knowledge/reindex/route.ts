@@ -1,9 +1,10 @@
+import { logError } from '@/lib/logging/error-log'
+import { cleanMessage } from '@/lib/logging/sanitize'
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { loadEmbeddingsSettings } from '@/lib/ai/config'
 import { ingestDocument } from '@/lib/ai/knowledge'
-import { AiError } from '@/lib/ai/types'
 import { getT } from '@/lib/i18n/translate'
 
 const t = getT('Api')
@@ -57,17 +58,31 @@ export async function POST() {
     let reindexed = 0
     const failed: string[] = []
     const keywordOnly: string[] = []
+    let embedError: string | null = null
+    let consecutiveEmbedFailures = 0
+    let skipped = 0
     for (const doc of docs ?? []) {
+      // The provider refused the first few documents: it will refuse the
+      // rest too (wrong key, URL or model). Stop instead of making dozens
+      // of calls that cannot work, and say why.
+      if (consecutiveEmbedFailures >= 3) {
+        skipped += 1
+        continue
+      }
       try {
         const result = await ingestDocument(supabase, accountId, { embeddings }, doc.id, doc.content)
         reindexed += 1
         if (result.keywordOnly) {
           keywordOnly.push(doc.id)
-          console.error(`[ai/knowledge/reindex] doc ${doc.id} keyword-only:`, describeError(result.embedError))
+          consecutiveEmbedFailures += 1
+          embedError ??= cleanMessage(result.embedError)
+          await logError('ai.reindex', result.embedError, { accountId, level: 'warning', context: { documentId: doc.id, stage: 'embed' } })
+        } else {
+          consecutiveEmbedFailures = 0
         }
       } catch (err) {
         failed.push(doc.id)
-        console.error(`[ai/knowledge/reindex] doc ${doc.id} failed:`, describeError(err))
+        await logError('ai.reindex', err, { accountId, context: { documentId: doc.id, stage: 'ingest' } })
       }
     }
 
@@ -77,12 +92,10 @@ export async function POST() {
       total,
       failed,
       keyword_only: keywordOnly,
+      embed_error: embedError,
+      skipped,
     })
   } catch (err) {
     return toErrorResponse(err)
   }
-}
-
-function describeError(err: unknown): string {
-  return err instanceof AiError ? err.message : String(err)
 }

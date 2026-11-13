@@ -1,3 +1,4 @@
+import { logError } from '@/lib/logging/error-log'
 import { supabaseAdmin } from './admin-client'
 import { loadAiConfig } from './config'
 import { buildConversationContext } from './context'
@@ -208,7 +209,7 @@ export async function dispatchInboundToAiReply(
       // deploy issue — e.g. `claim_ai_reply_slot` not EXECUTE-able by the
       // service role, or the migration not applied. Log it loudly: a
       // silent return makes "auto-reply never fires" undiagnosable.
-      console.error('[ai auto-reply] claim_ai_reply_slot failed:', claimErr)
+      await logError('ai.auto-reply', claimErr, { accountId, context: { stage: 'claim_slot' } })
       return
     }
     if (claimed !== true) return
@@ -222,7 +223,7 @@ export async function dispatchInboundToAiReply(
       aiGenerated: true,
     })
   } catch (err) {
-    console.error('[ai auto-reply] dispatch failed:', err)
+    await logError('ai.auto-reply', err, { accountId, context: { stage: 'dispatch' } })
   }
 }
 

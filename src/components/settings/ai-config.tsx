@@ -443,22 +443,20 @@ export function AiConfig() {
                     </SelectContent>
                   </Select>
                 </div>
-                {embPreset !== 'openai' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-embeddings-model">{t('embeddingsModel')}</Label>
-                    <Input
-                      id="ai-embeddings-model"
-                      value={embModel}
-                      onChange={(e) => {
-                        setEmbModel(e.target.value);
-                        setEmbSettingsEdited(true);
-                      }}
-                      placeholder="model-id"
-                      disabled={disabled}
-                      autoComplete="off"
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="ai-embeddings-model">{t('embeddingsModel')}</Label>
+                  <Input
+                    id="ai-embeddings-model"
+                    value={embModel}
+                    onChange={(e) => {
+                      setEmbModel(e.target.value);
+                      setEmbSettingsEdited(true);
+                    }}
+                    placeholder={embPreset === 'openai' ? 'text-embedding-3-small' : 'model-id'}
+                    disabled={disabled}
+                    autoComplete="off"
+                  />
+                </div>
                 {embPreset === 'custom' && (
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="ai-embeddings-base-url">{t('embeddingsBaseUrl')}</Label>
@@ -475,26 +473,24 @@ export function AiConfig() {
                     />
                   </div>
                 )}
-                {embPreset !== 'openai' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="ai-embeddings-dims">
-                      {t('embeddingsDimensions')}{' '}
-                      <span className="font-normal text-muted-foreground">{t('optional')}</span>
-                    </Label>
-                    <Input
-                      id="ai-embeddings-dims"
-                      value={embDims}
-                      onChange={(e) => {
-                        setEmbDims(e.target.value.replace(/\D/g, ''));
-                        setEmbSettingsEdited(true);
-                      }}
-                      inputMode="numeric"
-                      placeholder="1536"
-                      disabled={disabled}
-                      autoComplete="off"
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="ai-embeddings-dims">
+                    {t('embeddingsDimensions')}{' '}
+                    <span className="font-normal text-muted-foreground">{t('optional')}</span>
+                  </Label>
+                  <Input
+                    id="ai-embeddings-dims"
+                    value={embDims}
+                    onChange={(e) => {
+                      setEmbDims(e.target.value.replace(/\D/g, ''));
+                      setEmbSettingsEdited(true);
+                    }}
+                    inputMode="numeric"
+                    placeholder="1536"
+                    disabled={disabled}
+                    autoComplete="off"
+                  />
+                </div>
               </div>
               <Input
                 id="ai-embeddings-key"

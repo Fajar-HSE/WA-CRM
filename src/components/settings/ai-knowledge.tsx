@@ -159,10 +159,13 @@ export function AiKnowledgeCard({
         );
       } else if (res.ok && data.success && keywordOnly.length > 0) {
         toast.warning(
-          t('reindexKeywordOnly', {
+          t(data.embed_error ? 'reindexEmbedError' : 'reindexKeywordOnly', {
             count: data.reindexed,
             keywordOnlyCount: keywordOnly.length,
+            skipped: typeof data.skipped === 'number' ? data.skipped : 0,
+            reason: typeof data.embed_error === 'string' ? data.embed_error : '',
           }),
+          { duration: 15000 },
         );
       } else if (res.ok && data.success) {
         toast.success(t('reindexSuccess', { count: data.reindexed }));

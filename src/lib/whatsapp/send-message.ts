@@ -19,6 +19,7 @@
 // without duplicating ~250 lines of Meta plumbing.
 // ============================================================
 
+import { logError } from '@/lib/logging/error-log';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { MediaKind } from '@/lib/whatsapp/meta-api';
@@ -436,7 +437,7 @@ export async function sendMessageToConversation(
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Unknown Meta API error';
-    console.error('[send-message] Meta send failed for all variants:', message);
+    await logError('whatsapp.send', err, { accountId, context: { stage: 'meta_send' } });
     throw new SendMessageError('meta_error', `Meta API error: ${message}`, 502);
   }
 
@@ -523,7 +524,7 @@ export async function sendMessageToConversation(
   }
 
   if (msgError) {
-    console.error('[send-message] error inserting sent message:', msgError);
+    await logError('whatsapp.send', msgError, { accountId, context: { stage: 'save_message' } });
     throw new SendMessageError(
       'db_error',
       `Message sent to Meta but failed to save to DB: ${msgError.message}`,

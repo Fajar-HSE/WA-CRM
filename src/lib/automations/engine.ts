@@ -1,3 +1,4 @@
+import { logError } from '@/lib/logging/error-log'
 import type {
   Automation,
   AutomationLogStepResult,
@@ -143,11 +144,11 @@ export async function runAutomationsForTrigger(input: DispatchInput): Promise<vo
       try {
         await executeAutomation(automation, input)
       } catch (err) {
-        console.error('[automations] execute failed:', automation.id, err)
+        await logError('automations.engine', err, { accountId: input.accountId, context: { stage: 'execute', automationId: automation.id } })
       }
     }
   } catch (err) {
-    console.error('[automations] dispatch failed:', err)
+    await logError('automations.engine', err, { accountId: input.accountId, context: { stage: 'dispatch' } })
   }
 }
 

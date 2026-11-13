@@ -19,6 +19,7 @@ import { DealsSettings } from '@/components/settings/deals-settings';
 import { InboxSettings } from '@/components/settings/inbox-settings';
 import { MembersTab } from '@/components/settings/members-tab';
 import { AccountsPanel } from '@/components/settings/accounts-panel';
+import { ErrorLogsPanel } from '@/components/settings/error-logs-panel';
 import { usePlatformAdmin } from '@/hooks/use-platform-admin';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import {
@@ -46,7 +47,7 @@ export default function SettingsPage() {
 function SettingsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { defaultCurrency } = useAuth();
+  const { defaultCurrency, canManageMembers } = useAuth();
   const { mode } = useTheme();
   const t = useTranslations('Settings');
   const isPlatformAdmin = usePlatformAdmin();
@@ -58,7 +59,10 @@ function SettingsPageInner() {
   const requested = resolveSection(searchParams.get('tab'));
   // The Accounts section exists only for the platform administrator.
   const section: SettingsSection =
-    requested === 'accounts' && !isPlatformAdmin ? DEFAULT_SECTION : requested;
+    (requested === 'accounts' && !isPlatformAdmin) ||
+    (requested === 'logs' && !canManageMembers)
+      ? DEFAULT_SECTION
+      : requested;
 
   const go = (next: SettingsSection) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -90,6 +94,7 @@ function SettingsPageInner() {
     deals: <DealsSettings />,
     members: <MembersTab />,
     api: <ApiKeysSettings />,
+    logs: <ErrorLogsPanel />,
     accounts: <AccountsPanel />,
   };
 
@@ -109,7 +114,10 @@ function SettingsPageInner() {
           active={section}
           onSelect={go}
           hints={hints}
-          hidden={isPlatformAdmin ? undefined : ['accounts']}
+          hidden={[
+            ...(isPlatformAdmin ? [] : (['accounts'] as const)),
+            ...(canManageMembers ? [] : (['logs'] as const)),
+          ]}
         />
         <div className="min-w-0">{panel[section]}</div>
       </div>

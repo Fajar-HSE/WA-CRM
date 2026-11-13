@@ -1856,6 +1856,7 @@
       "inbox": "Inbox",
       "members": "Team members",
       "api": "API keys",
+      "logs": "Error log",
       "accounts": "Accounts"
     },
     "groups": {
@@ -2087,6 +2088,7 @@
       "reindexSuccess": "Reindexed {count} document(s).",
       "reindexFailed": "Reindex failed.",
       "reindexWithFailures": "Reindexed {reindexed} of {total} document(s). {failedCount} failed: {titles}. Use Reindex to retry.",
+      "reindexEmbedError": "Semantic indexing failed: {reason}. {skipped} document(s) skipped. Check the Embeddings settings (key, URL, model), save, then Reindex again.",
       "reindexKeywordOnly": "Reindexed {count} document(s), but {keywordOnlyCount} are searchable by keyword only (semantic indexing failed). Use Reindex to retry.",
       "title": "Knowledge base",
       "description": "Add FAQs, policies, or product details. The assistant retrieves the relevant pieces when drafting and auto-replying, so it can answer instead of handing off.{searchType}",
@@ -2966,5 +2968,41 @@
     "deleteFailed": "Could not delete the account.",
     "deleteToast": "Account and its users were deleted.",
     "deletePartialToast": "Account deleted, but {count} user(s) could not be deleted."
+  },
+  "ErrorLogs": {
+    "title": "Error log",
+    "description": "Problems that happened in the app. The same problem is counted once. Secret keys, phone numbers and customer message text are not stored.",
+    "filter": {
+      "open": "Open",
+      "resolved": "Resolved",
+      "all": "All"
+    },
+    "level": {
+      "error": "Error",
+      "warning": "Warning"
+    },
+    "loading": "Loading…",
+    "empty": "No problems recorded. Good.",
+    "times": "{count} times",
+    "resolved": "Resolved",
+    "lastSeen": "Last seen: {when}",
+    "firstSeen": "First seen: {when}",
+    "details": "Details",
+    "stack": "Stack trace",
+    "markResolved": "Mark resolved",
+    "reopen": "Reopen",
+    "delete": "Delete",
+    "clearResolved": "Delete resolved",
+    "clearedToast": "Resolved entries deleted.",
+    "loadFailed": "Could not load the error log.",
+    "actionFailed": "The action failed. Try again.",
+    "notFound": "Entry not found.",
+    "invalidReport": "Invalid request.",
+    "boundary": {
+      "title": "Something went wrong",
+      "body": "This page could not be shown. The problem has been recorded. Try again.",
+      "code": "Code",
+      "retry": "Try again"
+    }
   }
 }

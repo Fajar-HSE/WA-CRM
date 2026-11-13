@@ -14,7 +14,7 @@ vi.mock('@/lib/auth/api-context', () => ({
   }),
 }));
 vi.mock('@/lib/ai/config', () => ({
-  loadEmbeddingsKey: vi.fn(async () => ({ key: null, corrupt: false })),
+  loadEmbeddingsSettings: vi.fn(async () => ({ settings: null, corrupt: false })),
 }));
 vi.mock('@/lib/ai/knowledge', () => ({
   ingestDocument: (...a: unknown[]) => state.ingest(...a),

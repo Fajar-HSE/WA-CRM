@@ -341,7 +341,7 @@ Menu **Agen AI** punya tiga tab: **Playground**, **Pengaturan**, **Penggunaan**.
 
 - **Playground**: uji balasan seolah-olah kamu pelanggan, sebelum agen dipakai di chat sungguhan.
 - **Pengaturan** (admin): pilih penyedia dan model, masukkan kunci API milik sendiri, tulis konteks bisnis dan instruksi, aktifkan **asisten AI** (untuk tombol draf) dan **balas otomatis** (bot menjawab pesan masuk), serta atur batas balasan otomatis dan siapa yang menerima serah-terima.
-- **Basis pengetahuan** (di tab Pengaturan): dokumen FAQ, harga, dan kebijakan yang dibaca AI saat menjawab. Tambah dokumen lewat **Tambah dokumen**. Pencarian kata kunci langsung jalan. Pencarian semantik butuh kunci embeddings tambahan dan tombol **Indeks ulang**.
+- **Basis pengetahuan** (di tab Pengaturan): dokumen FAQ, harga, dan kebijakan yang dibaca AI saat menjawab. Tambah dokumen lewat **Tambah dokumen**. Pencarian kata kunci langsung jalan. Pencarian semantik butuh kunci embeddings tambahan dan tombol **Indeks ulang**. Penyedia embeddings bebas: OpenAI (bawaan), Google Gemini, Jina, atau layanan lain yang kompatibel dengan OpenAI. Pilih di bagian *Embeddings* pada tab Pengaturan. Setelah ganti penyedia atau model, klik **Indeks ulang** supaya semua dokumen dihitung ulang.
 - **Penggunaan**: jumlah token yang terpakai di kunci API kamu.
 
 Tips menulis dokumen: satu topik per dokumen, jawaban lengkap dan jelas, tulis kata yang biasa dipakai pelanggan.

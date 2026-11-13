@@ -74,7 +74,7 @@ function makeDb() {
 
 beforeEach(() => {
   h.embedTexts.mockReset()
-  h.embedTexts.mockImplementation(async (_key: string, inputs: string[]) =>
+  h.embedTexts.mockImplementation(async (_settings: unknown, inputs: string[]) =>
     inputs.map((_, i) => [i, i]),
   )
 })
@@ -82,14 +82,14 @@ beforeEach(() => {
 describe('retrieveKnowledge', () => {
   it('returns [] for an empty query without touching the DB', async () => {
     const { db, state } = makeDb()
-    expect(await retrieveKnowledge(db, 'acct', { embeddingsApiKey: null }, '  ')).toEqual([])
+    expect(await retrieveKnowledge(db, 'acct', { embeddings: null }, '  ')).toEqual([])
     expect(state.rpcCalls).toEqual([])
   })
 
   it('short-circuits (no embed, no RPC) when the KB is empty', async () => {
     const { db, state } = makeDb()
     state.chunkCount = 0
-    const out = await retrieveKnowledge(db, 'acct', { embeddingsApiKey: 'sk-x' }, 'q')
+    const out = await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'q')
     expect(out).toEqual([])
     expect(h.embedTexts).not.toHaveBeenCalled()
     expect(state.rpcCalls).toEqual([])
@@ -98,7 +98,7 @@ describe('retrieveKnowledge', () => {
   it('uses lexical FTS only when there is no embeddings key', async () => {
     const { db, state } = makeDb()
     state.fts = [{ id: 'f1', content: 'F1' }]
-    const out = await retrieveKnowledge(db, 'acct', { embeddingsApiKey: null }, 'q')
+    const out = await retrieveKnowledge(db, 'acct', { embeddings: null }, 'q')
     expect(out).toEqual(['F1'])
     expect(state.rpcCalls).toEqual(['match_ai_knowledge_fts'])
     expect(h.embedTexts).not.toHaveBeenCalled()
@@ -111,7 +111,7 @@ describe('retrieveKnowledge', () => {
       { id: 's2', content: 'S2' },
       { id: 's3', content: 'S3' },
     ]
-    const out = await retrieveKnowledge(db, 'acct', { embeddingsApiKey: 'sk-x' }, 'q', 3)
+    const out = await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'q', 3)
     expect(out).toEqual(['S1', 'S2', 'S3'])
     expect(h.embedTexts).toHaveBeenCalledTimes(1)
     // Enough semantic hits → no FTS top-up.
@@ -128,7 +128,7 @@ describe('retrieveKnowledge', () => {
       { id: 's2', content: 'S2-dup' }, // dedup by id
       { id: 'f1', content: 'F1' },
     ]
-    const out = await retrieveKnowledge(db, 'acct', { embeddingsApiKey: 'sk-x' }, 'q', 3)
+    const out = await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'q', 3)
     expect(out).toEqual(['S1', 'S2', 'F1'])
     expect(state.rpcCalls).toEqual([
       'match_ai_knowledge_semantic',
@@ -140,7 +140,7 @@ describe('retrieveKnowledge', () => {
 describe('ingestDocument', () => {
   it('embeds chunks when a key is present', async () => {
     const { db, state } = makeDb()
-    const result = await ingestDocument(db, 'acct', { embeddingsApiKey: 'sk-x' }, 'doc-1', 'hello world')
+    const result = await ingestDocument(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'doc-1', 'hello world')
     expect(result).toEqual({ keywordOnly: false, embedError: null })
     expect(h.embedTexts).toHaveBeenCalledTimes(1)
     expect(state.deletedIds).toEqual(['old-1', 'old-2'])
@@ -151,14 +151,14 @@ describe('ingestDocument', () => {
 
   it('stores chunks without embeddings when there is no key', async () => {
     const { db, state } = makeDb()
-    await ingestDocument(db, 'acct', { embeddingsApiKey: null }, 'doc-1', 'hello world')
+    await ingestDocument(db, 'acct', { embeddings: null }, 'doc-1', 'hello world')
     expect(h.embedTexts).not.toHaveBeenCalled()
     expect(state.inserted![0].embedding).toBeNull()
   })
 
   it('deletes existing chunks and inserts nothing for empty content', async () => {
     const { db, state } = makeDb()
-    await ingestDocument(db, 'acct', { embeddingsApiKey: 'sk-x' }, 'doc-1', '   ')
+    await ingestDocument(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'doc-1', '   ')
     expect(state.deletedIds).toEqual(['old-1', 'old-2'])
     expect(state.inserted).toBeNull()
     expect(h.embedTexts).not.toHaveBeenCalled()
@@ -168,7 +168,7 @@ describe('ingestDocument', () => {
     const { db, state } = makeDb()
     const embedError = new Error('rate limited')
     h.embedTexts.mockRejectedValueOnce(embedError)
-    const result = await ingestDocument(db, 'acct', { embeddingsApiKey: 'sk-x' }, 'doc-1', 'hello world')
+    const result = await ingestDocument(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'doc-1', 'hello world')
     expect(result).toEqual({ keywordOnly: true, embedError })
     // Chunks were inserted (lexical search works) despite the embed failure…
     expect(state.inserted).toHaveLength(1)
@@ -181,7 +181,7 @@ describe('ingestDocument', () => {
       expect(state.events).toEqual([])
       throw new Error('timeout')
     })
-    await ingestDocument(db, 'acct', { embeddingsApiKey: 'sk-x' }, 'doc-1', 'hello world')
+    await ingestDocument(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'doc-1', 'hello world')
     expect(state.events).toEqual(['list', 'insert', 'delete'])
   })
 
@@ -189,7 +189,7 @@ describe('ingestDocument', () => {
     const { db, state } = makeDb()
     state.insertError = new Error('insert failed')
     await expect(
-      ingestDocument(db, 'acct', { embeddingsApiKey: null }, 'doc-1', 'hello world'),
+      ingestDocument(db, 'acct', { embeddings: null }, 'doc-1', 'hello world'),
     ).rejects.toThrow('insert failed')
     expect(state.deletedIds).toBeNull()
   })
@@ -197,7 +197,7 @@ describe('ingestDocument', () => {
   it('deletes previous chunks in batches', async () => {
     const { db, state } = makeDb()
     state.existingChunkIds = Array.from({ length: 250 }, (_, i) => `old-${i}`)
-    await ingestDocument(db, 'acct', { embeddingsApiKey: null }, 'doc-1', 'hello world')
+    await ingestDocument(db, 'acct', { embeddings: null }, 'doc-1', 'hello world')
     expect(state.events.filter((e) => e === 'delete')).toHaveLength(3)
     expect(state.deletedIds).toHaveLength(250)
   })

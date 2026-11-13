@@ -5,7 +5,7 @@ const state = vi.hoisted(() => ({
   fake: null as unknown,
   scopes: [] as string[],
   ingest: vi.fn(),
-  embeddingsKey: { key: null as string | null, corrupt: false },
+  embeddingsKey: { settings: null as unknown, corrupt: false },
 }));
 
 vi.mock('@/lib/auth/api-context', () => ({
@@ -19,7 +19,7 @@ vi.mock('@/lib/auth/api-context', () => ({
   }),
 }));
 vi.mock('@/lib/ai/config', () => ({
-  loadEmbeddingsKey: vi.fn(async () => state.embeddingsKey),
+  loadEmbeddingsSettings: vi.fn(async () => state.embeddingsKey),
 }));
 vi.mock('@/lib/ai/knowledge', () => ({
   ingestDocument: (...a: unknown[]) => state.ingest(...a),
@@ -39,7 +39,7 @@ beforeEach(() => {
   fake = makeFakeDb();
   state.fake = fake;
   state.scopes = [];
-  state.embeddingsKey = { key: null, corrupt: false };
+  state.embeddingsKey = { settings: null, corrupt: false };
   state.ingest.mockReset();
   state.ingest.mockResolvedValue({ keywordOnly: false, embedError: null });
 });
@@ -61,7 +61,7 @@ describe('POST /api/v1/knowledge', () => {
     expect(state.ingest).toHaveBeenCalledWith(
       fake.db,
       'acct-1',
-      { embeddingsApiKey: null },
+      { embeddings: null },
       data.id,
       'Isi dokumen'
     );
@@ -97,7 +97,7 @@ describe('POST /api/v1/knowledge', () => {
   });
 
   it('reports keyword_only when the stored embeddings key cannot be decrypted', async () => {
-    state.embeddingsKey = { key: null, corrupt: true };
+    state.embeddingsKey = { settings: null, corrupt: true };
     const { data } = await (await POST(json({ title: 'T', content: 'C' }))).json();
     expect(data.index_status).toBe('keyword_only');
     expect(data.warning).toMatch(/ENCRYPTION_KEY/);

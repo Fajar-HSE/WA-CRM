@@ -6,10 +6,14 @@ import {
 } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { encrypt, decrypt } from '@/lib/whatsapp/encryption'
+import { fetchAiConfigRow } from '@/lib/ai/config'
 import { validateAiCredentials } from '@/lib/ai/validate'
 import { embedTexts } from '@/lib/ai/embeddings'
 import { AiError, type AiProvider } from '@/lib/ai/types'
-import { normalizeOpenAiCompatibleBaseUrl } from '@/lib/ai/providers/openai-compatible'
+import {
+  normalizeOpenAiCompatibleBaseUrl,
+  validateHttpBaseUrl,
+} from '@/lib/ai/providers/openai-compatible'
 import { canReuseStoredAiKey } from '@/lib/ai/stored-key'
 import { getT } from '@/lib/i18n/translate'
 
@@ -30,15 +34,13 @@ export async function GET() {
   try {
     const { supabase, accountId } = await getCurrentAccount()
 
-    const { data, error } = await supabase
-      .from('ai_configs')
-      // `api_key` is selected only to derive `has_key` — it is stripped
-      // out below and never returned to the client.
-      .select(
-        'provider, model, base_url, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, api_key, embeddings_api_key',
-      )
-      .eq('account_id', accountId)
-      .maybeSingle()
+    // `api_key` is selected only to derive `has_key` — it is stripped
+    // out below and never returned to the client.
+    const { data, error } = await fetchAiConfigRow<Record<string, unknown>>(
+      supabase,
+      accountId,
+      'provider, model, base_url, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, api_key, embeddings_api_key',
+    )
 
     if (error) {
       console.error('[ai/config GET] fetch error:', error)
@@ -133,12 +135,39 @@ export async function POST(request: Request) {
         : ''
     const clearEmbeddingsKey = body.embeddings_api_key === null
 
+    // Embeddings endpoint (optional): any OpenAI-compatible provider. Each
+    // field, when present, replaces the stored value; blank / null resets it
+    // (OpenAI, text-embedding-3-small, the model's own vector size).
+    const embBaseProvided = 'embeddings_base_url' in body
+    const rawEmbBase =
+      typeof body.embeddings_base_url === 'string' ? body.embeddings_base_url.trim() : ''
+    const embModelProvided = 'embeddings_model' in body
+    const rawEmbModel =
+      typeof body.embeddings_model === 'string' ? body.embeddings_model.trim().slice(0, 200) : ''
+    const embDimsProvided = 'embeddings_dimensions' in body
+    let rawEmbDims: number | null = null
+    if (embDimsProvided && body.embeddings_dimensions !== null && body.embeddings_dimensions !== '') {
+      const n = Number(body.embeddings_dimensions)
+      if (!Number.isInteger(n) || n < 8 || n > 8192) return bad(t('ai.embeddingsDimsInvalid'))
+      rawEmbDims = n
+    }
+    if (rawEmbBase) {
+      try {
+        validateHttpBaseUrl(rawEmbBase)
+      } catch (err) {
+        return bad(err instanceof AiError ? err.message : t('ai.baseUrlInvalid'))
+      }
+    }
+
     // Reuse the stored key when the form didn't send a fresh one.
-    const { data: existing } = await supabase
-      .from('ai_configs')
-      .select('id, provider, model, base_url, api_key')
-      .eq('account_id', accountId)
-      .maybeSingle()
+    const { data: existing } = await fetchAiConfigRow<{
+      id: string
+      provider: AiProvider
+      model: string
+      base_url: string | null
+      api_key: string
+      embeddings_api_key: string | null
+    }>(supabase, accountId, 'id, provider, model, base_url, api_key, embeddings_api_key')
 
     let apiKeyPlain: string
     let baseUrl: string | null = null
@@ -191,7 +220,7 @@ export async function POST(request: Request) {
           autoReplyEnabled,
           autoReplyMaxPerConversation: maxPer,
           handoffAgentId: null,
-          embeddingsApiKey: null,
+          embeddings: null,
         })
       } catch (err) {
         if (err instanceof AiError) {
@@ -205,11 +234,46 @@ export async function POST(request: Request) {
       }
     }
 
-    // Validate a new embeddings key before storing (a cheap 1-input
-    // embed), same "verify before save" discipline as the chat key.
+    // What the embeddings setup will be after this save: stored values,
+    // overridden by whatever the form sent.
+    const finalEmbBase = embBaseProvided ? rawEmbBase || null : (existing?.embeddings_base_url ?? null)
+    const finalEmbModel = embModelProvided ? rawEmbModel || null : (existing?.embeddings_model ?? null)
+    const finalEmbDims = embDimsProvided ? rawEmbDims : (existing?.embeddings_dimensions ?? null)
+    if (finalEmbBase && !finalEmbModel) return bad(t('ai.embeddingsModelRequired'))
+
+    const embeddingsChanged =
+      !!rawEmbeddingsKey ||
+      clearEmbeddingsKey ||
+      finalEmbBase !== (existing?.embeddings_base_url ?? null) ||
+      finalEmbModel !== (existing?.embeddings_model ?? null) ||
+      finalEmbDims !== (existing?.embeddings_dimensions ?? null)
+
+    // The key the embeddings will use: a new one, or the stored one.
+    let effectiveEmbKey: string | null = null
     if (rawEmbeddingsKey) {
+      effectiveEmbKey = rawEmbeddingsKey
+    } else if (!clearEmbeddingsKey && existing?.embeddings_api_key) {
       try {
-        await embedTexts(rawEmbeddingsKey, ['ping'])
+        effectiveEmbKey = decrypt(existing.embeddings_api_key)
+      } catch {
+        effectiveEmbKey = null
+      }
+    }
+
+    // Validate the embeddings setup before storing (a cheap 1-input embed),
+    // same "verify before save" discipline as the chat key. Runs whenever
+    // anything about it changed and there is a key to test with.
+    if (embeddingsChanged && effectiveEmbKey) {
+      try {
+        await embedTexts(
+          {
+            apiKey: effectiveEmbKey,
+            baseUrl: finalEmbBase,
+            model: finalEmbModel,
+            dimensions: finalEmbDims,
+          },
+          ['ping'],
+        )
       } catch (err) {
         if (err instanceof AiError) {
           return NextResponse.json(
@@ -240,6 +304,9 @@ export async function POST(request: Request) {
     } else if (clearEmbeddingsKey) {
       shared.embeddings_api_key = null
     }
+    if (embBaseProvided) shared.embeddings_base_url = finalEmbBase
+    if (embModelProvided) shared.embeddings_model = finalEmbModel
+    if (embDimsProvided) shared.embeddings_dimensions = finalEmbDims
 
     if (existing) {
       const { error: upErr } = await supabase
@@ -269,7 +336,9 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true })
+    // Vectors from a different model cannot be compared with the new ones:
+    // the UI tells the admin to run Reindex when this is true.
+    return NextResponse.json({ success: true, embeddings_changed: embeddingsChanged })
   } catch (err) {
     return toErrorResponse(err)
   }

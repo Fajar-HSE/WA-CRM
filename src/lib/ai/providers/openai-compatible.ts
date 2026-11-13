@@ -18,7 +18,7 @@ function normalizeHost(host: string): string {
   return host.trim().toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '')
 }
 
-function allowedPrivateHosts(): Set<string> {
+export function allowedPrivateHosts(): Set<string> {
   return new Set(
     (process.env[PRIVATE_HOST_ALLOWLIST_ENV] ?? '')
       .split(',')
@@ -27,7 +27,12 @@ function allowedPrivateHosts(): Set<string> {
   )
 }
 
-export function normalizeOpenAiCompatibleBaseUrl(baseUrl: string): string {
+/**
+ * Validate an OpenAI-compatible base URL (https, no credentials / query /
+ * hash; plain http only for hosts in AI_PROVIDER_ALLOWED_PRIVATE_HOSTS) and
+ * return it without a trailing slash. Shared by chat and embeddings.
+ */
+export function validateHttpBaseUrl(baseUrl: string): string {
   const value = baseUrl.trim().replace(/\/+$/, '')
   if (!value) {
     throw new AiError(t('ai.compatBaseUrlRequired'), {
@@ -74,7 +79,11 @@ export function normalizeOpenAiCompatibleBaseUrl(baseUrl: string): string {
     })
   }
 
-  const normalized = parsed.toString().replace(/\/+$/, '')
+  return parsed.toString().replace(/\/+$/, '')
+}
+
+export function normalizeOpenAiCompatibleBaseUrl(baseUrl: string): string {
+  const normalized = validateHttpBaseUrl(baseUrl)
   return normalized.endsWith('/chat/completions')
     ? normalized
     : `${normalized}/chat/completions`

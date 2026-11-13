@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         autoReplyEnabled: false,
         autoReplyMaxPerConversation: 3,
         handoffAgentId: null,
-        embeddingsApiKey: null,
+        embeddings: null,
       })
     } catch (err) {
       if (err instanceof AiError) {

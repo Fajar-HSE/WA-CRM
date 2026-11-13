@@ -6,6 +6,8 @@
 // whether the account is on OpenAI or Anthropic.
 // ============================================================
 
+import type { EmbeddingsSettings } from './embeddings'
+
 export type AiProvider = 'openai' | 'anthropic' | 'openai_compatible'
 
 /**
@@ -27,10 +29,11 @@ export interface AiConfig {
    *  agent's `auth.users.id`, or null to leave it unassigned (drop into
    *  the shared queue). */
   handoffAgentId: string | null
-  /** Optional OpenAI-compatible key for embeddings. When set, the
-   *  knowledge base is embedded and semantic retrieval turns on; when
-   *  null, retrieval falls back to lexical full-text search. */
-  embeddingsApiKey: string | null
+  /** Optional embeddings provider (OpenAI by default, or any OpenAI-compatible
+   *  service). When set, the knowledge base is embedded and semantic
+   *  retrieval turns on; when null, retrieval falls back to lexical
+   *  full-text search. */
+  embeddings: EmbeddingsSettings | null
 }
 
 /** A single conversation turn in the shape both providers accept. */

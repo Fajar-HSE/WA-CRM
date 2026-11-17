@@ -78,6 +78,24 @@ export async function ingestDocument(
     if (delErr) throw delErr
   }
 
+  // Persist per-document stats so the dashboard can show chunk count and
+  // whether semantic search is live for this doc. Best-effort: a failure
+  // here must not discard the chunks we just stored — the toast in the
+  // route already reports the real indexing outcome.
+  const indexStatus =
+    chunks.length === 0 ? 'lexical' : embeddings ? 'semantic' : 'lexical'
+  try {
+    const { error: statErr } = await db
+      .from('ai_knowledge_documents')
+      .update({ chunk_count: chunks.length, index_status: indexStatus })
+      .eq('id', documentId)
+    if (statErr) {
+      console.error('[ai knowledge] failed to update doc stats:', statErr)
+    }
+  } catch (err) {
+    console.error('[ai knowledge] failed to update doc stats:', err)
+  }
+
   return { keywordOnly: embedError !== null, embedError }
 }
 

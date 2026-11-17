@@ -2107,7 +2107,13 @@
       "reindexTooltip": "Embed ulang semua dokumen (mis. setelah menambahkan kunci embeddings)",
       "editDoc": "Ubah",
       "deleteDoc": "Hapus",
-      "loading": "Memuat…"
+      "loading": "Memuat…",
+      "chunksLabel": "chunk",
+      "contentCounter": "{chars} karakter · ≈ {chunks} chunk",
+      "contentCounterHint": "Maks. ±8 cuplikan per jawaban",
+      "oversizedParagraphWarning": "Ada paragraf > 1.200 karakter; akan dipotong otomatis.",
+      "indexStatusSemantic": "Semantik",
+      "indexStatusLexical": "Kata kunci"
     },
     "quickReplies": {
       "nameRequired": "Beri nama pada balasan cepat.",

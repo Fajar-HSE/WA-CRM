@@ -2107,7 +2107,13 @@
       "reindexTooltip": "Re-embed all documents (e.g. after adding an embeddings key)",
       "editDoc": "Edit",
       "deleteDoc": "Delete",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "chunksLabel": "chunks",
+      "contentCounter": "{chars} characters · ≈ {chunks} chunks",
+      "contentCounterHint": "Up to ~8 excerpts per reply",
+      "oversizedParagraphWarning": "A paragraph exceeds 1,200 characters; it will be split automatically.",
+      "indexStatusSemantic": "Semantic",
+      "indexStatusLexical": "Keyword"
     },
     "quickReplies": {
       "nameRequired": "Give the quick reply a name.",

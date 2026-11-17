@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import {
   Card,
   CardContent,
@@ -16,10 +17,14 @@ import {
 } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 
+import { chunkText } from '@/lib/ai/chunk';
+
 interface DocSummary {
   id: string;
   title: string;
   updated_at: string;
+  chunk_count?: number;
+  index_status?: 'semantic' | 'lexical';
 }
 
 /** Editor target: 'new' when creating, a doc id when editing, null when closed. */
@@ -230,8 +235,22 @@ export function AiKnowledgeCard({
                     <span className="min-w-0 truncate text-sm text-foreground">
                       {doc.title}
                     </span>
-                    {canEdit && (
-                      <span className="flex shrink-0 gap-1">
+                    <span className="flex shrink-0 items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className={
+                          doc.index_status === 'semantic' || !hasEmbeddingsKey
+                            ? ''
+                            : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                        }
+                      >
+                        {doc.chunk_count ?? 0} {t('chunksLabel')} ·{' '}
+                        {doc.index_status === 'semantic'
+                          ? t('indexStatusSemantic')
+                          : t('indexStatusLexical')}
+                      </Badge>
+                      {canEdit && (
+                        <span className="flex shrink-0 gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -252,6 +271,7 @@ export function AiKnowledgeCard({
                         </Button>
                       </span>
                     )}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -279,6 +299,23 @@ export function AiKnowledgeCard({
                     rows={8}
                     disabled={saving}
                   />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {t('contentCounter', {
+                        chars: content.length,
+                        chunks: chunkText(content).length,
+                      })}
+                    </span>
+                    <span>{t('contentCounterHint')}</span>
+                  </div>
+                  {content
+                    .replace(/\r\n/g, '\n')
+                    .split(/\n\s*\n/)
+                    .some((p) => p.trim().length > 1200) && (
+                    <p className="text-xs text-amber-600">
+                      {t('oversizedParagraphWarning')}
+                    </p>
+                  )}
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" onClick={cancelEdit} disabled={saving}>

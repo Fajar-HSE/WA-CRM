@@ -34,6 +34,7 @@
     "beta": "Beta",
     "unreadConversations": "{count} percakapan belum dibaca",
     "unreadNotifications": "{count} notifikasi belum dibaca",
+    "unreadGroups": "{count} grup dengan pesan baru",
     "roleOwner": "Pemilik",
     "roleAdmin": "Admin",
     "roleAgent": "Agen",
@@ -2248,7 +2249,7 @@
   },
   "Groups": {
     "title": "Grup WhatsApp",
-    "description": "Pesan grup yang kamu pantau, hanya untuk dibaca. Bot AI, otomasi, dan Dasbor tidak ikut memakainya.",
+    "description": "Pesan grup yang kamu pantau. Agen ke atas bisa membalas dari sini, atas nama nomor yang terhubung. Bot AI, otomasi, dan Dasbor tidak ikut memakainya.",
     "manage": "Kelola grup",
     "noMonitored": "Belum ada grup yang dipantau.",
     "noMonitoredHint": "Admin memilih grup lewat Kelola grup. Pesan hanya disimpan untuk grup yang dipilih.",
@@ -2258,7 +2259,15 @@
     "refresh": "Segarkan",
     "you": "Anda",
     "unknownSender": "Anggota",
-    "readOnly": "Hanya baca. Pesan tidak bisa dibalas dari sini.",
+    "readOnly": "Peran akunmu hanya untuk melihat, jadi tidak bisa membalas di sini.",
+    "reply": "Balas",
+    "replyingTo": "Membalas {name}",
+    "cancelReply": "Batalkan balasan",
+    "messagePlaceholder": "Tulis balasan ke grup…",
+    "sendHint": "Enter untuk kirim, Shift+Enter untuk baris baru",
+    "send": "Kirim",
+    "sendFailed": "Pesan tidak dapat dikirim.",
+    "unreadGroup": "Ada pesan baru",
     "manageTitle": "Kelola grup",
     "manageDesc": "Pilih grup yang pesannya boleh disimpan. Grup yang tidak dipilih tidak disimpan sama sekali.",
     "loadingGroups": "Memuat grup…",
@@ -2719,7 +2728,7 @@
     }
   },
   "Api": {
-    "groups": {"invalidGroup": "Grup tidak valid.", "notWaha": "Fitur grup hanya untuk nomor yang tersambung lewat WAHA.", "wahaFailed": "WAHA tidak dapat mengambil data grup saat ini. Coba lagi nanti.", "saveFailed": "Pengaturan grup tidak dapat disimpan.", "noMembers": "Pilih setidaknya satu anggota.", "tooMany": "Terlalu banyak anggota dalam satu permintaan (maksimal {max})."},
+    "groups": {"invalidGroup": "Grup tidak valid.", "notWaha": "Fitur grup hanya untuk nomor yang tersambung lewat WAHA.", "wahaFailed": "WAHA tidak dapat mengambil data grup saat ini. Coba lagi nanti.", "saveFailed": "Pengaturan grup tidak dapat disimpan.", "noMembers": "Pilih setidaknya satu anggota.", "tooMany": "Terlalu banyak anggota dalam satu permintaan (maksimal {max}).", "textRequired": "Ketik pesan terlebih dahulu.", "textTooLong": "Pesan terlalu panjang (maksimal {max} karakter).", "notMonitored": "Aktifkan pemantauan grup ini sebelum membalas.", "sendFailed": "Pesan tidak dapat dikirim ke WhatsApp. Periksa koneksi WAHA lalu coba lagi."},
     "history": {"invalidConversation": "Percakapan tidak valid.", "notWaha": "Riwayat hanya bisa dimuat untuk nomor yang tersambung lewat WAHA.", "storeDisabled": "Riwayat belum tersimpan di WAHA. Buka Pengaturan → WhatsApp dan klik “Sinkronkan ulang webhook”. Riwayat sebelum hari ini baru ikut setelah nomor dihubungkan ulang dengan kode QR.", "wahaFailed": "WAHA tidak dapat mengambil riwayat saat ini. Coba lagi nanti."},
     "common": {
       "notFound": "Tidak ditemukan",

@@ -34,6 +34,7 @@
     "beta": "Beta",
     "unreadConversations": "{count} unread {count, plural, =1 {conversation} other {conversations}}",
     "unreadNotifications": "{count} unread {count, plural, =1 {notification} other {notifications}}",
+    "unreadGroups": "{count} {count, plural, =1 {group} other {groups}} with new messages",
     "roleOwner": "Owner",
     "roleAdmin": "Admin",
     "roleAgent": "Agent",
@@ -2248,7 +2249,7 @@
   },
   "Groups": {
     "title": "WhatsApp groups",
-    "description": "Messages of the groups you monitor, read-only. The AI bot, automations and the dashboard do not use them.",
+    "description": "Messages of the groups you monitor. Agents and above can reply from here, as the linked number. The AI bot, automations and the dashboard do not use them.",
     "manage": "Manage groups",
     "noMonitored": "No monitored groups yet.",
     "noMonitoredHint": "An admin picks groups under Manage groups. Messages are only saved for the groups chosen.",
@@ -2258,7 +2259,15 @@
     "refresh": "Refresh",
     "you": "You",
     "unknownSender": "Member",
-    "readOnly": "Read-only. Messages cannot be answered from here.",
+    "readOnly": "Your role is view-only, so you cannot reply here.",
+    "reply": "Reply",
+    "replyingTo": "Replying to {name}",
+    "cancelReply": "Cancel reply",
+    "messagePlaceholder": "Write a reply to the group…",
+    "sendHint": "Enter to send, Shift+Enter for a new line",
+    "send": "Send",
+    "sendFailed": "Could not send the message.",
+    "unreadGroup": "New messages",
     "manageTitle": "Manage groups",
     "manageDesc": "Choose which groups may have their messages saved. Groups you do not choose are not saved at all.",
     "loadingGroups": "Loading groups…",
@@ -2719,7 +2728,7 @@
     }
   },
   "Api": {
-    "groups": {"invalidGroup": "Invalid group.", "notWaha": "Groups only work for a number connected through WAHA.", "wahaFailed": "WAHA could not fetch the group data right now. Try again later.", "saveFailed": "Could not save the group setting.", "noMembers": "Pick at least one member.", "tooMany": "Too many members in one request (maximum {max})."},
+    "groups": {"invalidGroup": "Invalid group.", "notWaha": "Groups only work for a number connected through WAHA.", "wahaFailed": "WAHA could not fetch the group data right now. Try again later.", "saveFailed": "Could not save the group setting.", "noMembers": "Pick at least one member.", "tooMany": "Too many members in one request (maximum {max}).", "textRequired": "Type a message first.", "textTooLong": "The message is too long (maximum {max} characters).", "notMonitored": "Turn on monitoring for this group before replying.", "sendFailed": "The message could not be sent to WhatsApp. Check the WAHA connection and try again."},
     "history": {"invalidConversation": "Invalid conversation.", "notWaha": "History can only be loaded for a number connected through WAHA.", "storeDisabled": "WAHA has not stored any history yet. Open Settings → WhatsApp and click “Re-sync webhook”. History from before today only appears after the number is linked again with the QR code.", "wahaFailed": "WAHA could not fetch the history right now. Try again later."},
     "common": {
       "notFound": "Not found",

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useGroupStamps, useGroupsUnread } from "@/hooks/use-groups-unread";
 import { useTotalUnread } from "@/hooks/use-total-unread";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import {
@@ -131,6 +132,7 @@ export function Sidebar({
   const { profile, profileLoading, account, accountRole, signOut } = useAuth();
   const totalUnread = useTotalUnread();
   const unreadNotifications = useUnreadNotifications();
+  const { count: unreadGroups } = useGroupsUnread(useGroupStamps());
   // Only surface the account-name strip when it actually carries
   // information. A solo user's personal account is named after them
   // (the 017 signup trigger seeds it from `full_name`), so showing it
@@ -251,6 +253,12 @@ export function Sidebar({
               const showUnreadDot =
                 item.href === "/inbox" && totalUnread > 0 && !isActive;
 
+              // Groups keep their unread state in this browser. While the
+              // page is open the list shows which group has news, so the
+              // sidebar dot only matters elsewhere in the app.
+              const showGroupsDot =
+                item.href === "/groups" && unreadGroups > 0 && !isActive;
+
               // Unlike the inbox dot, the notifications count stays visible
               // even while the page is active — it reflects unread state
               // (cleared by marking notifications read), not "currently
@@ -294,6 +302,18 @@ export function Sidebar({
                         className={cn(
                           "relative flex h-2 w-2",
                           // Collapsed: pin the dot to the icon's corner.
+                          collapsed && "lg:absolute lg:right-3 lg:top-1.5",
+                        )}
+                      >
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                      </span>
+                    )}
+                    {showGroupsDot && (
+                      <span
+                        aria-label={t("unreadGroups", { count: unreadGroups })}
+                        className={cn(
+                          "relative flex h-2 w-2",
                           collapsed && "lg:absolute lg:right-3 lg:top-1.5",
                         )}
                       >

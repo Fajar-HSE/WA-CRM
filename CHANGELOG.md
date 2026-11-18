@@ -4,6 +4,14 @@ User-visible changes in WA-CRM. When pulling an update, check this file for any 
 
 Versions follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+- **Reply to WhatsApp groups** (WAHA): agents and above can answer a monitored group from the Grup page, with a quote of the message being answered. Text only, from the linked number. Viewers still see the thread read-only.
+- **Faster Grup page**: the group list refreshes every 10 seconds while the tab is open (it was 30) and when you return to the tab; a thread reloads only when it has a new message.
+- **Unread marker for groups**: a dot on Grup in the sidebar and next to each group with new messages. It is kept per browser.
+
+No migration required.
+
 ## [1.0.0] — 2026-11-06
 
 Initial public release of WA-CRM — a self-hostable CRM for WhatsApp.

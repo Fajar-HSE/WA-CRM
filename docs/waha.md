@@ -112,7 +112,7 @@ from WAHA into the conversation. It can be pressed repeatedly to go further
 back and is safe to repeat: messages already saved are skipped. Attachments
 from history appear as `[Attachment]` because media is not downloaded.
 
-## WhatsApp groups (read-only) and "Grab Nomor"
+## WhatsApp groups and "Grab Nomor"
 
 Group chats are **not** inbox conversations. The inbox, dashboard, broadcasts,
 automations, flows and the AI auto-reply all assume one contact = one phone
@@ -124,9 +124,26 @@ own page, **Grup**, in the sidebar.
   The webhook drops the messages of every other group before anything is
   written, so a phone that sits in many private groups stores nothing it was
   not asked to. Turning a group off stops saving; saved messages stay.
-- **Read-only.** There is no reply box. Messages show the sender's profile name
-  and number when WhatsApp reveals it (a member can appear as a hidden `@lid`
-  id). Media is not downloaded; a file shows as `[Lampiran]`.
+- **Reading.** Messages show the sender's profile name and number when
+  WhatsApp reveals it (a member can appear as a hidden `@lid` id). Media is not
+  downloaded; a file shows as `[Lampiran]`.
+- **Replying** (agent and above). The reply box under the thread sends text to
+  the group through `POST /api/whatsapp/groups/send`, from the linked number.
+  **Balas** on a message quotes it (WAHA `reply_to`). Enter sends, Shift+Enter
+  starts a new line, and a message is limited to 4000 characters. Only monitored
+  groups can be answered. The sent message is saved at once; WAHA's echo of it
+  (`message.any`) is then ignored as a duplicate. It is text only: no files, and
+  the AI bot, automations and broadcasts never write to groups. Viewers see the
+  thread without the reply box.
+- **Fresher thread.** The page checks the group list every 10 seconds while the
+  tab is in front (and when you return to it), and reloads a thread only when
+  its latest message changed. There is no realtime subscription for groups.
+- **Unread marker.** A dot appears on **Grup** in the sidebar and next to a
+  group in the list when it has a message newer than the last one you saw. It is
+  remembered per browser (localStorage), not per user on the server, so another
+  browser starts clean and a group you have never opened there is treated as
+  read. Messages you type on the phone also move a group's latest-message time,
+  so they can light the dot too.
 - **Only messages since monitoring began** are stored. WAHA's history is not
   imported for groups.
 - **Grab Nomor** (admin): lists a group's members (`GET
@@ -136,6 +153,11 @@ own page, **Grup**, in the sidebar.
   the group's name. Numbers that are already contacts are only tagged. New
   contacts get their number as the name; the real profile name replaces it when
   the person writes in. A CSV download is available too. Nothing is sent.
+
+Replying from a group uses the same unofficial WAHA connection as everything
+else here, so WhatsApp can restrict the number if it looks automated. Keep it
+to people typing real answers; do not script it or paste the same text into
+many groups.
 
 Grabbing numbers is a privacy and ban risk: contacting group members who did
 not ask for it is what gets WhatsApp numbers blocked, and phone numbers are
@@ -154,4 +176,4 @@ headers or images: write the message as plain text.
 
 - Interactive buttons and lists are sent as numbered text.
 - Reactions are not handled yet.
-- Channels and Status updates are ignored by the webhook. Group chats go to the separate, read-only Grup page, and only for groups an admin monitors.
+- Channels and Status updates are ignored by the webhook. Group chats go to the separate Grup page, and only for groups an admin monitors. Replies there are text only.

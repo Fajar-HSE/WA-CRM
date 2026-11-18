@@ -56,22 +56,56 @@ export function toNetworkError(err: unknown): AiError {
   })
 }
 
-/** Build a typed AiError from a non-2xx provider response, pulling the
- *  provider's own error message out of the JSON body when present. */
+const SNIPPET_MAX = 120
+
+/** The visible text of an error body that is not JSON (an HTML block page,
+ *  plain text), shortened so it fits in a toast. */
+function bodySnippet(raw: string): string {
+  const text = raw
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX)}…` : text
+}
+
+/** The provider's own message from a JSON error body, in the shapes seen in
+ *  the wild: `{error:{message}}`, `{error:"…"}`, `{message}`, `{detail}`. */
+function jsonDetail(body: unknown): string {
+  if (!body || typeof body !== 'object') return ''
+  const b = body as { error?: unknown; message?: unknown; detail?: unknown }
+  if (typeof b.error === 'string') return b.error
+  if (b.error && typeof b.error === 'object') {
+    const m = (b.error as { message?: unknown }).message
+    if (typeof m === 'string' && m) return m
+  }
+  if (typeof b.message === 'string') return b.message
+  if (typeof b.detail === 'string') return b.detail
+  return ''
+}
+
+/** Build a typed AiError from a non-2xx provider response. The message says
+ *  what the provider said: its own JSON message when there is one, otherwise
+ *  a short piece of the body, so a block page from a proxy in front of the
+ *  provider is told apart from a real "wrong key" answer. A rejected key also
+ *  carries the HTTP status (401 vs 403). */
 export async function providerHttpError(
   provider: string,
   res: Response,
 ): Promise<AiError> {
+  let raw = ''
+  try {
+    raw = await res.text()
+  } catch {
+    // Body unreadable — fall back to the status line.
+  }
   let detail = ''
   try {
-    const body = (await res.json()) as { error?: { message?: string } | string }
-    detail =
-      typeof body?.error === 'string'
-        ? body.error
-        : (body?.error?.message ?? '')
+    detail = jsonDetail(JSON.parse(raw))
   } catch {
-    // Non-JSON error body — fall back to the status line.
+    // Not JSON — use a snippet of the body below.
   }
+  if (!detail) detail = bodySnippet(raw)
 
   const { status } = res
   const code =
@@ -82,7 +116,7 @@ export async function providerHttpError(
         : 'provider_error'
   const base =
     code === 'invalid_key'
-      ? t('ai.invalidKey', { provider })
+      ? `${t('ai.invalidKey', { provider })} (HTTP ${status})`
       : code === 'rate_limited'
         ? t('ai.rateLimited', { provider })
         : t('ai.apiError', { provider, status: String(status) })

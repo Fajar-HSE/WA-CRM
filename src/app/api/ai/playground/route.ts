@@ -5,7 +5,7 @@ import { loadAiConfig } from '@/lib/ai/config'
 import { retrieveKnowledge } from '@/lib/ai/knowledge'
 import { generateReply } from '@/lib/ai/generate'
 import { buildSystemPrompt } from '@/lib/ai/defaults'
-import { knowledgeQuery } from '@/lib/ai/query'
+import { knowledgeQuery, latestUserMessage } from '@/lib/ai/query'
 import { AiError, type ChatMessage } from '@/lib/ai/types'
 import { getT } from '@/lib/i18n/translate'
 
@@ -80,6 +80,8 @@ export async function POST(request: Request) {
       accountId,
       config,
       knowledgeQuery(messages),
+      undefined,
+      { focusText: latestUserMessage(messages) },
     )
     const systemPrompt = buildSystemPrompt({
       userPrompt: config.systemPrompt,

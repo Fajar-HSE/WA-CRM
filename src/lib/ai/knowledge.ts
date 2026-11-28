@@ -99,14 +99,24 @@ export async function ingestDocument(
   return { keywordOnly: embedError !== null, embedError }
 }
 
+/** Reciprocal-rank-fusion constant: higher = flatter weighting of ranks. */
+const RRF_K = 60
+/** Cap on the "focus" (latest customer message) query, in characters. */
+const FOCUS_MAX_CHARS = 500
+
 /**
  * Retrieve up to `k` knowledge excerpts relevant to `queryText`.
  *
- * Semantic-primary when an embeddings key is configured (embed the
- * query → cosine-nearest chunks), then topped up with lexical full-text
- * matches to fill `k`. Lexical-only when there's no key. Best-effort:
- * any failure (no KB, embedding error, RPC error) degrades to fewer or
- * zero results and never throws into the draft / auto-reply path.
+ * Hybrid: every available ranking is fused with reciprocal-rank fusion,
+ * so an excerpt that ranks well in ANY of them (meaning, or exact words
+ * such as a price or a course code) reaches the prompt:
+ *   - semantic, for the whole query (recent customer turns), and
+ *   - semantic, for `focusText` (the latest customer message on its
+ *     own), because a long multi-turn query blurs the topic,
+ *   - lexical full-text, for the whole query.
+ * Lexical-only when the account has no embeddings key. Best-effort: any
+ * failure (no KB, embedding error, RPC error) degrades to fewer or zero
+ * results and never throws into the draft / auto-reply path.
  */
 export async function retrieveKnowledge(
   db: SupabaseClient,
@@ -114,6 +124,7 @@ export async function retrieveKnowledge(
   config: Pick<AiConfig, 'embeddings'>,
   queryText: string,
   k = DEFAULT_KNOWLEDGE_EXCERPTS,
+  opts: { focusText?: string } = {},
 ): Promise<string[]> {
   const query = queryText.trim()
   if (!query || k <= 0) return []
@@ -132,45 +143,63 @@ export async function retrieveKnowledge(
     return []
   }
 
-  const picked = new Map<string, string>() // id → content, preserves order
+  // Each ranking is an ordered list of rows, best first.
+  const rankings: MatchRow[][] = []
 
-  // Semantic path.
+  // Semantic path: one embeddings call for all query texts.
   if (config.embeddings) {
     try {
-      const [queryEmbedding] = await embedTexts(config.embeddings, [query])
-      if (queryEmbedding) {
-        const { data, error } = await db.rpc('match_ai_knowledge_semantic', {
-          p_account_id: accountId,
-          p_query_embedding: toVectorLiteral(queryEmbedding),
-          p_match_count: k,
-        })
-        if (!error && Array.isArray(data)) {
-          for (const row of data as MatchRow[]) picked.set(row.id, row.content)
-        }
-      }
+      const focus = (opts.focusText ?? '').trim().slice(-FOCUS_MAX_CHARS)
+      const texts = focus && focus !== query ? [query, focus] : [query]
+      const vectors = await embedTexts(config.embeddings, texts)
+      const lists = await Promise.all(
+        vectors.map(async (vector) => {
+          if (!vector) return [] as MatchRow[]
+          const { data, error } = await db.rpc('match_ai_knowledge_semantic', {
+            p_account_id: accountId,
+            p_query_embedding: toVectorLiteral(vector),
+            p_match_count: k,
+          })
+          return !error && Array.isArray(data) ? (data as MatchRow[]) : []
+        }),
+      )
+      // The focused ranking goes first: it breaks ties in favour of what
+      // the customer just asked.
+      for (const list of lists.reverse()) if (list.length > 0) rankings.push(list)
     } catch (err) {
       console.error('[ai knowledge] semantic retrieval failed, falling back to FTS:', err)
     }
   }
 
-  // Lexical top-up (also the sole path when there's no embeddings key).
-  if (picked.size < k) {
-    try {
-      const { data, error } = await db.rpc('match_ai_knowledge_fts', {
-        p_account_id: accountId,
-        p_query: query,
-        p_match_count: k,
-      })
-      if (!error && Array.isArray(data)) {
-        for (const row of data as MatchRow[]) {
-          if (picked.size >= k) break
-          if (!picked.has(row.id)) picked.set(row.id, row.content)
-        }
-      }
-    } catch (err) {
-      console.error('[ai knowledge] lexical retrieval failed:', err)
-    }
+  // Lexical path (the sole path when there's no embeddings key). Always
+  // part of the fusion: exact words still matter next to meaning.
+  try {
+    const { data, error } = await db.rpc('match_ai_knowledge_fts', {
+      p_account_id: accountId,
+      p_query: query,
+      p_match_count: k,
+    })
+    if (!error && Array.isArray(data) && data.length > 0) rankings.push(data as MatchRow[])
+  } catch (err) {
+    console.error('[ai knowledge] lexical retrieval failed:', err)
   }
 
-  return Array.from(picked.values()).slice(0, k)
+  return fuseRankings(rankings).slice(0, k)
+}
+
+/** Reciprocal-rank fusion over ordered lists of rows; returns contents. */
+export function fuseRankings(rankings: { id: string; content: string }[][]): string[] {
+  const scores = new Map<string, { content: string; score: number; first: number }>()
+  let order = 0
+  for (const list of rankings) {
+    list.forEach((row, rank) => {
+      const hit = scores.get(row.id)
+      const add = 1 / (RRF_K + rank + 1)
+      if (hit) hit.score += add
+      else scores.set(row.id, { content: row.content, score: add, first: order++ })
+    })
+  }
+  return [...scores.values()]
+    .sort((a, b) => b.score - a.score || a.first - b.first)
+    .map((v) => v.content)
 }

@@ -6,7 +6,7 @@ import { buildConversationContext } from '@/lib/ai/context'
 import { retrieveKnowledge } from '@/lib/ai/knowledge'
 import { generateReply } from '@/lib/ai/generate'
 import { buildSystemPrompt } from '@/lib/ai/defaults'
-import { knowledgeQuery } from '@/lib/ai/query'
+import { knowledgeQuery, latestUserMessage } from '@/lib/ai/query'
 import { logAiUsage } from '@/lib/ai/usage'
 import { supabaseAdmin } from '@/lib/ai/admin-client'
 import { AiError } from '@/lib/ai/types'
@@ -99,6 +99,8 @@ export async function POST(request: Request) {
       accountId,
       config,
       knowledgeQuery(messages),
+      undefined,
+      { focusText: latestUserMessage(messages) },
     )
 
     const systemPrompt = buildSystemPrompt({

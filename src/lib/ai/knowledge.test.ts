@@ -7,7 +7,7 @@ vi.mock('./embeddings', () => ({
   toVectorLiteral: (v: number[]) => `[${v.join(',')}]`,
 }))
 
-import { retrieveKnowledge, ingestDocument } from './knowledge'
+import { retrieveKnowledge, ingestDocument, fuseRankings } from './knowledge'
 
 interface FakeState {
   semantic: { id: string; content: string }[]
@@ -114,11 +114,11 @@ describe('retrieveKnowledge', () => {
     const out = await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'q', 3)
     expect(out).toEqual(['S1', 'S2', 'S3'])
     expect(h.embedTexts).toHaveBeenCalledTimes(1)
-    // Enough semantic hits → no FTS top-up.
-    expect(state.rpcCalls).toEqual(['match_ai_knowledge_semantic'])
+    // Lexical search always joins the fusion next to the semantic ranking.
+    expect(state.rpcCalls).toEqual(['match_ai_knowledge_semantic', 'match_ai_knowledge_fts'])
   })
 
-  it('tops up with FTS and dedupes when semantic is short', async () => {
+  it('fuses semantic and lexical rankings; a hit in both ranks first', async () => {
     const { db, state } = makeDb()
     state.semantic = [
       { id: 's1', content: 'S1' },
@@ -129,11 +129,49 @@ describe('retrieveKnowledge', () => {
       { id: 'f1', content: 'F1' },
     ]
     const out = await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'q', 3)
-    expect(out).toEqual(['S1', 'S2', 'F1'])
-    expect(state.rpcCalls).toEqual([
-      'match_ai_knowledge_semantic',
-      'match_ai_knowledge_fts',
-    ])
+    expect(out).toEqual(['S2', 'S1', 'F1'])
+  })
+
+  it('lets an exact-word lexical hit through even when semantic fills every slot', async () => {
+    const { db, state } = makeDb()
+    state.semantic = [
+      { id: 's1', content: 'S1' },
+      { id: 's2', content: 'S2' },
+    ]
+    state.fts = [{ id: 'f1', content: 'F1' }]
+    const out = await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'q', 3)
+    expect(out).toContain('F1')
+  })
+
+  it('also embeds the latest message on its own and fuses both rankings', async () => {
+    const { db, state } = makeDb()
+    const calls: string[][] = []
+    h.embedTexts.mockImplementation(async (_s: unknown, inputs: string[]) => {
+      calls.push(inputs)
+      return inputs.map((_, i) => [i + 1])
+    })
+    // Each embedding gets its own ranking: rpc returns by call order.
+    const rankings = [
+      [{ id: 'broad', content: 'BROAD' }],
+      [{ id: 'focus', content: 'FOCUS' }],
+    ]
+    let n = 0
+    ;(db as unknown as { rpc: (name: string) => Promise<unknown> }).rpc = (name: string) => {
+      state.rpcCalls.push(name)
+      if (name === 'match_ai_knowledge_semantic') return Promise.resolve({ data: rankings[n++], error: null })
+      return Promise.resolve({ data: [], error: null })
+    }
+    const out = await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'topik A\nberapa biayanya?', 4, {
+      focusText: 'berapa biayanya?',
+    })
+    expect(calls).toEqual([['topik A\nberapa biayanya?', 'berapa biayanya?']])
+    expect(out).toEqual(expect.arrayContaining(['BROAD', 'FOCUS']))
+  })
+
+  it('does not embed the focus twice when it equals the query', async () => {
+    const { db } = makeDb()
+    await retrieveKnowledge(db, 'acct', { embeddings: { apiKey: 'sk-x', baseUrl: null, model: null, dimensions: null } }, 'q', 3, { focusText: ' q ' })
+    expect(h.embedTexts.mock.calls[0][1]).toEqual(['q'])
   })
 })
 
@@ -200,5 +238,21 @@ describe('ingestDocument', () => {
     await ingestDocument(db, 'acct', { embeddings: null }, 'doc-1', 'hello world')
     expect(state.events.filter((e) => e === 'delete')).toHaveLength(3)
     expect(state.deletedIds).toHaveLength(250)
+  })
+})
+
+describe('fuseRankings', () => {
+  it('ranks an item present in several lists above single-list items', () => {
+    const out = fuseRankings([
+      [{ id: 'a', content: 'A' }, { id: 'b', content: 'B' }],
+      [{ id: 'c', content: 'C' }, { id: 'b', content: 'B' }],
+    ])
+    expect(out[0]).toBe('B')
+    expect(out).toHaveLength(3)
+  })
+
+  it('keeps list order on ties and handles empty input', () => {
+    expect(fuseRankings([])).toEqual([])
+    expect(fuseRankings([[{ id: 'a', content: 'A' }, { id: 'b', content: 'B' }]])).toEqual(['A', 'B'])
   })
 })
